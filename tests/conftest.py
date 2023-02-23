@@ -523,79 +523,39 @@ if chain_used == 1:  # mainnet
 
         yield strategy
 
+    @pytest.fixture(scope="module")
+    def new_registry(interface):
+        yield interface.IRegistry("0x78f73705105A63e06B932611643E0b210fAE93E9")
 
-elif chain_used == 250:  # only fantom so far and convex doesn't exist there
+    @pytest.fixture(scope="module")
+    def toke_gauge(Contract):
+        yield Contract("0xa0C08C0Aede65a0306F7dD042D2560dA174c91fC")
 
-    @pytest.fixture(scope="session")
-    def voter():
-        yield Contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
 
-    @pytest.fixture(scope="session")
-    def crv():
-        yield Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
+    @pytest.fixture(scope="module")
+    def factory(
+        accounts,
+        keeper,
+        strategy,
+        new_registry,
+        CurveFactory,
+        strategist
+    ):
+        registry_owner = accounts.at(new_registry.owner(), force=True)
+        curveFactory = strategist.deploy(CurveFactory)
 
-    @pytest.fixture(scope="session")
-    def other_vault_strategy():
-        yield Contract("0x8423590CD0343c4E18d35aA780DF50a5751bebae")
+        new_registry.setApprovedVaultsOwner(curveFactory, True, {"from": registry_owner})
+        new_registry.setRole(curveFactory, False, True, {"from": registry_owner})
 
-    @pytest.fixture(scope="session")
-    def curve_registry():
-        yield Contract("0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5")
+        print(new_registry)
+        print(strategy)
+        print(keeper)
+        print(strategist)
 
-    @pytest.fixture(scope="session")
-    def healthCheck():
-        yield Contract("0xDDCea799fF1699e98EDF118e0629A974Df7DF012")
+        curveFactory.initialize(new_registry,strategy,keeper,strategist)
 
-    @pytest.fixture(scope="session")
-    def farmed():
-        # this is the token that we are farming and selling for more of our want.
-        yield Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
+        yield curveFactory
 
-    # curve deposit pool
-    @pytest.fixture(scope="session")
-    def pool(token, curve_registry):
-        if curve_registry.get_pool_from_lp_token(token) == ZERO_ADDRESS:
-            poolAddress = token
-        else:
-            _poolAddress = curve_registry.get_pool_from_lp_token(token)
-            poolAddress = Contract(_poolAddress)
-        yield poolAddress
-
-    @pytest.fixture(scope="session")
-    def gasOracle():
-        yield Contract("0xb5e1CAcB567d98faaDB60a1fD4820720141f064F")
-
-    # Define any accounts in this section
-    # for live testing, governance is the strategist MS; we will update this before we endorse
-    # normal gov is ychad, 0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52
-    @pytest.fixture(scope="session")
-    def gov(accounts):
-        yield accounts.at("0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", force=True)
-
-    @pytest.fixture(scope="session")
-    def strategist_ms(accounts):
-        # like governance, but better
-        yield accounts.at("0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7", force=True)
-
-    @pytest.fixture(scope="session")
-    def keeper(accounts):
-        yield accounts.at("0xBedf3Cf16ba1FcE6c3B751903Cf77E51d51E05b8", force=True)
-
-    @pytest.fixture(scope="session")
-    def rewards(accounts):
-        yield accounts.at("0x8Ef63b525fceF7f8662D98F77f5C9A86ae7dFE09", force=True)
-
-    @pytest.fixture(scope="session")
-    def guardian(accounts):
-        yield accounts[2]
-
-    @pytest.fixture(scope="session")
-    def management(accounts):
-        yield accounts[3]
-
-    @pytest.fixture(scope="session")
-    def strategist(accounts):
-        yield accounts.at("0xBedf3Cf16ba1FcE6c3B751903Cf77E51d51E05b8", force=True)
 
 
 # commented-out fixtures to be used with live testing

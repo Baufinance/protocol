@@ -29,4 +29,6 @@ interface Registry {
         uint256 _releaseDelta,
         VaultType _type
     ) external;
+
+    function owner() external view returns(address);
 }

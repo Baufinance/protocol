@@ -108,13 +108,6 @@ contract CurveFactory is Initializable {
         keeper = _keeper;
     }
 
-    address public healthCheck;
-
-    function setHealthcheck(address _health) external {
-        require(msg.sender == owner || msg.sender == management);
-        healthCheck = _health;
-    }
-
     uint256 public depositLimit;
 
     function setDepositLimit(uint256 _depositLimit) external {
@@ -157,7 +150,6 @@ contract CurveFactory is Initializable {
     function initialize (
         address _registry,
         address _convexStratImplementation,
-        address _healthCheck,
         address _keeper,
         address _owner
     ) public initializer {
@@ -166,8 +158,6 @@ contract CurveFactory is Initializable {
         owner = _owner;
 
         depositLimit = 10_000_000_000_000 * 1e18; // some large number
-
-        healthCheck = _healthCheck;
 
         keeper = _keeper;
 
@@ -184,6 +174,7 @@ contract CurveFactory is Initializable {
 
         booster =
         IBooster(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
+
     }
 
     /// @notice Public function to check whether, for a given gauge address, its possible to permissionlessly create a vault for corressponding LP token
@@ -232,17 +223,15 @@ contract CurveFactory is Initializable {
 
     // only permissioned users can deploy if there is already one endorsed
     function createNewVaultsAndStrategies(
-        address _curvePool,
         address _gauge,
         bool _allowDuplicate
     ) external returns (address vault, address convexStrategy) {
         require(msg.sender == owner || msg.sender == management);
 
-        return _createNewVaultsAndStrategies(_curvePool, _gauge, _allowDuplicate);
+        return _createNewVaultsAndStrategies(_gauge, _allowDuplicate);
     }
 
     function _createNewVaultsAndStrategies(
-        address _curvePool,
         address _gauge,
         bool _allowDuplicate
     ) internal returns (address vault, address strategy) {
@@ -302,18 +291,18 @@ contract CurveFactory is Initializable {
 
         //now we create the convex strat
         strategy = IStrategy(convexStratImplementation).cloneConvex3CrvRewards(
-        vault,
+            vault,
             management,
             treasury,
             keeper,
             pid,
-            _curvePool,
+            lptoken,
             string(
             abi.encodePacked("yvConvex", IDetails(address(lptoken)).symbol())
             )
        );
 
-        Vault(vault).addStrategy(
+        v.addStrategy(
             strategy,
             10_000,
             0,
@@ -322,5 +311,6 @@ contract CurveFactory is Initializable {
         );
 
         emit NewAutomatedVault(category, lptoken, _gauge, vault, strategy);
+
     }
 }
