@@ -10,8 +10,6 @@ def test_factory(pm, factory, strategist, toke_gauge, strategy, StrategyConvex3C
 
   (vault, strat) = f.return_value
 
-  print(vault, strat)
-
   Vault = pm(config["dependencies"][0]).Vault
 
   v = Vault.at(vault)

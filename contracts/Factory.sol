@@ -13,7 +13,7 @@ import {ICurveGauge} from "./interfaces/ICurve.sol";
 
 
 
-contract CurveFactory is Initializable {
+contract Factory is Initializable {
     event NewAutomatedVault(
         uint256 indexed category,
         address indexed lpToken,

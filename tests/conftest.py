@@ -538,23 +538,18 @@ if chain_used == 1:  # mainnet
         keeper,
         strategy,
         new_registry,
-        CurveFactory,
+        Factory,
         strategist
     ):
         registry_owner = accounts.at(new_registry.owner(), force=True)
-        curveFactory = strategist.deploy(CurveFactory)
+        factory = strategist.deploy(Factory)
 
-        new_registry.setApprovedVaultsOwner(curveFactory, True, {"from": registry_owner})
-        new_registry.setRole(curveFactory, False, True, {"from": registry_owner})
+        new_registry.setApprovedVaultsOwner(factory, True, {"from": registry_owner})
+        new_registry.setRole(factory, False, True, {"from": registry_owner})
 
-        print(new_registry)
-        print(strategy)
-        print(keeper)
-        print(strategist)
+        factory.initialize(new_registry,strategy,keeper,strategist)
 
-        curveFactory.initialize(new_registry,strategy,keeper,strategist)
-
-        yield curveFactory
+        yield factory
 
 
 

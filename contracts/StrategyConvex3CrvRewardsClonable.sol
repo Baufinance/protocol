@@ -257,7 +257,7 @@ contract StrategyConvex3CrvRewardsClonable is StrategyConvexBase {
         string memory _name
     ) external returns (address newStrategy) {
         require(isOriginal);
-        // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactory.sol
+        // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactorysol
         bytes20 addressBytes = bytes20(address(this));
         assembly {
             // EIP-1167 bytecode
