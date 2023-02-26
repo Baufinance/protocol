@@ -8,7 +8,7 @@ import "./interfaces/IBooster.sol";
 import "./interfaces/IDetails.sol";
 import "./interfaces/IPoolManager.sol";
 import "./interfaces/Registry.sol";
-import "./interfaces/Vault.sol";
+import "./interfaces/IVault.sol";
 import {ICurveGauge} from "./interfaces/ICurve.sol";
 
 
@@ -276,7 +276,7 @@ contract Factory is Initializable {
         );
         deployedVaults.push(vault);
 
-        Vault v = Vault(vault);
+        IVault v = IVault(vault);
         v.setManagement(management);
         //set governance to ychad who needs to accept before it is finalised. until then governance is this factory
         v.setGovernance(governance);
