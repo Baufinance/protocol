@@ -310,6 +310,7 @@ contract StrategyConvex3CrvRewardsClonable is StrategyConvexBase {
         // You can set these parameters on deployment to whatever you want
         maxReportDelay = 21 days; // 21 days in seconds, if we hit this then harvestTrigger = True
         healthCheck = 0xDDCea799fF1699e98EDF118e0629A974Df7DF012;
+        baseFeeOracle = 0xb5e1CAcB567d98faaDB60a1fD4820720141f064F;
         harvestProfitMin = 60000e6;
         harvestProfitMax = 120000e6;
         creditThreshold = 1e6 * 1e18;
