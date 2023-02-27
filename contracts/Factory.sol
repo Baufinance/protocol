@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.15;
 
-import "./Initializable.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+
 import "./interfaces/IStrategy.sol";
 import "./interfaces/IBooster.sol";
 import "./interfaces/IDetails.sol";

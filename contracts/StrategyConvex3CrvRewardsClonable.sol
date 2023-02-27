@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.15;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/math/Math.sol";
-
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./interfaces/ICurve.sol";
 
 import {IUniswapV2Router02} from "./interfaces/IUniV2.sol";
@@ -23,7 +23,8 @@ import "./interfaces/IConvexDeposit.sol";
 
 abstract contract StrategyConvexBase is BaseStrategy {
     using Address for address;
-
+    using SafeMath for uint256;
+    using SafeERC20 for IERC20;
     /* ========== STATE VARIABLES ========== */
     // these should stay the same across different wants.
 
@@ -55,8 +56,7 @@ abstract contract StrategyConvexBase is BaseStrategy {
     // keeper stuff
     uint256 public harvestProfitMin; // minimum size in USD (6 decimals) that we want to harvest
     uint256 public harvestProfitMax; // maximum size in USD (6 decimals) that we want to harvest
-    uint256 public creditThreshold; // amount of credit in underlying tokens that will automatically trigger a harvest
-    bool internal forceHarvestTriggerOnce; // only set this to true when we want to trigger our keepers to harvest for us
+
 
     string internal stratName;
 
@@ -65,7 +65,7 @@ abstract contract StrategyConvexBase is BaseStrategy {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _vault) public BaseStrategy(_vault) {}
+    constructor(address _vault) BaseStrategy(_vault) {}
 
     /* ========== VIEWS ========== */
 
@@ -185,16 +185,13 @@ abstract contract StrategyConvexBase is BaseStrategy {
         claimRewards = _claimRewards;
     }
 
-    // This allows us to manually harvest with our keeper as needed
-    function setForceHarvestTriggerOnce(bool _forceHarvestTriggerOnce)
-        external
-        onlyVaultManagers
-    {
-        forceHarvestTriggerOnce = _forceHarvestTriggerOnce;
-    }
 }
 
 contract StrategyConvex3CrvRewardsClonable is StrategyConvexBase {
+
+    using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+
     /* ========== STATE VARIABLES ========== */
     // these will likely change across different wants.
 
@@ -621,13 +618,6 @@ contract StrategyConvex3CrvRewardsClonable is StrategyConvexBase {
         override
         returns (uint256)
     {}
-
-    // check if the current baseFee is below our external target
-    function isBaseFeeAcceptable() internal view returns (bool) {
-        return
-            IBaseFee(0xb5e1CAcB567d98faaDB60a1fD4820720141f064F)
-                .isCurrentBaseFeeAcceptable();
-    }
 
     /// @notice True if someone needs to earmark rewards on Convex before keepers harvest again
     function needsEarmarkReward() public view returns (bool needsEarmark) {
