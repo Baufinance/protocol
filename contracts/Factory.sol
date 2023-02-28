@@ -7,14 +7,14 @@ import "./interfaces/IStrategy.sol";
 import "./interfaces/IBooster.sol";
 import "./interfaces/IDetails.sol";
 import "./interfaces/IPoolManager.sol";
-import "./interfaces/Registry.sol";
+import "./interfaces/IRegistry.sol";
 import "./interfaces/IVault.sol";
 import {ICurveGauge} from "./interfaces/ICurve.sol";
 
 
 
 contract Factory is Initializable {
-    event NewAutomatedVault(
+    event NewVault(
         uint256 indexed category,
         address indexed lpToken,
         address gauge,
@@ -65,11 +65,11 @@ contract Factory is Initializable {
         convexPoolManager = _convexPoolManager;
     }
 
-    Registry public registry; //= Registry(address(0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804));
+    IRegistry public registry;
 
     function setRegistry(address _registry) external {
         require(msg.sender == owner);
-        registry = Registry(_registry);
+        registry = IRegistry(_registry);
     }
 
 
@@ -153,7 +153,7 @@ contract Factory is Initializable {
         address _keeper,
         address _owner
     ) public initializer {
-        registry = Registry(_registry);
+        registry = IRegistry(_registry);
         convexStratImplementation = _convexStratImplementation;
         owner = _owner;
 
@@ -196,12 +196,23 @@ contract Factory is Initializable {
             return address(0);
         }
 
-        address latest = registry.latestVault(lptoken);
-        if (latest == address(0)) {
-            return registry.latestVault(lptoken, VaultType.AUTOMATED);
-        }
+        address latest = latestVault(lptoken);
 
         return latest;
+    }
+
+
+    function latestVault(address _token) public view returns(address) {
+         bytes memory data = abi.encodeWithSignature(
+            "latestVault(address)",
+            _token
+        );
+        (bool success, bytes memory returnBytes) = address(registry)
+            .staticcall(data);
+        if (success) {
+            return abi.decode(returnBytes, (address));
+        }
+        return address(0);
     }
 
     function getPid(address _gauge) public view returns (uint256 pid) {
@@ -255,8 +266,8 @@ contract Factory is Initializable {
             );
         }
 
-        //now we create the vault, endorses it as well
-        vault = registry.newVault(
+        //now we create the vault, endorses it from governance after
+        vault = registry.newExperimentalVault(
             lptoken,
             address(this),
             guardian,
@@ -271,9 +282,9 @@ contract Factory is Initializable {
             string(
                 abi.encodePacked("yvCurve", IDetails(address(lptoken)).symbol())
             ),
-            0,
-            VaultType.AUTOMATED
+            0
         );
+
         deployedVaults.push(vault);
 
         IVault v = IVault(vault);
@@ -310,7 +321,7 @@ contract Factory is Initializable {
             0
         );
 
-        emit NewAutomatedVault(category, lptoken, _gauge, vault, strategy);
+        emit NewVault(category, lptoken, _gauge, vault, strategy);
 
     }
 }

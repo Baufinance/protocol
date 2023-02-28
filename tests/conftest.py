@@ -54,6 +54,7 @@ def amount():
     yield amount
 
 
+
 @pytest.fixture(scope="session")
 def whale(accounts, amount, token):
     # Totally in it for the tech
@@ -532,23 +533,31 @@ if chain_used == 1:  # mainnet
         yield Contract("0xa0C08C0Aede65a0306F7dD042D2560dA174c91fC")
 
 
+
+    @pytest.fixture(scope="module")
+    def rando(accounts):
+        yield accounts[9]
+
+    @pytest.fixture(scope="module")
+    def registry(Registry, rando, Vault):
+        registry = rando.deploy(Registry)
+        vault = rando.deploy(Vault)
+
+        registry.newRelease(vault, {"from": rando})
+
+        yield registry
+
     @pytest.fixture(scope="module")
     def factory(
-        accounts,
         keeper,
         strategy,
-        new_registry,
         Factory,
+        registry,
         strategist
     ):
-        registry_owner = accounts.at(new_registry.owner(), force=True)
+
         factory = strategist.deploy(Factory)
-
-        new_registry.setApprovedVaultsOwner(factory, True, {"from": registry_owner})
-        new_registry.setRole(factory, False, True, {"from": registry_owner})
-
-        factory.initialize(new_registry,strategy,keeper,strategist)
-
+        factory.initialize(registry,strategy,keeper,strategist)
         yield factory
 
 
