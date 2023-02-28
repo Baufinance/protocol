@@ -534,9 +534,22 @@ if chain_used == 1:  # mainnet
 
 
 
+
     @pytest.fixture(scope="module")
     def rando(accounts):
         yield accounts[9]
+
+
+    @pytest.fixture(scope="module")
+    def whaleF(accounts):
+        # Totally in it for the tech
+        # Update this with a large holder of your want token (the largest EOA holder of LP)
+        whaleF = accounts.at("0xeCb456EA5365865EbAb8a2661B0c503410e9B347", force=True)
+        yield whaleF
+
+    @pytest.fixture(scope="module")
+    def tokenVault():
+        yield Contract("0x7ea4aD8C803653498bF6AC1D2dEbc04DCe8Fd2aD")
 
     @pytest.fixture(scope="module")
     def registry(Registry, rando, Vault):
@@ -547,17 +560,37 @@ if chain_used == 1:  # mainnet
 
         yield registry
 
+
+    @pytest.fixture(scope="module")
+    def keeper_wrapper(rando, KeeperWrapper):
+        keeperWrapper = rando.deploy(KeeperWrapper)
+        yield keeperWrapper
+
+    @pytest.fixture(scope="module")
+    def common_health_check(rando, CommonHealthCheck):
+        healthCheck = rando.deploy(CommonHealthCheck)
+        yield healthCheck
+
+    @pytest.fixture(scope="module")
+    def base_fee_oracle(rando, BaseFeeOracle):
+        oracle = rando.deploy(BaseFeeOracle)
+        oracle.setBaseFeeProvider("0xf8d0Ec04e94296773cE20eFbeeA82e76220cD549", {"from": rando})
+        oracle.setMaxAcceptableBaseFee(25000000000, {"from": rando})
+
+        yield oracle
+
     @pytest.fixture(scope="module")
     def factory(
         keeper,
         strategy,
         Factory,
         registry,
-        strategist
+        strategist,
+        keeper_wrapper
     ):
-
         factory = strategist.deploy(Factory)
-        factory.initialize(registry,strategy,keeper,strategist)
+        factory.initialize(registry,strategy,keeper_wrapper,strategist)
+
         yield factory
 
 
