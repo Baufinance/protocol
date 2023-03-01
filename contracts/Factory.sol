@@ -125,7 +125,7 @@ contract Factory is Initializable {
     }
 
 
-    uint256 public performanceFee = 1_000;
+    uint256 public performanceFee = 1_00;
 
     function setPerformanceFee(uint256 _performanceFee) external {
         require(msg.sender == owner);
