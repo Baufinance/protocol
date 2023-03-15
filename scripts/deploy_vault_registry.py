@@ -5,7 +5,7 @@ from dotenv import load_dotenv, find_dotenv
 def main():
 
     load_dotenv(find_dotenv())
-    acct = accounts.load("yield")
+    acct = accounts.load("yield2")
     # token address for vault template
     token_template = os.getenv("TOKEN_TEMPLATE")
 
@@ -16,9 +16,9 @@ def main():
 
     print(" -- Vault --")
 
-    vault = Vault.deploy({"from":acct}, publish_source=True)
+    vault = Vault.deploy({"from":acct})
 
-    tx1 = vault.initialize(token_template, owner, owner, "Yield", "YLD", owner, {"from": acct})
+    tx1 = vault.initialize(token_template, owner, owner, "Yield Curve Frax-F", "YCF", owner, {"from": acct})
 
     tx1.wait(1)
 
@@ -26,7 +26,7 @@ def main():
 
     print(" -- Registry --")
 
-    registry = Registry.deploy({"from":acct}, publish_source=True)
+    registry = Registry.deploy({"from":acct})
 
     print("registry", registry.address)
 

@@ -2,7 +2,7 @@ from brownie import *
 
 
 def main():
-    acct = accounts.load("yield")
+    acct = accounts.load("yield2")
 
     print("account", acct)
 

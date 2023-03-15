@@ -297,7 +297,7 @@ def initialize(
     assert self.activation == 0  # dev: no devops199
     self.token = ERC20(token)
     if nameOverride == "":
-        self.name = concat(DetailedERC20(token).symbol(), " yVault")
+        self.name = concat(DetailedERC20(token).symbol(), " yieldVault")
     else:
         self.name = nameOverride
     if symbolOverride == "":
@@ -316,10 +316,10 @@ def initialize(
     log UpdateRewards(rewards)
     self.guardian = guardian
     log UpdateGuardian(guardian)
-    self.performanceFee = 1000  # 10% of yield (per Strategy)
-    log UpdatePerformanceFee(convert(1000, uint256))
-    self.managementFee = 200  # 2% per year
-    log UpdateManagementFee(convert(200, uint256))
+    self.performanceFee = 100  # 1% of yield (per Strategy)
+    log UpdatePerformanceFee(convert(100, uint256))
+    self.managementFee = 0  # 0% per year
+    log UpdateManagementFee(convert(0, uint256))
     self.lastReport = block.timestamp
     self.activation = block.timestamp
     self.lockedProfitDegradation = convert(DEGRADATION_COEFFICIENT * 46 / 10 ** 6 , uint256) # 6 hours in blocks

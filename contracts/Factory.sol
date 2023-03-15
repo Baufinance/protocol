@@ -272,20 +272,18 @@ contract Factory is Initializable {
             address(this),
             guardian,
             treasury,
-            string(
-                abi.encodePacked(
+
+            string.concat(
                     "Curve ",
                     IDetails(address(lptoken)).symbol(),
-                    " Auto-Compounding yVault"
-                )
+                    " yieldVault"
             ),
-            string(
-                abi.encodePacked("yvCurve", IDetails(address(lptoken)).symbol())
-            ),
+            string.concat("yieldCurve", IDetails(address(lptoken)).symbol()),
             0
         );
 
         deployedVaults.push(vault);
+
 
         IVault v = IVault(vault);
         v.setManagement(management);
@@ -299,6 +297,7 @@ contract Factory is Initializable {
         if (v.performanceFee() != performanceFee) {
             v.setPerformanceFee(performanceFee);
         }
+
 
         //now we create the convex strat
         strategy = IStrategy(convexStratImplementation).cloneConvex3CrvRewards(
@@ -322,6 +321,5 @@ contract Factory is Initializable {
         );
 
         emit NewVault(category, lptoken, _gauge, vault, strategy);
-
     }
 }

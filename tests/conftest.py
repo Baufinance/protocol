@@ -530,7 +530,7 @@ if chain_used == 1:  # mainnet
 
     @pytest.fixture(scope="module")
     def toke_gauge(Contract):
-        yield Contract("0xa0C08C0Aede65a0306F7dD042D2560dA174c91fC")
+        yield Contract("0xd8b712d29381748dB89c36BCa0138d7c75866ddF")
 
 
 
@@ -544,12 +544,12 @@ if chain_used == 1:  # mainnet
     def whaleF(accounts):
         # Totally in it for the tech
         # Update this with a large holder of your want token (the largest EOA holder of LP)
-        whaleF = accounts.at("0xeCb456EA5365865EbAb8a2661B0c503410e9B347", force=True)
+        whaleF = accounts.at("0xe896e539e557BC751860a7763C8dD589aF1698Ce", force=True)
         yield whaleF
 
     @pytest.fixture(scope="module")
     def tokenVault():
-        yield Contract("0x7ea4aD8C803653498bF6AC1D2dEbc04DCe8Fd2aD")
+        yield Contract("0x5a6A4D54456819380173272A5E8E9B9904BdF41B")
 
     @pytest.fixture(scope="module")
     def registry(Registry, rando, Vault):
