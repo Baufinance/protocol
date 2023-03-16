@@ -16,6 +16,7 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
     bool public isWETHPool;
     bool public isCRVPool;
     bool public isCVXPool;
+    bool public isUseUnderlying;
 
     uint256 nCoins;
 
@@ -33,12 +34,13 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
         address _curvePool,
         bytes memory _swapPath,
         string memory _name,
-        uint256 _nCoins
+        uint256 _nCoins,
+        bool _isUseUnderlying
     ) StrategyCurveBase(_vault, _pid, _name) {
-      _initializeStrat(_curvePool, _nCoins, _swapPath);
+      _initializeStrat(_curvePool, _nCoins, _swapPath, _isUseUnderlying);
     }
 
-
+    receive() external payable {}
     function initialize(
         address _vault,
         address _strategist,
@@ -48,14 +50,15 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
         address _curvePool,
         bytes memory _swapPath,
         string memory _name,
-        uint256 _nCoins
+        uint256 _nCoins,
+        bool _isUseUnderlying
     ) public {
         _initialize(_vault, _strategist, _rewards, _keeper);
         _initializeStratBase(_pid, _name);
-        _initializeStrat(_curvePool, _nCoins, _swapPath);
+        _initializeStrat(_curvePool, _nCoins, _swapPath, _isUseUnderlying);
     }
 
-    function _initializeStrat(address _curvePool, uint256 _nCoins, bytes memory _swapPath) internal {
+    function _initializeStrat(address _curvePool, uint256 _nCoins, bytes memory _swapPath, bool _isUseUnderlying) internal {
 
         if (_nCoins < 2) {
           revert InvalidNCoins();
@@ -86,11 +89,17 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
           }
         }
 
+        address targetCoin = ICurveFi(_curvePool).coins(targetCoinIndex);
+
+        IERC20(targetCoin).approve(_curvePool, type(uint256).max);
+
         curve = ICurveFi(_curvePool);
 
         nCoins = _nCoins;
 
         swapPath = _swapPath;
+
+        isUseUnderlying = _isUseUnderlying;
     }
 
 
@@ -104,7 +113,8 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
         address _curvePool,
         bytes memory _swapPath,
         string memory _name,
-        uint256 _nCoins
+        uint256 _nCoins,
+        bool _isUseUnderlying
     ) external returns (address newStrategy) {
         require(isOriginal);
         // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactorysol
@@ -124,7 +134,7 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
             newStrategy := create(0, clone_code, 0x37)
         }
 
-        StrategyConvexCurveRewardsClonable(newStrategy).initialize(
+        StrategyConvexCurveRewardsClonable(payable(newStrategy)).initialize(
             _vault,
             _strategist,
             _rewards,
@@ -133,7 +143,8 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
             _curvePool,
             _swapPath,
             _name,
-            _nCoins
+            _nCoins,
+            _isUseUnderlying
         );
 
         emit Cloned(newStrategy);
@@ -180,9 +191,7 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
         // do this even if we have zero balances so we can sell WETH from rewards
         _sellCrvAndCvx(crvBalance, convexBalance);
 
-        /*
-          deposit to curve to get want
-        */
+        _depositToCurve();
 
         // debtOustanding will only be > 0 in the event of revoking or if we need to rebalance from a withdrawal or lowering the debtRatio
         if (_debtOutstanding > 0) {
@@ -234,7 +243,6 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
             crveth.exchange(1, 0, _crvAmount, 0, false);
         }
 
-
         if (!isWETHPool && !isETHPool) {
         uint256 _wethBalance = weth.balanceOf(address(this));
             if (_wethBalance > 1e15) {
@@ -252,11 +260,81 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
       }
     }
 
+    function _depositToCurve() internal {
+
+      address targetCoin = curve.coins(targetCoinIndex);
+
+      uint256 targetBalance = IERC20(targetCoin).balanceOf(address(this));
+
+      if (targetCoin == eth) {
+        targetBalance = address(this).balance;
+      }
+      uint256[2] memory coins2;
+      uint256[3] memory coins3;
+      uint256[4] memory coins4;
+
+      for (uint256 i; i < nCoins; i++) {
+        if (i ==  targetCoinIndex) {
+          if (nCoins == 2) {
+            coins2[i] = targetBalance;
+          } else if (nCoins == 3) {
+            coins3[i] = targetBalance;
+          } else {
+            coins4[i] = targetBalance;
+          }
+        } else {
+          if (nCoins == 2) {
+            coins2[i] = 0;
+          } else if (nCoins == 3) {
+            coins3[i] = 0;
+          } else {
+            coins4[i] = 0;
+          }
+        }
+      }
+
+      if (isUseUnderlying) {
+        if (nCoins == 2) {
+          curve.add_liquidity(coins2, 0, true);
+        } else if (nCoins == 3) {
+          curve.add_liquidity(coins3, 0, true);
+        } else {
+          curve.add_liquidity(coins4, 0, true);
+        }
+      } else {
+        if (isETHPool) {
+          if (nCoins == 2) {
+            curve.add_liquidity{value: targetBalance}(coins2, 0);
+          } else if (nCoins == 3) {
+            curve.add_liquidity{value: targetBalance}(coins3, 0);
+          } else {
+            curve.add_liquidity{value: targetBalance}(coins4, 0);
+          }
+        } else {
+          if (nCoins == 2) {
+            curve.add_liquidity(coins2, 0);
+          } else if (nCoins == 3) {
+            curve.add_liquidity(coins3, 0);
+          } else {
+            curve.add_liquidity(coins4, 0);
+          }
+        }
+      }
+    }
+
     function updateSwapPath(bytes memory _swapPath) external onlyVaultManagers {
       swapPath = _swapPath;
     }
 
     function setOptimalTargetCoinIndex(uint256 _targetCoinIndex) external onlyVaultManagers {
+      address targetCoin = curve.coins(targetCoinIndex);
+
+      IERC20(targetCoin).approve(address(curve), 0);
+
       targetCoinIndex = _targetCoinIndex;
+
+      targetCoin = curve.coins(targetCoinIndex);
+
+      IERC20(targetCoin).approve(address(curve), type(uint256).max);
     }
 }
