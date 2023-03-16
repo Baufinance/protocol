@@ -12,7 +12,11 @@
   "scripts": {
     "lint": "pretty-quick --pattern '**/*.*(sol|json)' --verbose",
     "lint:check": "prettier --check **/*.sol **/*.json",
-    "lint:fix": "pretty-quick --pattern '**/*.*(sol|json)' --staged --verbose"
+    "lint:fix": "pretty-quick --pattern '**/*.*(sol|json)' --staged --verbose",
+    "format": "prettier --write 'contracts/**/*.sol' --verbose",
+    "format:check": "prettier --check '**/*.*(sol|json)'",
+    "format:fix": "pretty-quick --pattern '**/*.*(sol|json)' --staged --verbose",
+    "hint": "solhint \"contracts/**/*.sol\""
   },
   "husky": {
     "hooks": {

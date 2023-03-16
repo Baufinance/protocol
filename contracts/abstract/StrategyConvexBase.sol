@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.15;
 
-import "./BaseStrategy.sol";
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "./interfaces/IConvexRewards.sol";
-import "./interfaces/IConvexDeposit.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "../yearn/BaseStrategy.sol";
+import "../interfaces/IConvexRewards.sol";
+import "../interfaces/IConvexDeposit.sol";
+
 
 abstract contract StrategyConvexBase is BaseStrategy {
     using Address for address;

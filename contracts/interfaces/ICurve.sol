@@ -77,6 +77,8 @@ interface ICurveFi is IERC20 {
         uint256 min_mint_amount
     ) external payable;
 
+    function token() external view returns (address);
+
     function remove_liquidity_imbalance(
         uint256[2] calldata amounts,
         uint256 max_burn_amount
