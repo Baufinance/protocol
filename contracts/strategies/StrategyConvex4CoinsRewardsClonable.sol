@@ -3,7 +3,7 @@ pragma solidity 0.8.15;
 
 import "../abstract/StrategyConvexCurveRewardsBase.sol";
 
-contract StrategyConvexCoins4RewardsClonable is StrategyConvexCurveRewardsBase {
+contract StrategyConvex4CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
 
   constructor(
         address _vault,

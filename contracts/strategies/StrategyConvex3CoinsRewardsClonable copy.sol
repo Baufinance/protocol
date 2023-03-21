@@ -3,7 +3,7 @@ pragma solidity 0.8.15;
 
 import "../abstract/StrategyConvexCurveRewardsBase.sol";
 
-contract StrategyConvexCoins2RewardsClonable is StrategyConvexCurveRewardsBase {
+contract StrategyConvex3CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
 
   constructor(
         address _vault,
@@ -12,7 +12,7 @@ contract StrategyConvexCoins2RewardsClonable is StrategyConvexCurveRewardsBase {
         bytes memory _swapPath,
         string memory _name,
         bool _isUseUnderlying
-    ) StrategyConvexCurveRewardsBase(_vault, _pid, _curvePool, _swapPath, _name, 2, _isUseUnderlying) {
+    ) StrategyConvexCurveRewardsBase(_vault, _pid, _curvePool, _swapPath, _name, 3, _isUseUnderlying) {
 
   }
 
@@ -26,7 +26,7 @@ contract StrategyConvexCoins2RewardsClonable is StrategyConvexCurveRewardsBase {
         targetBalance = address(this).balance;
       }
 
-      uint256[2] memory coins;
+      uint256[3] memory coins;
 
       for (uint256 i; i < nCoins; i++) {
         if (i ==  targetCoinIndex) {

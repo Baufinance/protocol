@@ -73,7 +73,7 @@ contract StrategyConvex3CrvRewardsClonable is StrategyConvexBase {
     event Cloned(address indexed clone);
 
     // we use this to clone our original strategy to other vaults
-    function cloneConvex3CrvRewards(
+    function clone(
         address _vault,
         address _strategist,
         address _rewards,
