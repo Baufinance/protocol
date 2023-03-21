@@ -6,7 +6,7 @@ import "../abstract/StrategyCurveBase.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
+abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     // Curve stuff
@@ -104,7 +104,7 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
 
 
      // we use this to clone our original strategy to other vaults
-    function cloneConvexCurveRewards(
+    function clone(
         address _vault,
         address _strategist,
         address _rewards,
@@ -115,7 +115,7 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
         string memory _name,
         uint256 _nCoins,
         bool _isUseUnderlying
-    ) external returns (address newStrategy) {
+    ) virtual external returns (address newStrategy) {
         require(isOriginal);
         // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactorysol
         bytes20 addressBytes = bytes20(address(this));
@@ -134,7 +134,7 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
             newStrategy := create(0, clone_code, 0x37)
         }
 
-        StrategyConvexCurveRewardsClonable(payable(newStrategy)).initialize(
+        StrategyConvexCurveRewardsBase(payable(newStrategy)).initialize(
             _vault,
             _strategist,
             _rewards,
@@ -233,14 +233,16 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
     function _sellCrvAndCvx(uint256 _crvAmount, uint256 _convexAmount)
         internal
     {
-        if (_convexAmount > 1e17 && !isCVXPool) {
+       bool isSwapToETH = isETHPool;
+
+       if (_convexAmount > 1e17 && !isCVXPool) {
             // don't want to swap dust or we might revert
-            cvxeth.exchange(1, 0, _convexAmount, 0, false);
+            cvxeth.exchange(1, 0, _convexAmount, 0, isSwapToETH);
         }
 
         if (_crvAmount > 1e17 && !isCRVPool) {
             // don't want to swap dust or we might revert
-            crveth.exchange(1, 0, _crvAmount, 0, false);
+            crveth.exchange(1, 0, _crvAmount, 0, isSwapToETH);
         }
 
         if (!isWETHPool && !isETHPool) {
@@ -260,9 +262,9 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
       }
     }
 
-    function _depositToCurve() internal {
+    function _depositToCurve() virtual internal {
 
-      address targetCoin = curve.coins(targetCoinIndex);
+     /* address targetCoin = curve.coins(targetCoinIndex);
 
       uint256 targetBalance = IERC20(targetCoin).balanceOf(address(this));
 
@@ -320,6 +322,8 @@ contract StrategyConvexCurveRewardsClonable is StrategyCurveBase {
           }
         }
       }
+
+      */
     }
 
     function updateSwapPath(bytes memory _swapPath) external onlyVaultManagers {
