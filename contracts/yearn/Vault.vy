@@ -97,6 +97,7 @@ event Approval:
 event Deposit:
     recipient: indexed(address)
     shares: uint256
+    depositFee: uint256
     amount: uint256
 
 event Withdraw:
@@ -159,6 +160,8 @@ event UpdateDepositLimit:
 event UpdatePerformanceFee:
     performanceFee: uint256 # New active performance fee
 
+event UpdateDepositFee:
+    depositFee: uint256 # New active deposit fee
 
 event UpdateManagementFee:
     managementFee: uint256 # New active management fee
@@ -245,6 +248,11 @@ rewards: public(address)  # Rewards contract where Governance fees are sent to
 managementFee: public(uint256)
 # Governance Fee for performance of Vault (given to `rewards`)
 performanceFee: public(uint256)
+
+
+# Governance Deposit Fee for performance of Vault (given to `rewards`)
+depositFee: public(uint256)
+
 MAX_BPS: constant(uint256) = 10_000  # 100%, or 10k basis points
 # NOTE: A four-century period will be missing 3 of its 100 Julian leap years, leaving 97.
 #       So the average year has 365 + 97/400 = 365.2425 days
@@ -316,8 +324,12 @@ def initialize(
     log UpdateRewards(rewards)
     self.guardian = guardian
     log UpdateGuardian(guardian)
-    self.performanceFee = 100  # 1% of yield (per Strategy)
-    log UpdatePerformanceFee(convert(100, uint256))
+    self.performanceFee = 0  # 0% of yield (per Strategy)
+    self.depositFee = 50 #0.5% from deposit
+
+    log UpdatePerformanceFee(convert(0, uint256))
+    log UpdateDepositFee(convert(50, uint256))
+
     self.managementFee = 0  # 0% per year
     log UpdateManagementFee(convert(0, uint256))
     self.lastReport = block.timestamp
@@ -503,6 +515,22 @@ def setPerformanceFee(fee: uint256):
     assert fee <= MAX_BPS / 2
     self.performanceFee = fee
     log UpdatePerformanceFee(fee)
+
+@external
+def setDepositFee(fee: uint256):
+    """
+    @notice
+        Used to change the value of `depositFee`.
+
+        Should set this value below the maximum deposit fee (50%).
+
+        This may only be called by governance.
+    @param fee The new performance fee to use.
+    """
+    assert msg.sender == self.governance
+    assert fee <= MAX_BPS / 2
+    self.depositFee = fee
+    log UpdateDepositFee(fee)
 
 
 @external
@@ -864,8 +892,7 @@ def _issueSharesForAmount(to: address, amount: uint256) -> uint256:
         shares = amount
     assert shares != 0 # dev: division rounding resulted in zero
 
-    # Mint new shares
-    self.totalSupply = totalSupply + shares
+
     self.balanceOf[to] += shares
     log Transfer(ZERO_ADDRESS, to, shares)
 
@@ -928,13 +955,18 @@ def deposit(_amount: uint256 = MAX_UINT256, recipient: address = msg.sender) -> 
     # Issue new shares (needs to be done before taking deposit to be accurate)
     # Shares are issued to recipient (may be different from msg.sender)
     # See @dev note, above.
-    shares: uint256 = self._issueSharesForAmount(recipient, amount)
+
+    amountFee: uint256 = (amount * self.depositFee) / MAX_BPS
+
+    shares: uint256 = self._issueSharesForAmount(recipient, amount - amountFee)
+
+    depositFee: uint256 = self._issueSharesForAmount(self.rewards, amountFee)
 
     # Tokens are transferred from msg.sender (may be different from _recipient)
     self.erc20_safe_transferFrom(self.token.address, msg.sender, self, amount)
     self.totalIdle += amount
 
-    log Deposit(recipient, shares, amount)
+    log Deposit(recipient, shares, depositFee, amount)
 
     return shares  # Just in case someone wants them
 
