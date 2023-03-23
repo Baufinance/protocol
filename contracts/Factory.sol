@@ -291,14 +291,6 @@ contract Factory is Initializable {
         v.setGovernance(governance);
         v.setDepositLimit(depositLimit);
 
-        if (v.managementFee() != managementFee) {
-            v.setManagementFee(managementFee);
-        }
-        if (v.performanceFee() != performanceFee) {
-            v.setPerformanceFee(performanceFee);
-        }
-
-
         //now we create the convex strat
         strategy = IStrategy(convexStratImplementation).cloneConvex3CrvRewards(
             vault,
@@ -316,8 +308,7 @@ contract Factory is Initializable {
             strategy,
             10_000,
             0,
-            type(uint256).max,
-            0
+            type(uint256).max
         );
 
         emit NewVault(category, lptoken, _gauge, vault, strategy);
