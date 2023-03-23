@@ -73,7 +73,6 @@ guardian: public(address)
 pendingGovernance: address
 
 struct StrategyParams:
-    performanceFee: uint256  # Strategist's fee (basis points)
     activation: uint256  # Activation block.timestamp
     debtRatio: uint256  # Maximum borrow amount (in BPS of total assets)
     minDebtPerHarvest: uint256  # Lower limit on the increase of debt since last harvest
@@ -117,7 +116,6 @@ event StrategyAdded:
     debtRatio: uint256  # Maximum borrow amount (in BPS of total assets)
     minDebtPerHarvest: uint256  # Lower limit on the increase of debt since last harvest
     maxDebtPerHarvest: uint256  # Upper limit on the increase of debt since last harvest
-    performanceFee: uint256  # Strategist's fee (basis points)
 
 
 event StrategyReported:
@@ -131,11 +129,6 @@ event StrategyReported:
     debtAdded: uint256
     debtRatio: uint256
 
-event FeeReport:
-    management_fee: uint256
-    performance_fee: uint256
-    strategist_fee: uint256
-    duration: uint256
 
 event WithdrawFromStrategy:
     strategy: indexed(address)
@@ -157,14 +150,8 @@ event UpdateDepositLimit:
     depositLimit: uint256 # New active deposit limit
 
 
-event UpdatePerformanceFee:
-    performanceFee: uint256 # New active performance fee
-
 event UpdateDepositFee:
     depositFee: uint256 # New active deposit fee
-
-event UpdateManagementFee:
-    managementFee: uint256 # New active management fee
 
 
 event UpdateGuardian:
@@ -193,10 +180,6 @@ event StrategyUpdateMaxDebtPerHarvest:
     strategy: indexed(address) # Address of the strategy for the rate limit adjustment
     maxDebtPerHarvest: uint256  # Upper limit on the increase of debt since last harvest
 
-
-event StrategyUpdatePerformanceFee:
-    strategy: indexed(address) # Address of the strategy for the performance fee adjustment
-    performanceFee: uint256 # The new performance fee for the strategy
 
 
 event StrategyMigrated:
@@ -244,11 +227,6 @@ activation: public(uint256)  # block.timestamp of contract deployment
 lockedProfit: public(uint256) # how much profit is locked and cant be withdrawn
 lockedProfitDegradation: public(uint256) # rate per block of degradation. DEGRADATION_COEFFICIENT is 100% per block
 rewards: public(address)  # Rewards contract where Governance fees are sent to
-# Governance Fee for management of Vault (given to `rewards`)
-managementFee: public(uint256)
-# Governance Fee for performance of Vault (given to `rewards`)
-performanceFee: public(uint256)
-
 
 # Governance Deposit Fee for performance of Vault (given to `rewards`)
 depositFee: public(uint256)
@@ -281,8 +259,6 @@ def initialize(
     @notice
         Initializes the Vault, this is called only once, when the contract is
         deployed.
-        The performance fee is set to 10% of yield, per Strategy.
-        The management fee is set to 2%, per year.
         The initial deposit limit is set to 0 (deposits disabled); it must be
         updated after initialization.
     @dev
@@ -324,14 +300,9 @@ def initialize(
     log UpdateRewards(rewards)
     self.guardian = guardian
     log UpdateGuardian(guardian)
-    self.performanceFee = 0  # 0% of yield (per Strategy)
+
     self.depositFee = 50 #0.5% from deposit
 
-    log UpdatePerformanceFee(convert(0, uint256))
-    log UpdateDepositFee(convert(50, uint256))
-
-    self.managementFee = 0  # 0% per year
-    log UpdateManagementFee(convert(0, uint256))
     self.lastReport = block.timestamp
     self.activation = block.timestamp
     self.lockedProfitDegradation = convert(DEGRADATION_COEFFICIENT * 46 / 10 ** 6 , uint256) # 6 hours in blocks
@@ -501,22 +472,6 @@ def setDepositLimit(limit: uint256):
 
 
 @external
-def setPerformanceFee(fee: uint256):
-    """
-    @notice
-        Used to change the value of `performanceFee`.
-
-        Should set this value below the maximum strategist performance fee.
-
-        This may only be called by governance.
-    @param fee The new performance fee to use.
-    """
-    assert msg.sender == self.governance
-    assert fee <= MAX_BPS / 2
-    self.performanceFee = fee
-    log UpdatePerformanceFee(fee)
-
-@external
 def setDepositFee(fee: uint256):
     """
     @notice
@@ -532,20 +487,6 @@ def setDepositFee(fee: uint256):
     self.depositFee = fee
     log UpdateDepositFee(fee)
 
-
-@external
-def setManagementFee(fee: uint256):
-    """
-    @notice
-        Used to change the value of `managementFee`.
-
-        This may only be called by governance.
-    @param fee The new management fee to use.
-    """
-    assert msg.sender == self.governance
-    assert fee <= MAX_BPS
-    self.managementFee = fee
-    log UpdateManagementFee(fee)
 
 
 @external
@@ -1232,7 +1173,6 @@ def addStrategy(
     debtRatio: uint256,
     minDebtPerHarvest: uint256,
     maxDebtPerHarvest: uint256,
-    performanceFee: uint256,
 ):
     """
     @notice
@@ -1249,8 +1189,7 @@ def addStrategy(
         Lower limit on the increase of debt since last harvest
     @param maxDebtPerHarvest
         Upper limit on the increase of debt since last harvest
-    @param performanceFee
-        The fee the strategist will receive based on this Vault's performance.
+
     """
     # Check if queue is full
     assert self.withdrawalQueue[MAXIMUM_STRATEGIES - 1] == ZERO_ADDRESS
@@ -1268,11 +1207,10 @@ def addStrategy(
     # Check strategy parameters
     assert self.debtRatio + debtRatio <= MAX_BPS
     assert minDebtPerHarvest <= maxDebtPerHarvest
-    assert performanceFee <= MAX_BPS / 2
+
 
     # Add strategy to approved strategies
     self.strategies[strategy] = StrategyParams({
-        performanceFee: performanceFee,
         activation: block.timestamp,
         debtRatio: debtRatio,
         minDebtPerHarvest: minDebtPerHarvest,
@@ -1282,7 +1220,7 @@ def addStrategy(
         totalGain: 0,
         totalLoss: 0,
     })
-    log StrategyAdded(strategy, debtRatio, minDebtPerHarvest, maxDebtPerHarvest, performanceFee)
+    log StrategyAdded(strategy, debtRatio, minDebtPerHarvest, maxDebtPerHarvest)
 
     # Update Vault parameters
     self.debtRatio += debtRatio
@@ -1359,26 +1297,6 @@ def updateStrategyMaxDebtPerHarvest(
     log StrategyUpdateMaxDebtPerHarvest(strategy, maxDebtPerHarvest)
 
 
-@external
-def updateStrategyPerformanceFee(
-    strategy: address,
-    performanceFee: uint256,
-):
-    """
-    @notice
-        Change the fee the strategist will receive based on this Vault's
-        performance.
-
-        This may only be called by governance.
-    @param strategy The Strategy to update.
-    @param performanceFee The new fee the strategist will receive.
-    """
-    assert msg.sender == self.governance
-    assert performanceFee <= MAX_BPS / 2
-    assert self.strategies[strategy].activation > 0
-    self.strategies[strategy].performanceFee = performanceFee
-    log StrategyUpdatePerformanceFee(strategy, performanceFee)
-
 
 @internal
 def _revokeStrategy(strategy: address):
@@ -1418,7 +1336,6 @@ def migrateStrategy(oldVersion: address, newVersion: address):
     self.strategies[oldVersion].totalDebt = 0
 
     self.strategies[newVersion] = StrategyParams({
-        performanceFee: strategy.performanceFee,
         # NOTE: use last report for activation time, so E[R] calc works
         activation: strategy.lastReport,
         debtRatio: strategy.debtRatio,
@@ -1657,68 +1574,6 @@ def expectedReturn(strategy: address = msg.sender) -> uint256:
     return self._expectedReturn(strategy)
 
 
-@internal
-def _assessFees(strategy: address, gain: uint256) -> uint256:
-    # Issue new shares to cover fees
-    # NOTE: In effect, this reduces overall share price by the combined fee
-    # NOTE: may throw if Vault.totalAssets() > 1e64, or not called for more than a year
-    if self.strategies[strategy].activation == block.timestamp:
-        return 0  # NOTE: Just added, no fees to assess
-
-    duration: uint256 = block.timestamp - self.strategies[strategy].lastReport
-    assert duration != 0 # can't assessFees twice within the same block
-
-    if gain == 0:
-        # NOTE: The fees are not charged if there hasn't been any gains reported
-        return 0
-
-    management_fee: uint256 = (
-        (
-            (self.strategies[strategy].totalDebt - Strategy(strategy).delegatedAssets())
-            * duration
-            * self.managementFee
-        )
-        / MAX_BPS
-        / SECS_PER_YEAR
-    )
-
-    # NOTE: Applies if Strategy is not shutting down, or it is but all debt paid off
-    # NOTE: No fee is taken when a Strategy is unwinding it's position, until all debt is paid
-    strategist_fee: uint256 = (
-        gain
-        * self.strategies[strategy].performanceFee
-        / MAX_BPS
-    )
-    # NOTE: Unlikely to throw unless strategy reports >1e72 harvest profit
-    performance_fee: uint256 = gain * self.performanceFee / MAX_BPS
-
-    # NOTE: This must be called prior to taking new collateral,
-    #       or the calculation will be wrong!
-    # NOTE: This must be done at the same time, to ensure the relative
-    #       ratio of governance_fee : strategist_fee is kept intact
-    total_fee: uint256 = performance_fee + strategist_fee + management_fee
-    # ensure total_fee is not more than gain
-    if total_fee > gain:
-        total_fee = gain
-    if total_fee > 0:  # NOTE: If mgmt fee is 0% and no gains were realized, skip
-        reward: uint256 = self._issueSharesForAmount(self, total_fee)
-
-        # Send the rewards out as new shares in this Vault
-        if strategist_fee > 0:  # NOTE: Guard against DIV/0 fault
-            # NOTE: Unlikely to throw unless sqrt(reward) >>> 1e39
-            strategist_reward: uint256 = (
-                strategist_fee
-                * reward
-                / total_fee
-            )
-            self._transfer(self, strategy, strategist_reward)
-            # NOTE: Strategy distributes rewards at the end of harvest()
-        # NOTE: Governance earns any dust leftover from flooring math above
-        if self.balanceOf[self] > 0:
-            self._transfer(self, self.rewards, self.balanceOf[self])
-    log FeeReport(management_fee, performance_fee, strategist_fee, duration)
-    return total_fee
-
 
 @external
 def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
@@ -1765,9 +1620,6 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
     if loss > 0:
         self._reportLoss(msg.sender, loss)
 
-    # Assess both management fee and performance fee, and issue both as shares of the vault
-    totalFees: uint256 = self._assessFees(msg.sender, gain)
-
     # Returns are always "realized gains"
     self.strategies[msg.sender].totalGain += gain
 
@@ -1809,7 +1661,7 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
 
     # Profit is locked and gradually released per block
     # NOTE: compute current locked profit and replace with sum of current and new
-    lockedProfitBeforeLoss: uint256 = self._calculateLockedProfit() + gain - totalFees
+    lockedProfitBeforeLoss: uint256 = self._calculateLockedProfit() + gain
     if lockedProfitBeforeLoss > loss:
         self.lockedProfit = lockedProfitBeforeLoss - loss
     else:
