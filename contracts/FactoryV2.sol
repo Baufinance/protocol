@@ -14,6 +14,7 @@ import {ICurveGauge, ICurveFi} from "./interfaces/ICurve.sol";
 contract FactoryV2 is Initializable {
 
     enum CurveType {
+      NONE,
       METAPOOL,
       COINS2,
       COINS3,
@@ -21,7 +22,6 @@ contract FactoryV2 is Initializable {
     }
 
     event NewVault(
-        uint256 indexed category,
         address indexed lpToken,
         address gauge,
         address indexed vault,
@@ -284,70 +284,16 @@ contract FactoryV2 is Initializable {
                 IPoolManager(convexPoolManager).addPool(_gauge),
                 "Unable to add pool to Convex"
             );
-        }
-
-        {
-        //now we create the vault, endorses it from governance after
-        vault = registry.newExperimentalVault(
-            lptoken,
-            address(this),
-            guardian,
-            treasury,
-
-            string.concat(
-                    "Curve ",
-                    IDetails(address(lptoken)).symbol(),
-                    " yieldVault"
-            ),
-            string.concat("yieldCurve", IDetails(address(lptoken)).symbol()),
-            0
-        );
-
-        deployedVaults.push(vault);
 
         }
 
-        {
+        vault = _createVault(lptoken);
+
+        deployedVaultsByToken[lptoken] = Vault(vault, _poolType);
+
         IVault v = IVault(vault);
-        v.setManagement(management);
-        //set governance to ychad who needs to accept before it is finalised. until then governance is this factory
-        v.setGovernance(governance);
-        v.setDepositLimit(depositLimit);
 
-        address implementation = convexStratImplementation[_poolType];
-
-        //now we create the convex strat
-        if (_poolType == CurveType.METAPOOL) {
-            strategy = IStrategy(implementation).clone(
-                vault,
-                management,
-                treasury,
-                keeper,
-                pid,
-                lptoken,
-                string(
-                abi.encodePacked("yieldConvex", IDetails(address(lptoken)).symbol())
-            )
-            );
-        } else {
-
-              address minter = ICurveFi(lptoken).minter();
-
-              /*strategy = IStrategy(implementation).clone(
-                vault,
-                management,
-                treasury,
-                keeper,
-                pid,
-                minter,
-                _swapPath,
-                string(
-                abi.encodePacked("yieldConvex", IDetails(address(lptoken)).symbol())),
-                2,
-                _isUseUnderlying
-            );
-            */
-        }
+        strategy = _createStrategy(lptoken, pid, _swapPath, _isUseUnderlying);
 
         v.addStrategy(
             strategy,
@@ -356,8 +302,69 @@ contract FactoryV2 is Initializable {
             type(uint256).max
         );
 
-        deployedVaultsByToken[lptoken] = Vault(vault, _poolType);
 
+        emit NewVault(lptoken, _gauge, vault, strategy, uint8(_poolType));
+    }
+
+    function _createVault(address _lptoken) internal returns(address vault) {
+                //now we create the vault, endorses it from governance after
+        vault = registry.newExperimentalVault(
+            _lptoken,
+            address(this),
+            guardian,
+            treasury,
+
+            string.concat(
+                    "Curve ",
+                    IDetails(address(_lptoken)).symbol(),
+                    " yieldVault"
+            ),
+            string.concat("yieldCurve", IDetails(address(_lptoken)).symbol()),
+            0
+        );
+
+        deployedVaults.push(vault);
+
+
+        IVault v = IVault(vault);
+        v.setManagement(management);
+        v.setGovernance(governance);
+        v.setDepositLimit(depositLimit);
+    }
+
+    function _createStrategy(address _lptoken, uint256 _pid, bytes calldata _swapPath, bool _isUseUnderlying) internal returns (address strategy) {
+        Vault memory v = deployedVaultsByToken[_lptoken];
+
+        //now we create the convex strat
+        if (v.poolType == CurveType.METAPOOL) {
+            strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
+                v.vaultAddress,
+                management,
+                treasury,
+                keeper,
+                _pid,
+                _lptoken,
+                string(
+                abi.encodePacked("yieldConvex", IDetails(address(_lptoken)).symbol())
+            )
+            );
+        } else {
+
+              address minter = ICurveFi(_lptoken).minter();
+
+              strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
+                v.vaultAddress,
+                management,
+                treasury,
+                keeper,
+                _pid,
+                minter,
+                _swapPath,
+                string(
+                abi.encodePacked("yieldConvex", IDetails(address(minter)).symbol())),
+                uint8(v.poolType),
+                _isUseUnderlying
+            );
         }
     }
 }
