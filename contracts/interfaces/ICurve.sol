@@ -29,6 +29,7 @@ interface ICurveGauge {
 interface ICurveFi is IERC20 {
     function get_virtual_price() external view returns (uint256);
 
+    function minter() external view returns (address);
     function coins(uint256) external view returns (address);
 
     function add_liquidity(

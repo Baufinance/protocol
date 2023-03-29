@@ -263,67 +263,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     }
 
     function _depositToCurve() virtual internal {
-
-     /* address targetCoin = curve.coins(targetCoinIndex);
-
-      uint256 targetBalance = IERC20(targetCoin).balanceOf(address(this));
-
-      if (targetCoin == eth) {
-        targetBalance = address(this).balance;
-      }
-      uint256[2] memory coins2;
-      uint256[3] memory coins3;
-      uint256[4] memory coins4;
-
-      for (uint256 i; i < nCoins; i++) {
-        if (i ==  targetCoinIndex) {
-          if (nCoins == 2) {
-            coins2[i] = targetBalance;
-          } else if (nCoins == 3) {
-            coins3[i] = targetBalance;
-          } else {
-            coins4[i] = targetBalance;
-          }
-        } else {
-          if (nCoins == 2) {
-            coins2[i] = 0;
-          } else if (nCoins == 3) {
-            coins3[i] = 0;
-          } else {
-            coins4[i] = 0;
-          }
-        }
-      }
-
-      if (isUseUnderlying) {
-        if (nCoins == 2) {
-          curve.add_liquidity(coins2, 0, true);
-        } else if (nCoins == 3) {
-          curve.add_liquidity(coins3, 0, true);
-        } else {
-          curve.add_liquidity(coins4, 0, true);
-        }
-      } else {
-        if (isETHPool) {
-          if (nCoins == 2) {
-            curve.add_liquidity{value: targetBalance}(coins2, 0);
-          } else if (nCoins == 3) {
-            curve.add_liquidity{value: targetBalance}(coins3, 0);
-          } else {
-            curve.add_liquidity{value: targetBalance}(coins4, 0);
-          }
-        } else {
-          if (nCoins == 2) {
-            curve.add_liquidity(coins2, 0);
-          } else if (nCoins == 3) {
-            curve.add_liquidity(coins3, 0);
-          } else {
-            curve.add_liquidity(coins4, 0);
-          }
-        }
-      }
-
-      */
     }
 
     function updateSwapPath(bytes memory _swapPath) external onlyVaultManagers {

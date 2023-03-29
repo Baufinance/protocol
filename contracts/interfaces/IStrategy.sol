@@ -2,7 +2,7 @@
 pragma solidity 0.8.15;
 
 interface IStrategy {
-     function cloneConvex3CrvRewards(
+     function clone(
         address _vault,
         address _strategist,
         address _rewards,
@@ -10,6 +10,20 @@ interface IStrategy {
         uint256 _pid,
         address _curvePool,
         string memory _name
+    ) external returns (address newStrategy);
+
+
+    function clone(
+        address _vault,
+        address _strategist,
+        address _rewards,
+        address _keeper,
+        uint256 _pid,
+        address _curvePool,
+        bytes memory _swapPath,
+        string memory _name,
+        uint256 _nCoins,
+        bool _isUseUnderlying
     ) external returns (address newStrategy);
 
     function setHealthCheck(address) external;

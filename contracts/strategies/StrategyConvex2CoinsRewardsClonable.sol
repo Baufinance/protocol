@@ -12,7 +12,7 @@ contract StrategyConvex2CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
         bytes memory _swapPath,
         string memory _name,
         bool _isUseUnderlying
-    ) StrategyConvexCurveRewardsBase(_vault, _pid, _curvePool, _swapPath, _name, 2, _isUseUnderlying) {
+  ) StrategyConvexCurveRewardsBase(_vault, _pid, _curvePool, _swapPath, _name, 2, _isUseUnderlying) {
 
   }
 
