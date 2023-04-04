@@ -6,6 +6,8 @@ interface IVault {
 
     function setManagement(address) external;
 
+    function setDepositFee(uint256) external;
+
     function setDepositLimit(uint256) external;
 
     function addStrategy(

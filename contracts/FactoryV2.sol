@@ -140,20 +140,13 @@ contract FactoryV2 is Initializable {
     }
 
 
-    uint256 public performanceFee = 1_00;
 
-    function setPerformanceFee(uint256 _performanceFee) external {
+    uint256 public depositFee = 50;
+
+    function setDespositFee(uint256 _depositFee) external {
         require(msg.sender == owner);
-        require(_performanceFee <= 5_000);
-        performanceFee = _performanceFee;
-    }
-
-    uint256 public managementFee = 0;
-
-    function setManagementFee(uint256 _managementFee) external {
-        require(msg.sender == owner);
-        require(_managementFee <= 1_000);
-        managementFee = _managementFee;
+        require(_depositFee <= 1_000);
+        depositFee = _depositFee;
     }
 
     ///////////////////////////////////
@@ -317,9 +310,9 @@ contract FactoryV2 is Initializable {
             string.concat(
                     "Curve ",
                     IDetails(address(_lptoken)).symbol(),
-                    " yieldVault"
+                    " bauVault"
             ),
-            string.concat("yieldCurve", IDetails(address(_lptoken)).symbol()),
+            string.concat("bauCurve", IDetails(address(_lptoken)).symbol()),
             0
         );
 
@@ -330,6 +323,7 @@ contract FactoryV2 is Initializable {
         v.setManagement(management);
         v.setGovernance(governance);
         v.setDepositLimit(depositLimit);
+        v.setDepositFee(depositFee);
     }
 
     function _createStrategy(address _lptoken, uint256 _pid, bytes calldata _swapPath, bool _isUseUnderlying) internal returns (address strategy) {
