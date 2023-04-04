@@ -3,37 +3,24 @@ pragma solidity 0.8.15;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-import "./interfaces/IStrategy.sol";
-import "./interfaces/IBooster.sol";
-import "./interfaces/IDetails.sol";
-import "./interfaces/IPoolManager.sol";
-import "./interfaces/IRegistry.sol";
-import "./interfaces/IVault.sol";
-import {ICurveGauge, ICurveFi} from "./interfaces/ICurve.sol";
+import "../interfaces/IStrategy.sol";
+import "../interfaces/IBooster.sol";
+import "../interfaces/IDetails.sol";
+import "../interfaces/IPoolManager.sol";
+import "../interfaces/IRegistry.sol";
+import "../interfaces/IVault.sol";
+import {ICurveGauge} from "../interfaces/ICurve.sol";
 
-contract FactoryV2 is Initializable {
 
-    enum CurveType {
-      NONE,
-      METAPOOL,
-      COINS2,
-      COINS3,
-      COINS4
-    }
 
+contract Factory is Initializable {
     event NewVault(
+        uint256 indexed category,
         address indexed lpToken,
         address gauge,
         address indexed vault,
-        address strategy,
-        uint8 poolType
+        address strategy
     );
-
-
-    struct Vault {
-      address vaultAddress;
-      CurveType poolType;
-    }
 
     ///////////////////////////////////
     //
@@ -42,8 +29,6 @@ contract FactoryV2 is Initializable {
     ////////////////////////////////////
 
     address[] public deployedVaults;
-
-    mapping(address => Vault) public deployedVaultsByToken; //for ZAP V1
 
     function allDeployedVaults() external view returns (address[] memory) {
         return deployedVaults;
@@ -130,23 +115,30 @@ contract FactoryV2 is Initializable {
         depositLimit = _depositLimit;
     }
 
-    mapping(CurveType => address) public convexStratImplementation;
+    address public convexStratImplementation;
 
-    function setConvexStratImplementation(CurveType _poolType, address _convexStratImplementation)
+    function setConvexStratImplementation(address _convexStratImplementation)
         external
     {
         require(msg.sender == owner);
-        convexStratImplementation[_poolType] = _convexStratImplementation;
+        convexStratImplementation = _convexStratImplementation;
     }
 
 
+    uint256 public performanceFee = 1_00;
 
-    uint256 public depositFee = 50;
-
-    function setDespositFee(uint256 _depositFee) external {
+    function setPerformanceFee(uint256 _performanceFee) external {
         require(msg.sender == owner);
-        require(_depositFee <= 1_000);
-        depositFee = _depositFee;
+        require(_performanceFee <= 5_000);
+        performanceFee = _performanceFee;
+    }
+
+    uint256 public managementFee = 0;
+
+    function setManagementFee(uint256 _managementFee) external {
+        require(msg.sender == owner);
+        require(_managementFee <= 1_000);
+        managementFee = _managementFee;
     }
 
     ///////////////////////////////////
@@ -157,11 +149,12 @@ contract FactoryV2 is Initializable {
 
     function initialize (
         address _registry,
+        address _convexStratImplementation,
         address _keeper,
         address _owner
     ) public initializer {
         registry = IRegistry(_registry);
-
+        convexStratImplementation = _convexStratImplementation;
         owner = _owner;
 
         depositLimit = 10_000_000_000_000 * 1e18; // some large number
@@ -242,21 +235,15 @@ contract FactoryV2 is Initializable {
     // only permissioned users can deploy if there is already one endorsed
     function createNewVaultsAndStrategies(
         address _gauge,
-        CurveType _poolType,
-        bytes calldata _swapPath,
-        bool _isUseUnderlying,
         bool _allowDuplicate
     ) external returns (address vault, address convexStrategy) {
         require(msg.sender == owner || msg.sender == management);
 
-        return _createNewVaultsAndStrategies(_gauge, _poolType, _swapPath, _isUseUnderlying, _allowDuplicate);
+        return _createNewVaultsAndStrategies(_gauge, _allowDuplicate);
     }
 
     function _createNewVaultsAndStrategies(
         address _gauge,
-        CurveType _poolType,
-        bytes calldata _swapPath,
-        bool _isUseUnderlying,
         bool _allowDuplicate
     ) internal returns (address vault, address strategy) {
         if (!_allowDuplicate) {
@@ -277,42 +264,21 @@ contract FactoryV2 is Initializable {
                 IPoolManager(convexPoolManager).addPool(_gauge),
                 "Unable to add pool to Convex"
             );
-
         }
 
-        vault = _createVault(lptoken);
-
-        deployedVaultsByToken[lptoken] = Vault(vault, _poolType);
-
-        IVault v = IVault(vault);
-
-        strategy = _createStrategy(lptoken, pid, _swapPath, _isUseUnderlying);
-
-        v.addStrategy(
-            strategy,
-            10_000,
-            0,
-            type(uint256).max
-        );
-
-
-        emit NewVault(lptoken, _gauge, vault, strategy, uint8(_poolType));
-    }
-
-    function _createVault(address _lptoken) internal returns(address vault) {
-                //now we create the vault, endorses it from governance after
+        //now we create the vault, endorses it from governance after
         vault = registry.newExperimentalVault(
-            _lptoken,
+            lptoken,
             address(this),
             guardian,
             treasury,
 
             string.concat(
                     "Curve ",
-                    IDetails(address(_lptoken)).symbol(),
-                    " bauVault"
+                    IDetails(address(lptoken)).symbol(),
+                    " yieldVault"
             ),
-            string.concat("bauCurve", IDetails(address(_lptoken)).symbol()),
+            string.concat("yieldCurve", IDetails(address(lptoken)).symbol()),
             0
         );
 
@@ -321,44 +287,30 @@ contract FactoryV2 is Initializable {
 
         IVault v = IVault(vault);
         v.setManagement(management);
+        //set governance to ychad who needs to accept before it is finalised. until then governance is this factory
         v.setGovernance(governance);
         v.setDepositLimit(depositLimit);
-        v.setDepositFee(depositFee);
-    }
-
-    function _createStrategy(address _lptoken, uint256 _pid, bytes calldata _swapPath, bool _isUseUnderlying) internal returns (address strategy) {
-        Vault memory v = deployedVaultsByToken[_lptoken];
 
         //now we create the convex strat
-        if (v.poolType == CurveType.METAPOOL) {
-            strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
-                v.vaultAddress,
-                management,
-                treasury,
-                keeper,
-                _pid,
-                _lptoken,
-                string(
-                abi.encodePacked("yieldConvex", IDetails(address(_lptoken)).symbol())
+        strategy = IStrategy(convexStratImplementation).clone(
+            vault,
+            management,
+            treasury,
+            keeper,
+            pid,
+            lptoken,
+            string(
+            abi.encodePacked("yvConvex", IDetails(address(lptoken)).symbol())
             )
-            );
-        } else {
+       );
 
-              address minter = ICurveFi(_lptoken).minter();
+        v.addStrategy(
+            strategy,
+            10_000,
+            0,
+            type(uint256).max
+        );
 
-              strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
-                v.vaultAddress,
-                management,
-                treasury,
-                keeper,
-                _pid,
-                minter,
-                _swapPath,
-                string(
-                abi.encodePacked("yieldConvex", IDetails(address(minter)).symbol())),
-                uint8(v.poolType),
-                _isUseUnderlying
-            );
-        }
+        emit NewVault(category, lptoken, _gauge, vault, strategy);
     }
 }
