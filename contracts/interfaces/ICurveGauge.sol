@@ -10,10 +10,10 @@ interface ICurveGauge {
 
     function claimable_tokens(address) external view returns (uint256);
 
-    function claimable_reward(address _addressToCheck, address _rewardToken)
-        external
-        view
-        returns (uint256);
+    function claimable_reward(
+        address _addressToCheck,
+        address _rewardToken
+    ) external view returns (uint256);
 
     function withdraw(uint256) external;
 

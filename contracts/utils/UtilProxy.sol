@@ -4,8 +4,8 @@ pragma solidity ^0.8.15;
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract UtilProxy is TransparentUpgradeableProxy {
-
-  constructor(address _logic, address admin_) TransparentUpgradeableProxy(_logic, admin_, "") {
-
-  }
+    constructor(
+        address _logic,
+        address admin_
+    ) TransparentUpgradeableProxy(_logic, admin_, "") {}
 }

@@ -11,8 +11,6 @@ import "../interfaces/IRegistry.sol";
 import "../interfaces/IVault.sol";
 import {ICurveGauge} from "../interfaces/ICurve.sol";
 
-
-
 contract Factory is Initializable {
     event NewVault(
         uint256 indexed category,
@@ -40,7 +38,6 @@ contract Factory is Initializable {
 
     address public constant cvx = 0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B;
     uint256 public constant category = 0; // 0 for curve
-
 
     IBooster public booster;
 
@@ -71,7 +68,6 @@ contract Factory is Initializable {
         require(msg.sender == owner);
         registry = IRegistry(_registry);
     }
-
 
     address public governance;
 
@@ -117,13 +113,12 @@ contract Factory is Initializable {
 
     address public convexStratImplementation;
 
-    function setConvexStratImplementation(address _convexStratImplementation)
-        external
-    {
+    function setConvexStratImplementation(
+        address _convexStratImplementation
+    ) external {
         require(msg.sender == owner);
         convexStratImplementation = _convexStratImplementation;
     }
-
 
     uint256 public performanceFee = 1_00;
 
@@ -147,7 +142,7 @@ contract Factory is Initializable {
     //
     ////////////////////////////////////
 
-    function initialize (
+    function initialize(
         address _registry,
         address _convexStratImplementation,
         address _keeper,
@@ -169,28 +164,25 @@ contract Factory is Initializable {
 
         governance = _owner;
 
-        convexPoolManager =
-        0xD1f9b3de42420A295C33c07aa5C9e04eDC6a4447;
+        convexPoolManager = 0xD1f9b3de42420A295C33c07aa5C9e04eDC6a4447;
 
-        booster =
-        IBooster(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
-
+        booster = IBooster(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
     }
 
     /// @notice Public function to check whether, for a given gauge address, its possible to permissionlessly create a vault for corressponding LP token
     /// @param _gauge The gauge address to find the latest vault for
     /// @return bool if true, vault can be created permissionlessly
-    function canCreateVaultPermissionlessly(address _gauge) public view returns (bool) {
+    function canCreateVaultPermissionlessly(
+        address _gauge
+    ) public view returns (bool) {
         return latestDefaultOrAutomatedVaultFromGauge(_gauge) == address(0);
     }
 
     /// @dev Returns only the latest vault address for any DEFAULT/AUTOMATED type vaults
     /// @dev If no vault of either DEFAULT or AUTOMATED types exists for this gauge, 0x0 is returned from registry.
-    function latestDefaultOrAutomatedVaultFromGauge(address _gauge)
-        internal
-        view
-        returns (address)
-    {
+    function latestDefaultOrAutomatedVaultFromGauge(
+        address _gauge
+    ) internal view returns (address) {
         address lptoken = ICurveGauge(_gauge).lp_token();
         if (!registry.isRegistered(lptoken)) {
             return address(0);
@@ -201,14 +193,14 @@ contract Factory is Initializable {
         return latest;
     }
 
-
-    function latestVault(address _token) public view returns(address) {
-         bytes memory data = abi.encodeWithSignature(
+    function latestVault(address _token) public view returns (address) {
+        bytes memory data = abi.encodeWithSignature(
             "latestVault(address)",
             _token
         );
-        (bool success, bytes memory returnBytes) = address(registry)
-            .staticcall(data);
+        (bool success, bytes memory returnBytes) = address(registry).staticcall(
+            data
+        );
         if (success) {
             return abi.decode(returnBytes, (address));
         }
@@ -272,18 +264,16 @@ contract Factory is Initializable {
             address(this),
             guardian,
             treasury,
-
             string.concat(
-                    "Curve ",
-                    IDetails(address(lptoken)).symbol(),
-                    " yieldVault"
+                "Curve ",
+                IDetails(address(lptoken)).symbol(),
+                " yieldVault"
             ),
             string.concat("yieldCurve", IDetails(address(lptoken)).symbol()),
             0
         );
 
         deployedVaults.push(vault);
-
 
         IVault v = IVault(vault);
         v.setManagement(management);
@@ -300,16 +290,14 @@ contract Factory is Initializable {
             pid,
             lptoken,
             string(
-            abi.encodePacked("yvConvex", IDetails(address(lptoken)).symbol())
+                abi.encodePacked(
+                    "yvConvex",
+                    IDetails(address(lptoken)).symbol()
+                )
             )
-       );
-
-        v.addStrategy(
-            strategy,
-            10_000,
-            0,
-            type(uint256).max
         );
+
+        v.addStrategy(strategy, 10_000, 0, type(uint256).max);
 
         emit NewVault(category, lptoken, _gauge, vault, strategy);
     }

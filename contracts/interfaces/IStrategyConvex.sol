@@ -2,7 +2,7 @@
 pragma solidity 0.8.15;
 
 interface IStrategyConvex {
-   function initialize(
+    function initialize(
         address _vault,
         address _strategist,
         address _rewards,

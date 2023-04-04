@@ -17,15 +17,7 @@ interface IBooster {
     function poolLength() external view returns (uint256);
 
     // give us info about a pool based on its pid
-    function poolInfo(uint256)
-        external
-        view
-        returns (
-            address,
-            address,
-            address,
-            address,
-            address,
-            bool
-        );
+    function poolInfo(
+        uint256
+    ) external view returns (address, address, address, address, address, bool);
 }

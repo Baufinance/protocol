@@ -12,10 +12,10 @@ interface ICurveGauge {
 
     function claimable_tokens(address) external view returns (uint256);
 
-    function claimable_reward(address _addressToCheck, address _rewardToken)
-        external
-        view
-        returns (uint256);
+    function claimable_reward(
+        address _addressToCheck,
+        address _rewardToken
+    ) external view returns (uint256);
 
     function withdraw(uint256) external;
 
@@ -30,6 +30,7 @@ interface ICurveFi is IERC20 {
     function get_virtual_price() external view returns (uint256);
 
     function minter() external view returns (address);
+
     function coins(uint256) external view returns (address);
 
     function add_liquidity(
@@ -85,8 +86,10 @@ interface ICurveFi is IERC20 {
         uint256 max_burn_amount
     ) external;
 
-    function remove_liquidity(uint256 _amount, uint256[2] calldata amounts)
-        external;
+    function remove_liquidity(
+        uint256 _amount,
+        uint256[2] calldata amounts
+    ) external;
 
     function remove_liquidity_one_coin(
         uint256 _token_amount,
@@ -122,10 +125,10 @@ interface ICurveFi is IERC20 {
     ) external view returns (uint256);
 
     // EURt
-    function calc_token_amount(uint256[2] calldata _amounts, bool _is_deposit)
-        external
-        view
-        returns (uint256);
+    function calc_token_amount(
+        uint256[2] calldata _amounts,
+        bool _is_deposit
+    ) external view returns (uint256);
 
     // 3Crv Metapools
     function calc_token_amount(
@@ -135,21 +138,21 @@ interface ICurveFi is IERC20 {
     ) external view returns (uint256);
 
     // sUSD, Y pool, etc
-    function calc_token_amount(uint256[4] calldata _amounts, bool _is_deposit)
-        external
-        view
-        returns (uint256);
+    function calc_token_amount(
+        uint256[4] calldata _amounts,
+        bool _is_deposit
+    ) external view returns (uint256);
 
     // 3pool, Iron Bank, etc
-    function calc_token_amount(uint256[3] calldata _amounts, bool _is_deposit)
-        external
-        view
-        returns (uint256);
+    function calc_token_amount(
+        uint256[3] calldata _amounts,
+        bool _is_deposit
+    ) external view returns (uint256);
 
-    function calc_withdraw_one_coin(uint256 amount, int128 i)
-        external
-        view
-        returns (uint256);
+    function calc_withdraw_one_coin(
+        uint256 amount,
+        int128 i
+    ) external view returns (uint256);
 }
 
 interface ICrvV3 is IERC20 {

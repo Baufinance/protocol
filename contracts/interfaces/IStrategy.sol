@@ -2,7 +2,7 @@
 pragma solidity 0.8.15;
 
 interface IStrategy {
-     function clone(
+    function clone(
         address _vault,
         address _strategist,
         address _rewards,
@@ -11,7 +11,6 @@ interface IStrategy {
         address _curvePool,
         string memory _name
     ) external returns (address newStrategy);
-
 
     function clone(
         address _vault,

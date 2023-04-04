@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.15;
 
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -14,8 +13,6 @@ import "../interfaces/IConvexRewards.sol";
 import "../interfaces/IConvexDeposit.sol";
 import "../interfaces/ICurve.sol";
 import "./StrategyConvexBase.sol";
-
-
 
 abstract contract StrategyCurveBase is StrategyConvexBase {
     using SafeMath for uint256;
@@ -50,9 +47,6 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
     // check for cloning
     bool internal isOriginal = true;
 
-
-
-
     constructor(
         address _vault,
         uint256 _pid,
@@ -61,18 +55,12 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
         _initializeStratBase(_pid, _name);
     }
 
-
-
     /* ========== CLONING ========== */
 
     event Cloned(address indexed clone);
 
-
-   function _initializeStratBase(
-        uint256 _pid,
-        string memory _name
-    ) internal {
-      // make sure that we haven't initialized this before
+    function _initializeStratBase(uint256 _pid, string memory _name) internal {
+        // make sure that we haven't initialized this before
         require(address(rewardsContract) == address(0)); // already initialized.
 
         // You can set these parameters on deployment to whatever you want
@@ -89,11 +77,11 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
         crv.approve(address(crveth), type(uint256).max);
         weth.approve(uniswapv3, type(uint256).max);
 
-
         // setup our rewards contract
         pid = _pid; // this is the pool ID on convex, we use this to determine what the reweardsContract address is
-        (address lptoken, , , address _rewardsContract, , ) =
-            IConvexDeposit(depositContract).poolInfo(_pid);
+        (address lptoken, , , address _rewardsContract, , ) = IConvexDeposit(
+            depositContract
+        ).poolInfo(_pid);
 
         // set up our rewardsContract
         rewardsContract = IConvexRewards(_rewardsContract);
@@ -130,14 +118,11 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
         );
     }
 
-     /* ========== KEEP3RS ========== */
+    /* ========== KEEP3RS ========== */
     // use this to determine when to harvest
-    function harvestTrigger(uint256 callCostinEth)
-        public
-        view
-        override
-        returns (bool)
-    {
+    function harvestTrigger(
+        uint256 callCostinEth
+    ) public view override returns (bool) {
         // Should not trigger if strategy is not active (no assets and no debtRatio). This means we don't need to adjust keeper job.
         if (!isActive()) {
             return false;
@@ -151,13 +136,11 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
             }
         }
 
-
         // harvest if we have a profit to claim at our upper limit without considering gas price
         uint256 claimableProfit = claimableProfitInUsdt();
         if (claimableProfit > harvestProfitMax) {
             return true;
         }
-
 
         // check if the base fee gas price is higher than we allow. if it is, block harvests.
         if (!isBaseFeeAcceptable()) {
@@ -189,7 +172,7 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
         return false;
     }
 
-     /// @notice The value in dollars that our claimable rewards are worth (in USDT, 6 decimals).
+    /// @notice The value in dollars that our claimable rewards are worth (in USDT, 6 decimals).
     /// @notice The value in dollars that our claimable rewards are worth (in USDT, 6 decimals).
     function claimableProfitInUsdt() public view returns (uint256) {
         // calculations pulled directly from CVX's contract for minting CVX per CRV claimed
@@ -232,14 +215,11 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
             usd_path[1] = address(weth);
             usd_path[2] = address(usdt);
 
-            uint256 _claimableBonusBal =
-                IConvexRewards(virtualRewardsPool).earned(address(this));
+            uint256 _claimableBonusBal = IConvexRewards(virtualRewardsPool)
+                .earned(address(this));
             if (_claimableBonusBal > 0) {
-                uint256[] memory rewardSwap =
-                    IUniswapV2Router02(sushiswap).getAmountsOut(
-                        _claimableBonusBal,
-                        usd_path
-                    );
+                uint256[] memory rewardSwap = IUniswapV2Router02(sushiswap)
+                    .getAmountsOut(_claimableBonusBal, usd_path);
                 rewardsValue = rewardSwap[rewardSwap.length - 1];
             }
         }
@@ -247,16 +227,12 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
         return crvValue.add(cvxValue).add(rewardsValue);
     }
 
-
     // convert our keeper's eth cost into want, we don't need this anymore since we don't use baseStrategy harvestTrigger
-    function ethToWant(uint256 _ethAmount)
-        public
-        view
-        override
-        returns (uint256)
-    {}
+    function ethToWant(
+        uint256 _ethAmount
+    ) public view override returns (uint256) {}
 
-     /// @notice True if someone needs to earmark rewards on Convex before keepers harvest again
+    /// @notice True if someone needs to earmark rewards on Convex before keepers harvest again
     function needsEarmarkReward() public view returns (bool needsEarmark) {
         // check if there is any CRV we need to earmark
         uint256 crvExpiry = rewardsContract.periodFinish();
@@ -264,17 +240,17 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
             return true;
         } else if (hasRewards) {
             // check if there is any bonus reward we need to earmark
-            uint256 rewardsExpiry =
-                IConvexRewards(virtualRewardsPool).periodFinish();
+            uint256 rewardsExpiry = IConvexRewards(virtualRewardsPool)
+                .periodFinish();
             return rewardsExpiry < block.timestamp;
         }
     }
 
-     /// @notice Use to update, add, or remove extra rewards tokens.
-    function updateRewards(bool _hasRewards, uint256 _rewardsIndex)
-        external
-        onlyGovernance
-    {
+    /// @notice Use to update, add, or remove extra rewards tokens.
+    function updateRewards(
+        bool _hasRewards,
+        uint256 _rewardsIndex
+    ) external onlyGovernance {
         if (
             address(rewardsToken) != address(0) &&
             address(rewardsToken) != address(convexToken)
@@ -288,8 +264,8 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
         } else {
             // update with our new token. get this via our virtualRewardsPool
             virtualRewardsPool = rewardsContract.extraRewards(_rewardsIndex);
-            address _rewardsToken =
-                IConvexRewards(virtualRewardsPool).rewardToken();
+            address _rewardsToken = IConvexRewards(virtualRewardsPool)
+                .rewardToken();
             rewardsToken = IERC20(_rewardsToken);
 
             // approve, setup our path, and turn on rewards
@@ -299,7 +275,7 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
         }
     }
 
-     /**
+    /**
      * @notice
      * Here we set various parameters to optimize our harvestTrigger.
      * @param _harvestProfitMin The amount of profit (in USDC, 6 decimals)

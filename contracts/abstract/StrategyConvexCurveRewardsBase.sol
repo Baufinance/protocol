@@ -37,10 +37,11 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         uint256 _nCoins,
         bool _isUseUnderlying
     ) StrategyCurveBase(_vault, _pid, _name) {
-      _initializeStrat(_curvePool, _nCoins, _swapPath, _isUseUnderlying);
+        _initializeStrat(_curvePool, _nCoins, _swapPath, _isUseUnderlying);
     }
 
     receive() external payable {}
+
     function initialize(
         address _vault,
         address _strategist,
@@ -58,35 +59,39 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         _initializeStrat(_curvePool, _nCoins, _swapPath, _isUseUnderlying);
     }
 
-    function _initializeStrat(address _curvePool, uint256 _nCoins, bytes memory _swapPath, bool _isUseUnderlying) internal {
-
+    function _initializeStrat(
+        address _curvePool,
+        uint256 _nCoins,
+        bytes memory _swapPath,
+        bool _isUseUnderlying
+    ) internal {
         if (_nCoins < 2) {
-          revert InvalidNCoins();
+            revert InvalidNCoins();
         }
         for (uint256 i; i < _nCoins; i++) {
-          address coin = ICurveFi(_curvePool).coins(i);
+            address coin = ICurveFi(_curvePool).coins(i);
 
-          targetCoinIndex = i;
+            targetCoinIndex = i;
 
-          if (coin == eth) {
-            isETHPool = true;
-            break;
-          }
+            if (coin == eth) {
+                isETHPool = true;
+                break;
+            }
 
-          if (coin == address(crv)) {
-            isCRVPool = true;
-            break;
-          }
+            if (coin == address(crv)) {
+                isCRVPool = true;
+                break;
+            }
 
-          if (coin == address(convexToken)) {
-            isCVXPool = true;
-            break;
-          }
+            if (coin == address(convexToken)) {
+                isCVXPool = true;
+                break;
+            }
 
-          if (coin == address(weth)) {
-            isWETHPool = true;
-            break;
-          }
+            if (coin == address(weth)) {
+                isWETHPool = true;
+                break;
+            }
         }
 
         address targetCoin = ICurveFi(_curvePool).coins(targetCoinIndex);
@@ -102,8 +107,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         isUseUnderlying = _isUseUnderlying;
     }
 
-
-     // we use this to clone our original strategy to other vaults
+    // we use this to clone our original strategy to other vaults
     function clone(
         address _vault,
         address _strategist,
@@ -115,7 +119,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         string memory _name,
         uint256 _nCoins,
         bool _isUseUnderlying
-    ) virtual external returns (address newStrategy) {
+    ) external virtual returns (address newStrategy) {
         require(isOriginal);
         // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactorysol
         bytes20 addressBytes = bytes20(address(this));
@@ -150,16 +154,14 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         emit Cloned(newStrategy);
     }
 
-        /* ========== MUTATIVE FUNCTIONS ========== */
+    /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function prepareReturn(uint256 _debtOutstanding)
+    function prepareReturn(
+        uint256 _debtOutstanding
+    )
         internal
         override
-        returns (
-            uint256 _profit,
-            uint256 _loss,
-            uint256 _debtPayment
-        )
+        returns (uint256 _profit, uint256 _loss, uint256 _debtPayment)
     {
         // this claims our CRV, CVX, and any extra tokens like SNX or ANKR. no harm leaving this true even if no extra rewards currently.
         rewardsContract.getReward(address(this), true);
@@ -181,8 +183,9 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         // claim and sell our rewards if we have them
         if (hasRewards) {
-            uint256 _rewardsBalance =
-                IERC20(rewardsToken).balanceOf(address(this));
+            uint256 _rewardsBalance = IERC20(rewardsToken).balanceOf(
+                address(this)
+            );
             if (_rewardsBalance > 0) {
                 _sellRewards(_rewardsBalance);
             }
@@ -228,14 +231,14 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         forceHarvestTriggerOnce = false;
     }
 
+    // Sells our CRV and CVX on Curve, then WETH -> stables together on UniV3
+    function _sellCrvAndCvx(
+        uint256 _crvAmount,
+        uint256 _convexAmount
+    ) internal {
+        bool isSwapToETH = isETHPool;
 
-     // Sells our CRV and CVX on Curve, then WETH -> stables together on UniV3
-    function _sellCrvAndCvx(uint256 _crvAmount, uint256 _convexAmount)
-        internal
-    {
-       bool isSwapToETH = isETHPool;
-
-       if (_convexAmount > 1e17 && !isCVXPool) {
+        if (_convexAmount > 1e17 && !isCVXPool) {
             // don't want to swap dust or we might revert
             cvxeth.exchange(1, 0, _convexAmount, 0, isSwapToETH);
         }
@@ -246,38 +249,39 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         }
 
         if (!isWETHPool && !isETHPool) {
-        uint256 _wethBalance = weth.balanceOf(address(this));
+            uint256 _wethBalance = weth.balanceOf(address(this));
             if (_wethBalance > 1e15) {
-              // don't want to swap dust or we might revert
-              IUniV3(uniswapv3).exactInput(
-                IUniV3.ExactInputParams(
-                    swapPath,
-                    address(this),
-                    block.timestamp,
-                    _wethBalance,
-                    uint256(1)
-                )
-            );
+                // don't want to swap dust or we might revert
+                IUniV3(uniswapv3).exactInput(
+                    IUniV3.ExactInputParams(
+                        swapPath,
+                        address(this),
+                        block.timestamp,
+                        _wethBalance,
+                        uint256(1)
+                    )
+                );
+            }
         }
-      }
     }
 
-    function _depositToCurve() virtual internal {
-    }
+    function _depositToCurve() internal virtual {}
 
     function updateSwapPath(bytes memory _swapPath) external onlyVaultManagers {
-      swapPath = _swapPath;
+        swapPath = _swapPath;
     }
 
-    function setOptimalTargetCoinIndex(uint256 _targetCoinIndex) external onlyVaultManagers {
-      address targetCoin = curve.coins(targetCoinIndex);
+    function setOptimalTargetCoinIndex(
+        uint256 _targetCoinIndex
+    ) external onlyVaultManagers {
+        address targetCoin = curve.coins(targetCoinIndex);
 
-      IERC20(targetCoin).approve(address(curve), 0);
+        IERC20(targetCoin).approve(address(curve), 0);
 
-      targetCoinIndex = _targetCoinIndex;
+        targetCoinIndex = _targetCoinIndex;
 
-      targetCoin = curve.coins(targetCoinIndex);
+        targetCoin = curve.coins(targetCoinIndex);
 
-      IERC20(targetCoin).approve(address(curve), type(uint256).max);
+        IERC20(targetCoin).approve(address(curve), type(uint256).max);
     }
 }

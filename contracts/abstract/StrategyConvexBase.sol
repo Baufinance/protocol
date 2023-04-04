@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.15;
 
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -9,7 +8,6 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../yearn/BaseStrategy.sol";
 import "../interfaces/IConvexRewards.sol";
 import "../interfaces/IConvexDeposit.sol";
-
 
 abstract contract StrategyConvexBase is BaseStrategy {
     using Address for address;
@@ -46,7 +44,6 @@ abstract contract StrategyConvexBase is BaseStrategy {
     // keeper stuff
     uint256 public harvestProfitMin; // minimum size in USD (6 decimals) that we want to harvest
     uint256 public harvestProfitMax; // maximum size in USD (6 decimals) that we want to harvest
-
 
     string internal stratName;
 
@@ -96,11 +93,9 @@ abstract contract StrategyConvexBase is BaseStrategy {
         }
     }
 
-    function liquidatePosition(uint256 _amountNeeded)
-        internal
-        override
-        returns (uint256 _liquidatedAmount, uint256 _loss)
-    {
+    function liquidatePosition(
+        uint256 _amountNeeded
+    ) internal override returns (uint256 _liquidatedAmount, uint256 _loss) {
         uint256 _wantBal = balanceOfWant();
         if (_amountNeeded > _wantBal) {
             uint256 _stakedBal = stakedBalance();
@@ -165,7 +160,10 @@ abstract contract StrategyConvexBase is BaseStrategy {
         voter = _keepCRVDestination;
     }
 
-    function setKeepCRV(uint256 _keepCRV, address _keepCRVDestination) external onlyGovernance {
+    function setKeepCRV(
+        uint256 _keepCRV,
+        address _keepCRVDestination
+    ) external onlyGovernance {
         keepCRV = _keepCRV;
         voter = _keepCRVDestination;
     }
@@ -174,5 +172,4 @@ abstract contract StrategyConvexBase is BaseStrategy {
     function setClaimRewards(bool _claimRewards) external onlyVaultManagers {
         claimRewards = _claimRewards;
     }
-
 }

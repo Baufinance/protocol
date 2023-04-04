@@ -48,7 +48,10 @@ contract CommonHealthCheck {
     }
 
     modifier onlyAuthorized() {
-        require(msg.sender == governance || msg.sender == management, "!authorized");
+        require(
+            msg.sender == governance || msg.sender == management,
+            "!authorized"
+        );
         _;
     }
 
@@ -69,12 +72,16 @@ contract CommonHealthCheck {
         management = _management;
     }
 
-    function setProfitLimitRatio(uint256 _profitLimitRatio) external onlyAuthorized {
+    function setProfitLimitRatio(
+        uint256 _profitLimitRatio
+    ) external onlyAuthorized {
         require(_profitLimitRatio < MAX_BPS);
         profitLimitRatio = _profitLimitRatio;
     }
 
-    function setlossLimitRatio(uint256 _lossLimitRatio) external onlyAuthorized {
+    function setlossLimitRatio(
+        uint256 _lossLimitRatio
+    ) external onlyAuthorized {
         require(_lossLimitRatio < MAX_BPS);
         lossLimitRatio = _lossLimitRatio;
     }
@@ -86,10 +93,17 @@ contract CommonHealthCheck {
     ) external onlyAuthorized {
         require(_lossLimitRatio < MAX_BPS);
         require(_profitLimitRatio < MAX_BPS);
-        strategiesLimits[_strategy] = Limits(_profitLimitRatio, _lossLimitRatio, true);
+        strategiesLimits[_strategy] = Limits(
+            _profitLimitRatio,
+            _lossLimitRatio,
+            true
+        );
     }
 
-    function setCheck(address _strategy, address _check) external onlyAuthorized {
+    function setCheck(
+        address _strategy,
+        address _check
+    ) external onlyAuthorized {
         checks[_strategy] = _check;
     }
 
@@ -100,7 +114,8 @@ contract CommonHealthCheck {
         uint256 debtOutstanding,
         uint256 totalDebt
     ) external view returns (bool) {
-        return _runChecks(profit, loss, debtPayment, debtOutstanding, totalDebt);
+        return
+            _runChecks(profit, loss, debtPayment, debtOutstanding, totalDebt);
     }
 
     function _runChecks(
@@ -116,7 +131,14 @@ contract CommonHealthCheck {
             return _executeDefaultCheck(profit, loss, totalDebt);
         }
 
-        return CustomHealthCheck(customCheck).check(profit, loss, debtPayment, debtOutstanding, msg.sender);
+        return
+            CustomHealthCheck(customCheck).check(
+                profit,
+                loss,
+                debtPayment,
+                debtOutstanding,
+                msg.sender
+            );
     }
 
     function _executeDefaultCheck(

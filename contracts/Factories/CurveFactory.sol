@@ -9,16 +9,16 @@ import "../interfaces/IDetails.sol";
 import "../interfaces/IPoolManager.sol";
 import "../interfaces/IRegistry.sol";
 import "../interfaces/IVault.sol";
+import "../interfaces/IFactoryAdapter.sol";
 import {ICurveGauge, ICurveFi} from "../interfaces/ICurve.sol";
 
-contract CurveFactory is Initializable {
-
+contract CurveFactory is Initializable, IFactoryAdapter {
     enum CurveType {
-      NONE,
-      METAPOOL,
-      COINS2,
-      COINS3,
-      COINS4
+        NONE,
+        METAPOOL,
+        COINS2,
+        COINS3,
+        COINS4
     }
 
     event NewVault(
@@ -29,10 +29,10 @@ contract CurveFactory is Initializable {
         uint8 poolType
     );
 
-
     struct Vault {
-      address vaultAddress;
-      CurveType poolType;
+        address vaultAddress;
+        CurveType poolType;
+        bool isUseUnderlying;
     }
 
     ///////////////////////////////////
@@ -41,21 +41,10 @@ contract CurveFactory is Initializable {
     //
     ////////////////////////////////////
 
-    address[] public deployedVaults;
-
     mapping(address => Vault) public deployedVaultsByToken; //for ZAP V1
-
-    function allDeployedVaults() external view returns (address[] memory) {
-        return deployedVaults;
-    }
-
-    function numVaults() external view returns (uint256) {
-        return deployedVaults.length;
-    }
 
     address public constant cvx = 0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B;
     uint256 public constant category = 0; // 0 for curve
-
 
     IBooster public booster;
 
@@ -86,7 +75,6 @@ contract CurveFactory is Initializable {
         require(msg.sender == owner);
         registry = IRegistry(_registry);
     }
-
 
     address public governance;
 
@@ -132,14 +120,13 @@ contract CurveFactory is Initializable {
 
     mapping(CurveType => address) public convexStratImplementation;
 
-    function setConvexStratImplementation(CurveType _poolType, address _convexStratImplementation)
-        external
-    {
+    function setConvexStratImplementation(
+        CurveType _poolType,
+        address _convexStratImplementation
+    ) external {
         require(msg.sender == owner);
         convexStratImplementation[_poolType] = _convexStratImplementation;
     }
-
-
 
     uint256 public depositFee = 50;
 
@@ -155,7 +142,7 @@ contract CurveFactory is Initializable {
     //
     ////////////////////////////////////
 
-    function initialize (
+    function initialize(
         address _registry,
         address _keeper,
         address _owner
@@ -176,28 +163,25 @@ contract CurveFactory is Initializable {
 
         governance = _owner;
 
-        convexPoolManager =
-        0xD1f9b3de42420A295C33c07aa5C9e04eDC6a4447;
+        convexPoolManager = 0xD1f9b3de42420A295C33c07aa5C9e04eDC6a4447;
 
-        booster =
-        IBooster(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
-
+        booster = IBooster(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
     }
 
     /// @notice Public function to check whether, for a given gauge address, its possible to permissionlessly create a vault for corressponding LP token
     /// @param _gauge The gauge address to find the latest vault for
     /// @return bool if true, vault can be created permissionlessly
-    function canCreateVaultPermissionlessly(address _gauge) public view returns (bool) {
+    function canCreateVaultPermissionlessly(
+        address _gauge
+    ) public view returns (bool) {
         return latestDefaultOrAutomatedVaultFromGauge(_gauge) == address(0);
     }
 
     /// @dev Returns only the latest vault address for any DEFAULT/AUTOMATED type vaults
     /// @dev If no vault of either DEFAULT or AUTOMATED types exists for this gauge, 0x0 is returned from registry.
-    function latestDefaultOrAutomatedVaultFromGauge(address _gauge)
-        internal
-        view
-        returns (address)
-    {
+    function latestDefaultOrAutomatedVaultFromGauge(
+        address _gauge
+    ) internal view returns (address) {
         address lptoken = ICurveGauge(_gauge).lp_token();
         if (!registry.isRegistered(lptoken)) {
             return address(0);
@@ -208,14 +192,14 @@ contract CurveFactory is Initializable {
         return latest;
     }
 
-
-    function latestVault(address _token) public view returns(address) {
-         bytes memory data = abi.encodeWithSignature(
+    function latestVault(address _token) public view returns (address) {
+        bytes memory data = abi.encodeWithSignature(
             "latestVault(address)",
             _token
         );
-        (bool success, bytes memory returnBytes) = address(registry)
-            .staticcall(data);
+        (bool success, bytes memory returnBytes) = address(registry).staticcall(
+            data
+        );
         if (success) {
             return abi.decode(returnBytes, (address));
         }
@@ -249,7 +233,14 @@ contract CurveFactory is Initializable {
     ) external returns (address vault, address convexStrategy) {
         require(msg.sender == owner || msg.sender == management);
 
-        return _createNewVaultsAndStrategies(_gauge, _poolType, _swapPath, _isUseUnderlying, _allowDuplicate);
+        return
+            _createNewVaultsAndStrategies(
+                _gauge,
+                _poolType,
+                _swapPath,
+                _isUseUnderlying,
+                _allowDuplicate
+            );
     }
 
     function _createNewVaultsAndStrategies(
@@ -277,47 +268,40 @@ contract CurveFactory is Initializable {
                 IPoolManager(convexPoolManager).addPool(_gauge),
                 "Unable to add pool to Convex"
             );
-
         }
 
         vault = _createVault(lptoken);
 
-        deployedVaultsByToken[lptoken] = Vault(vault, _poolType);
+        deployedVaultsByToken[lptoken] = Vault(
+            vault,
+            _poolType,
+            _isUseUnderlying
+        );
 
         IVault v = IVault(vault);
 
         strategy = _createStrategy(lptoken, pid, _swapPath, _isUseUnderlying);
 
-        v.addStrategy(
-            strategy,
-            10_000,
-            0,
-            type(uint256).max
-        );
-
+        v.addStrategy(strategy, 10_000, 0, type(uint256).max);
 
         emit NewVault(lptoken, _gauge, vault, strategy, uint8(_poolType));
     }
 
-    function _createVault(address _lptoken) internal returns(address vault) {
-                //now we create the vault, endorses it from governance after
+    function _createVault(address _lptoken) internal returns (address vault) {
+        //now we create the vault, endorses it from governance after
         vault = registry.newExperimentalVault(
             _lptoken,
             address(this),
             guardian,
             treasury,
-
             string.concat(
-                    "Curve ",
-                    IDetails(address(_lptoken)).symbol(),
-                    " bauVault"
+                "Curve ",
+                IDetails(address(_lptoken)).symbol(),
+                " bauVault"
             ),
             string.concat("bauCurve", IDetails(address(_lptoken)).symbol()),
             0
         );
-
-        deployedVaults.push(vault);
-
 
         IVault v = IVault(vault);
         v.setManagement(management);
@@ -326,7 +310,12 @@ contract CurveFactory is Initializable {
         v.setDepositFee(depositFee);
     }
 
-    function _createStrategy(address _lptoken, uint256 _pid, bytes calldata _swapPath, bool _isUseUnderlying) internal returns (address strategy) {
+    function _createStrategy(
+        address _lptoken,
+        uint256 _pid,
+        bytes calldata _swapPath,
+        bool _isUseUnderlying
+    ) internal returns (address strategy) {
         Vault memory v = deployedVaultsByToken[_lptoken];
 
         //now we create the convex strat
@@ -339,14 +328,16 @@ contract CurveFactory is Initializable {
                 _pid,
                 _lptoken,
                 string(
-                abi.encodePacked("yieldConvex", IDetails(address(_lptoken)).symbol())
-            )
+                    abi.encodePacked(
+                        "yieldConvex",
+                        IDetails(address(_lptoken)).symbol()
+                    )
+                )
             );
         } else {
+            address minter = ICurveFi(_lptoken).minter();
 
-              address minter = ICurveFi(_lptoken).minter();
-
-              strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
+            strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
                 v.vaultAddress,
                 management,
                 treasury,
@@ -355,10 +346,35 @@ contract CurveFactory is Initializable {
                 minter,
                 _swapPath,
                 string(
-                abi.encodePacked("yieldConvex", IDetails(address(minter)).symbol())),
+                    abi.encodePacked(
+                        "yieldConvex",
+                        IDetails(address(minter)).symbol()
+                    )
+                ),
                 uint8(v.poolType),
                 _isUseUnderlying
             );
         }
     }
+
+    ///////////////////////////////////
+    //
+    // Adapter
+    //
+    ////////////////////////////////////
+
+    // get target coin for add liquidity
+    function targetCoin(
+        address _token
+    ) external view override returns (uint256) {}
+
+    // add liquidity for targetAmount
+    function deposit(address _token, uint256 _targetAmount) external override {}
+
+    // add liquidity for targetAmount
+    function deposit(address _token) external override {}
+
+    function withdraw(address _token, uint256 _shareAmount) external override {}
+
+    function withdraw(address _token) external override {}
 }
