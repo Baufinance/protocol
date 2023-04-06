@@ -396,6 +396,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         if (v.poolType == CurveType.NONE) {
             revert VaultDoesntExist();
         }
+
         if (v.poolType == CurveType.METAPOOL) {
             coin = address(usdt);
         } else {
