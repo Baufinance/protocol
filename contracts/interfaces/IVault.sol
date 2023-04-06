@@ -11,4 +11,6 @@ interface IVault {
     function setDepositLimit(uint256) external;
 
     function addStrategy(address, uint256, uint256, uint256) external;
+
+    function deposit(uint256 _amount, address _recipient) external;
 }

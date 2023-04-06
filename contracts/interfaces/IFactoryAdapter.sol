@@ -6,10 +6,10 @@ interface IFactoryAdapter {
     function targetCoin(address _token) external view returns (uint256);
 
     // add liquidity for targetAmount
-    function deposit(address _token, uint256 _targetAmount) external;
+    function deposit(address _token, uint256 _targetAmount,  address _recipient) external;
 
     // add liquidity for targetAmount
-    function deposit(address _token) external;
+    function deposit(address _token,  address _recipient) external;
 
     function withdraw(address _token, uint256 _shareAmount) external;
 

@@ -2,6 +2,8 @@
 pragma solidity 0.8.15;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/IStrategy.sol";
 import "../interfaces/IBooster.sol";
@@ -13,6 +15,9 @@ import "../interfaces/IFactoryAdapter.sol";
 import {ICurveGauge, ICurveFi} from "../interfaces/ICurve.sol";
 
 contract CurveFactory is Initializable, IFactoryAdapter {
+
+    using SafeERC20 for IERC20;
+
     enum CurveType {
         NONE,
         METAPOOL,
@@ -35,13 +40,16 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         bool isUseUnderlying;
     }
 
+    error VaultDoesntExist();
+    error BalanceIsZero();
+
     ///////////////////////////////////
     //
     //  Storage variables and setters
     //
     ////////////////////////////////////
 
-    mapping(address => Vault) public deployedVaultsByToken; //for ZAP V1
+    mapping(address => Vault) public deployedVaults; //for ZAP V1
 
     address public constant cvx = 0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B;
     uint256 public constant category = 0; // 0 for curve
@@ -51,6 +59,12 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     // always owned by ychad
     address public owner;
     address internal pendingOwner;
+
+    IERC20 internal constant usdt =
+        IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+
+    ICurveFi internal constant zapContract =
+        ICurveFi(0xA79828DF1850E8a3A3064576f380D90aECDD3359);
 
     function setOwner(address newOwner) external {
         require(msg.sender == owner);
@@ -272,7 +286,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         vault = _createVault(lptoken);
 
-        deployedVaultsByToken[lptoken] = Vault(
+        deployedVaults[lptoken] = Vault(
             vault,
             _poolType,
             _isUseUnderlying
@@ -316,7 +330,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         bytes calldata _swapPath,
         bool _isUseUnderlying
     ) internal returns (address strategy) {
-        Vault memory v = deployedVaultsByToken[_lptoken];
+        Vault memory v = deployedVaults[_lptoken];
 
         //now we create the convex strat
         if (v.poolType == CurveType.METAPOOL) {
@@ -369,12 +383,56 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     ) external view override returns (uint256) {}
 
     // add liquidity for targetAmount
-    function deposit(address _token, uint256 _targetAmount) external override {}
+    function deposit(address _token, uint256 _targetAmount, address _recipient) external override {
+        Vault memory v = deployedVaults[_token];
+
+        address vault = v.vaultAddress;
+
+        if (v.poolType == CurveType.NONE) {
+            revert VaultDoesntExist();
+        }
+
+        if (v.poolType == CurveType.METAPOOL) {
+            usdt.transferFrom(msg.sender, address(this), _targetAmount);
+
+            usdt.approve(address(zapContract), _targetAmount);
+
+            uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
+            zapContract.add_liquidity(
+                _token,
+                [0, 0, 0, _targetAmount],
+                0
+            );
+
+            uint256 tokenBalanceAfter = IERC20(_token).balanceOf(address(this));
+
+            uint256 tokenBalance = tokenBalanceAfter - tokenBalanceBefore;
+
+            if (tokenBalance == 0) {
+                revert BalanceIsZero();
+            }
+
+            IERC20(_token).approve(vault, tokenBalance);
+
+            uint256 vaultBalanceBefore = IERC20(vault).balanceOf(address(this));
+
+            IVault(vault).deposit(tokenBalance, _recipient);
+
+        } else {
+
+        }
+    }
 
     // add liquidity for targetAmount
-    function deposit(address _token) external override {}
+    function deposit(address _token,  address _recipient) external override {
 
-    function withdraw(address _token, uint256 _shareAmount) external override {}
+    }
 
-    function withdraw(address _token) external override {}
+    function withdraw(address _token, uint256 _shareAmount) external override {
+
+    }
+
+    function withdraw(address _token) external override {
+
+    }
 }
