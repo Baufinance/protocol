@@ -51,6 +51,8 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
     mapping(address => Vault) public deployedVaults; //for ZAP V1
 
+    address eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     address public constant cvx = 0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B;
     uint256 public constant category = 0; // 0 for curve
 
@@ -126,6 +128,14 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     }
 
     uint256 public depositLimit;
+
+
+    address public zapper;
+
+    function setZepper(address _zapper) external {
+        require(msg.sender == owner || msg.sender == management);
+        zapper = _zapper;
+    }
 
     function setDepositLimit(uint256 _depositLimit) external {
         require(msg.sender == owner || msg.sender == management);
@@ -380,10 +390,27 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     // get target coin for add liquidity
     function targetCoin(
         address _token
-    ) external view override returns (uint256) {}
+    ) public view override returns (address coin) {
+        Vault memory v = deployedVaults[_token];
+
+        if (v.poolType == CurveType.NONE) {
+            revert VaultDoesntExist();
+        }
+        if (v.poolType == CurveType.METAPOOL) {
+            coin = address(usdt);
+        } else {
+            coin = ICurveFi(_token).coins(0);
+
+            if (coin == eth) {
+                coin = ICurveFi(_token).coins(1);
+            }
+        }
+    }
 
     // add liquidity for targetAmount
     function deposit(address _token, uint256 _targetAmount, address _recipient) external override {
+        require(msg.sender == zapper); //only zapper can call this function
+
         Vault memory v = deployedVaults[_token];
 
         address vault = v.vaultAddress;
@@ -393,6 +420,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
 
         if (v.poolType == CurveType.METAPOOL) {
+
             usdt.transferFrom(msg.sender, address(this), _targetAmount);
 
             usdt.approve(address(zapContract), _targetAmount);
@@ -423,16 +451,8 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
     }
 
-    // add liquidity for targetAmount
-    function deposit(address _token,  address _recipient) external override {
-
-    }
 
     function withdraw(address _token, uint256 _shareAmount) external override {
-
-    }
-
-    function withdraw(address _token) external override {
-
+        require(msg.sender == zapper); //only zapper can call this function
     }
 }
