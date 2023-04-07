@@ -33,6 +33,8 @@ interface ICurveFi is IERC20 {
 
     function coins(uint256) external view returns (address);
 
+    function underlying_coins(uint256) external view returns (address);
+
     function add_liquidity(
         // EURt
         uint256[2] calldata amounts,

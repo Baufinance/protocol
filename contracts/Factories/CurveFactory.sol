@@ -390,7 +390,9 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     // get target coin for add liquidity
     function targetCoin(
         address _token
-    ) public view override returns (address coin) {
+    ) public view override returns (address coin, uint256 index) {
+
+        index = 0;
         Vault memory v = deployedVaults[_token];
 
         if (v.poolType == CurveType.NONE) {
@@ -400,17 +402,32 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         if (v.poolType == CurveType.METAPOOL) {
             coin = address(usdt);
         } else {
-            coin = ICurveFi(_token).coins(0);
 
-            if (coin == eth) {
-                coin = ICurveFi(_token).coins(1);
+            address minter = ICurveFi(_token).minter();
+
+            if (v.isUseUnderlying) {
+                coin = ICurveFi(_token).underlying_coins(index);
+
+                index += 1;
+
+                if (coin == eth) {
+                    coin = ICurveFi(_token).underlying_coins(index);
+                }
+            } else {
+                coin = ICurveFi(_token).coins(index);
+
+                index += 1;
+
+                if (coin == eth) {
+                    coin = ICurveFi(_token).coins(index);
+                }
             }
         }
     }
 
-    // add liquidity for targetAmount
-    function deposit(address _token, uint256 _targetAmount, address _recipient) external override {
-        require(msg.sender == zapper); //only zapper can call this function
+    // add liquidity for targetAmount with targetCoin, global targetCoin index variable
+
+    function depositWithTargetCoin(address _token, uint256 _targetAmount, address _recipient) external override {
 
         Vault memory v = deployedVaults[_token];
 
@@ -420,40 +437,118 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             revert VaultDoesntExist();
         }
 
+
+        uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
+
         if (v.poolType == CurveType.METAPOOL) {
+            _depositToMetaPool(_token, _targetAmount);
+        } else if (v.poolType == CurveType.COINS2) {
+            _depositTo2Pool(_token, _targetAmount, v.isUseUnderlying);
+        } else if (v.poolType == CurveType.COINS3) {
+            _depositTo3Pool(_token, _targetAmount, v.isUseUnderlying);
+        } else if (v.poolType == CurveType.COINS4) {
+            _depositTo4Pool(_token, _targetAmount, v.isUseUnderlying);
+        }
 
-            usdt.transferFrom(msg.sender, address(this), _targetAmount);
+        uint256 tokenBalanceAfter = IERC20(_token).balanceOf(address(this));
 
-            usdt.approve(address(zapContract), _targetAmount);
+        uint256 tokenBalance = tokenBalanceAfter - tokenBalanceBefore;
 
-            uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
-            zapContract.add_liquidity(
-                _token,
-                [0, 0, 0, _targetAmount],
-                0
-            );
+        if (tokenBalance == 0) {
+            revert BalanceIsZero();
+        }
 
-            uint256 tokenBalanceAfter = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).approve(vault, tokenBalance);
 
-            uint256 tokenBalance = tokenBalanceAfter - tokenBalanceBefore;
+        uint256 vaultBalanceBefore = IERC20(vault).balanceOf(address(this));
 
-            if (tokenBalance == 0) {
-                revert BalanceIsZero();
+        IVault(vault).deposit(tokenBalance, _recipient);
+    }
+
+    function _depositToMetaPool(address _token, uint256 _targetAmount) internal {
+        usdt.transferFrom(msg.sender, address(this), _targetAmount);
+
+        usdt.approve(address(zapContract), _targetAmount);
+
+        zapContract.add_liquidity(
+            _token,
+            [0, 0, 0, _targetAmount],
+            0
+        );
+    }
+
+    function _depositTo2Pool(address _token, uint256 _targetAmount, bool _isUseUnderlying) internal {
+        (address targetCoin, uint256 index) = targetCoin(_token);
+
+        address minter = ICurveFi(_token).minter();
+
+        uint256[2] memory coins;
+
+
+        for (uint256 i; i < 2; i++) {
+            if (i == index) {
+                coins[i] = _targetAmount;
+            } else {
+                coins[i] = 0;
             }
+        }
 
-            IERC20(_token).approve(vault, tokenBalance);
-
-            uint256 vaultBalanceBefore = IERC20(vault).balanceOf(address(this));
-
-            IVault(vault).deposit(tokenBalance, _recipient);
-
+        if (_isUseUnderlying) {
+            ICurveFi(minter).add_liquidity(coins, 0, true);
         } else {
+            ICurveFi(minter).add_liquidity(coins, 0);
+        }
+    }
 
+    function _depositTo3Pool(address _token, uint256 _targetAmount, bool _isUseUnderlying) internal {
+        (address targetCoin, uint256 index) = targetCoin(_token);
+
+        address minter = ICurveFi(_token).minter();
+
+        uint256[3] memory coins;
+
+
+        for (uint256 i; i < 3; i++) {
+            if (i == index) {
+                coins[i] = _targetAmount;
+            } else {
+                coins[i] = 0;
+            }
+        }
+
+        if (_isUseUnderlying) {
+            ICurveFi(minter).add_liquidity(coins, 0, true);
+        } else {
+            ICurveFi(minter).add_liquidity(coins, 0);
         }
     }
 
 
-    function withdraw(address _token, uint256 _shareAmount) external override {
+    function _depositTo4Pool(address _token, uint256 _targetAmount, bool _isUseUnderlying) internal {
+        (address targetCoin, uint256 index) = targetCoin(_token);
+
+        address minter = ICurveFi(_token).minter();
+
+        uint256[4] memory coins;
+
+
+        for (uint256 i; i < 4; i++) {
+            if (i == index) {
+                coins[i] = _targetAmount;
+            } else {
+                coins[i] = 0;
+            }
+        }
+
+        if (_isUseUnderlying) {
+            ICurveFi(minter).add_liquidity(coins, 0, true);
+        } else {
+            ICurveFi(minter).add_liquidity(coins, 0);
+        }
+    }
+
+
+    function withdrawWithTargetCoin(address _token, uint256 _shareAmount) external override {
         require(msg.sender == zapper); //only zapper can call this function
     }
 }
