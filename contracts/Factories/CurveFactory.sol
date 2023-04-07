@@ -400,8 +400,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
 
         if (v.poolType == CurveType.METAPOOL) {
-            coin = address(usdt);
-            index = 3;
+            coin = ICurveFi(minter).coins(index);
         } else {
 
             address minter = ICurveFi(_token).minter();
@@ -676,6 +675,11 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
 
     function withdrawWithTargetCoin(address _token, uint256 _shareAmount) external override {
-        require(msg.sender == zapper); //only zapper can call this function
+
+    }
+
+
+    function withdrawWithSupportedCoin(address _token, address _targetCoin, uint256 _shareAmount) external override {
+
     }
 }
