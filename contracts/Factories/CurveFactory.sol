@@ -401,25 +401,98 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         if (v.poolType == CurveType.METAPOOL) {
             coin = address(usdt);
+            index = 3;
         } else {
 
             address minter = ICurveFi(_token).minter();
 
             if (v.isUseUnderlying) {
-                coin = ICurveFi(_token).underlying_coins(index);
+                coin = ICurveFi(minter).underlying_coins(index);
 
-                index += 1;
+                index+= 1;
 
                 if (coin == eth) {
-                    coin = ICurveFi(_token).underlying_coins(index);
+                    coin = ICurveFi(minter).underlying_coins(index);
                 }
             } else {
-                coin = ICurveFi(_token).coins(index);
+                coin = ICurveFi(minter).coins(index);
 
-                index += 1;
+                index+= 1;
 
                 if (coin == eth) {
-                    coin = ICurveFi(_token).coins(index);
+                    coin = ICurveFi(minter).coins(index);
+                }
+            }
+        }
+    }
+
+    function supportedCoin(address _token, address _targetToken) public view override returns (bool supported, uint256 index) {
+        Vault memory v = deployedVaults[_token];
+
+        require(_token != eth);
+
+        if (v.poolType == CurveType.NONE) {
+            revert VaultDoesntExist();
+        }
+
+        if (v.poolType == CurveType.METAPOOL) {
+
+            for (uint256 i; i < 4;i++ ) {
+
+                address coin =  ICurveFi(_token).coins(i);
+
+                if (_targetToken == coin ) {
+                    supported = true;
+                    index = i;
+                }
+            }
+        } else if (v.poolType == CurveType.COINS2) {
+            for (uint256 i; i < 2;i++ ) {
+
+                address coin;
+
+                if (v.isUseUnderlying) {
+                    coin = ICurveFi(_token).underlying_coins(i);
+                } else {
+                    coin = ICurveFi(_token).coins(i);
+                }
+
+                if (_targetToken == coin ) {
+                    supported = true;
+                    index = i;
+                }
+            }
+         } else if (v.poolType == CurveType.COINS3) {
+            for (uint256 i; i < 2;i++ ) {
+
+                address coin;
+
+                if (v.isUseUnderlying) {
+                    coin = ICurveFi(_token).underlying_coins(i);
+                } else {
+                    coin = ICurveFi(_token).coins(i);
+                }
+
+                if (_targetToken == coin ) {
+                    supported = true;
+                    index = i;
+                }
+            }
+
+        } else if (v.poolType == CurveType.COINS4) {
+            for (uint256 i; i < 4;i++ ) {
+
+                address coin;
+
+                if (v.isUseUnderlying) {
+                    coin = ICurveFi(_token).underlying_coins(i);
+                } else {
+                    coin = ICurveFi(_token).coins(i);
+                }
+
+                if (_targetToken == coin ) {
+                    supported = true;
+                    index = i;
                 }
             }
         }
@@ -440,14 +513,19 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
 
+        (address targetToken, uint256 index) = targetCoin(_token);
+
+        IERC20(targetToken).transferFrom(msg.sender, address(this), _targetAmount);
+        IERC20(targetToken).approve(address(zapContract), _targetAmount);
+
         if (v.poolType == CurveType.METAPOOL) {
-            _depositToMetaPool(_token, _targetAmount);
+            _depositToMetaPool(_token, targetToken, index, _targetAmount);
         } else if (v.poolType == CurveType.COINS2) {
-            _depositTo2Pool(_token, _targetAmount, v.isUseUnderlying);
+            _depositTo2Pool(_token, targetToken, index, _targetAmount, v.isUseUnderlying);
         } else if (v.poolType == CurveType.COINS3) {
-            _depositTo3Pool(_token, _targetAmount, v.isUseUnderlying);
+            _depositTo3Pool(_token, targetToken, index, _targetAmount, v.isUseUnderlying);
         } else if (v.poolType == CurveType.COINS4) {
-            _depositTo4Pool(_token, _targetAmount, v.isUseUnderlying);
+            _depositTo4Pool(_token, targetToken, index, _targetAmount, v.isUseUnderlying);
         }
 
         uint256 tokenBalanceAfter = IERC20(_token).balanceOf(address(this));
@@ -465,20 +543,71 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         IVault(vault).deposit(tokenBalance, _recipient);
     }
 
-    function _depositToMetaPool(address _token, uint256 _targetAmount) internal {
-        usdt.transferFrom(msg.sender, address(this), _targetAmount);
 
-        usdt.approve(address(zapContract), _targetAmount);
+    function depositWithSupportedCoin(address _token, address _targetToken, uint256 _targetAmount,  address _recipient) external override {
+        Vault memory v = deployedVaults[_token];
+
+        address vault = v.vaultAddress;
+
+        if (v.poolType == CurveType.NONE) {
+            revert VaultDoesntExist();
+        }
+
+         uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
+
+        (bool supported, uint256 index) = supportedCoin(_token, _targetToken);
+
+        require(supported, "");
+
+        IERC20(_targetToken).transferFrom(msg.sender, address(this), _targetAmount);
+
+        IERC20(_targetToken).approve(ICurveFi(_token).minter(), _targetAmount);
+
+        if (v.poolType == CurveType.METAPOOL) {
+            _depositToMetaPool(_token, _targetToken, index, _targetAmount);
+        } else if (v.poolType == CurveType.COINS2) {
+            _depositTo2Pool(_token, _targetToken, index, _targetAmount, v.isUseUnderlying);
+        } else if (v.poolType == CurveType.COINS3) {
+            _depositTo3Pool(_token, _targetToken, index, _targetAmount, v.isUseUnderlying);
+        } else if (v.poolType == CurveType.COINS4) {
+            _depositTo4Pool(_token, _targetToken, index, _targetAmount, v.isUseUnderlying);
+        }
+
+        uint256 tokenBalanceAfter = IERC20(_token).balanceOf(address(this));
+
+        uint256 tokenBalance = tokenBalanceAfter - tokenBalanceBefore;
+
+        if (tokenBalance == 0) {
+            revert BalanceIsZero();
+        }
+
+        IERC20(_token).approve(vault, tokenBalance);
+
+        uint256 vaultBalanceBefore = IERC20(vault).balanceOf(address(this));
+
+        IVault(vault).deposit(tokenBalance, _recipient);
+    }
+
+    function _depositToMetaPool(address _token, address _targetCoin, uint256 _index, uint256 _targetAmount) internal {
+
+        uint256[4] memory coins;
+
+        for (uint256 i; i < 4; i++) {
+            if (i == _index) {
+                coins[i] = _targetAmount;
+            } else {
+                coins[i] = 0;
+            }
+        }
 
         zapContract.add_liquidity(
             _token,
-            [0, 0, 0, _targetAmount],
+            coins,
             0
         );
     }
 
-    function _depositTo2Pool(address _token, uint256 _targetAmount, bool _isUseUnderlying) internal {
-        (address targetCoin, uint256 index) = targetCoin(_token);
+    function _depositTo2Pool(address _token, address _targetCoin,  uint256 _index, uint256 _targetAmount, bool _isUseUnderlying) internal {
 
         address minter = ICurveFi(_token).minter();
 
@@ -486,7 +615,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
 
         for (uint256 i; i < 2; i++) {
-            if (i == index) {
+            if (i == _index) {
                 coins[i] = _targetAmount;
             } else {
                 coins[i] = 0;
@@ -500,8 +629,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
     }
 
-    function _depositTo3Pool(address _token, uint256 _targetAmount, bool _isUseUnderlying) internal {
-        (address targetCoin, uint256 index) = targetCoin(_token);
+    function _depositTo3Pool(address _token, address _targetCoin,  uint256 _index, uint256 _targetAmount, bool _isUseUnderlying) internal {
 
         address minter = ICurveFi(_token).minter();
 
@@ -509,7 +637,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
 
         for (uint256 i; i < 3; i++) {
-            if (i == index) {
+            if (i == _index) {
                 coins[i] = _targetAmount;
             } else {
                 coins[i] = 0;
@@ -524,8 +652,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     }
 
 
-    function _depositTo4Pool(address _token, uint256 _targetAmount, bool _isUseUnderlying) internal {
-        (address targetCoin, uint256 index) = targetCoin(_token);
+    function _depositTo4Pool(address _token, address _targetCoin,  uint256 _index, uint256 _targetAmount, bool _isUseUnderlying) internal {
 
         address minter = ICurveFi(_token).minter();
 
@@ -533,7 +660,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
 
         for (uint256 i; i < 4; i++) {
-            if (i == index) {
+            if (i == _index) {
                 coins[i] = _targetAmount;
             } else {
                 coins[i] = 0;
