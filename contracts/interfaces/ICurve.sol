@@ -24,10 +24,6 @@ interface ICurveGauge {
     function rewarded_token() external view returns (address); //v1
 
     function lp_token() external view returns (address);
-
-    function curve() external view returns (address);
-
-    function token() external view returns (address);
 }
 
 interface ICurveFi is IERC20 {
@@ -35,7 +31,13 @@ interface ICurveFi is IERC20 {
 
     function minter() external view returns (address);
 
+    function curve() external view returns (address);
+
+    function token() external view returns (address);
+
     function coins(uint256) external view returns (address);
+
+    function underlying_coins(uint256) external view returns (address);
 
     function underlying_coins(int128) external view returns (address);
 
@@ -84,8 +86,6 @@ interface ICurveFi is IERC20 {
         uint256[4] calldata amounts,
         uint256 min_mint_amount
     ) external payable;
-
-    function token() external view returns (address);
 
     function remove_liquidity_imbalance(
         uint256[2] calldata amounts,

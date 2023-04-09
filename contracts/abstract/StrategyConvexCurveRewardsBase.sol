@@ -19,6 +19,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     bool public isCVXPool;
     bool public isUseUnderlying;
 
+    bool public isDepositContract;
     uint256 nCoins;
 
     address eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -37,9 +38,16 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bytes memory _swapPath,
         string memory _name,
         uint256 _nCoins,
-        bool _isLendingPool
+        bool _isLendingPool,
+        bool _isDepositContract
     ) StrategyCurveBase(_vault, _pid, _name) {
-        _initializeStrat(_curvePool, _nCoins, _swapPath, _isLendingPool);
+        _initializeStrat(
+            _curvePool,
+            _nCoins,
+            _swapPath,
+            _isLendingPool,
+            _isDepositContract
+        );
     }
 
     receive() external payable {}
@@ -54,18 +62,26 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bytes memory _swapPath,
         string memory _name,
         uint256 _nCoins,
-        bool _isLendingPool
+        bool _isLendingPool,
+        bool _isDepositContract
     ) public {
         _initialize(_vault, _strategist, _rewards, _keeper);
         _initializeStratBase(_pid, _name);
-        _initializeStrat(_curvePool, _nCoins, _swapPath, _isLendingPool);
+        _initializeStrat(
+            _curvePool,
+            _nCoins,
+            _swapPath,
+            _isLendingPool,
+            _isDepositContract
+        );
     }
 
     function _initializeStrat(
         address _curvePool,
         uint256 _nCoins,
         bytes memory _swapPath,
-        bool _isLendingPool
+        bool _isLendingPool,
+        bool _isDepositContract
     ) internal {
         if (_nCoins < 2) {
             revert InvalidNCoins();
@@ -74,7 +90,13 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             address coin;
 
             if (_isLendingPool) {
-                coin = ICurveFi(_curvePool).underlying_coins(int128(int256(i)));
+                if (_isDepositContract) {
+                    coin = ICurveFi(_curvePool).underlying_coins(
+                        int128(int256(i))
+                    );
+                } else {
+                    coin = ICurveFi(_curvePool).underlying_coins(i);
+                }
             } else {
                 coin = ICurveFi(_curvePool).coins(i);
             }
@@ -117,6 +139,8 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         swapPath = _swapPath;
 
         isUseUnderlying = _isLendingPool;
+
+        isDepositContract = _isDepositContract;
     }
 
     // we use this to clone our original strategy to other vaults
@@ -130,7 +154,8 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bytes memory _swapPath,
         string memory _name,
         uint256 _nCoins,
-        bool _isLendingPool
+        bool _isLendingPool,
+        bool _isDepositContract
     ) external virtual returns (address newStrategy) {
         require(isOriginal);
         // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactorysol
@@ -160,7 +185,8 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             _swapPath,
             _name,
             _nCoins,
-            _isLendingPool
+            _isLendingPool,
+            _isDepositContract
         );
 
         emit Cloned(newStrategy);
@@ -291,9 +317,13 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         targetCoinIndex = _targetCoinIndex;
 
         if (isUseUnderlying) {
-            targetCoin = curve.underlying_coins(
-                int128(int256(targetCoinIndex))
-            );
+            if (isDepositContract) {
+                targetCoin = curve.underlying_coins(targetCoinIndex);
+            } else {
+                targetCoin = curve.underlying_coins(
+                    int128(int256(targetCoinIndex))
+                );
+            }
         } else {
             targetCoin = curve.coins(targetCoinIndex);
         }

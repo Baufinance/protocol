@@ -18,6 +18,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
     uint256 internal constant MAX_BPS = 10_000; //100%
 
+    address internal constant SUSD = 0xC25a3A3b969415c80451098fa907EC722572917F;
     enum CurveType {
         NONE,
         METAPOOL,
@@ -39,6 +40,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         CurveType poolType;
         address deposit;
         bool isLendingPool;
+        bool depositContract;
     }
 
     error VaultDoesntExist();
@@ -53,7 +55,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     mapping(address => Vault) public deployedVaults; //for ZAP V1
 
     // pools, deposit contracts
-    mapping(address => address) public lendingPools;
+    mapping(address => address) public depositContracts;
 
     address eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -194,6 +196,42 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         convexPoolManager = 0xD1f9b3de42420A295C33c07aa5C9e04eDC6a4447;
 
         booster = IBooster(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
+
+        // depositContracts map
+
+        // BUSD
+        depositContracts[
+            0x3B3Ac5386837Dc563660FB6a0937DFAa5924333B
+        ] = 0xb6c057591E073249F2D9D88Ba59a46CFC9B59EdB;
+
+        //compound
+        depositContracts[
+            0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2
+        ] = 0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06;
+
+        //PAX
+
+        depositContracts[
+            0xD905e2eaeBe188fc92179b6350807D8bd91Db0D8
+        ] = 0xA50cCc70b6a011CffDdf45057E39679379187287;
+
+        //USDT
+
+        depositContracts[
+            0x9fC689CCaDa600B6DF723D9E47D84d76664a1F23
+        ] = 0xac795D2c97e60DF6a99ff1c814727302fD747a80;
+
+        //yDAI
+
+        depositContracts[
+            0xdF5e0e81Dff6FAF3A7e52BA697820c5e32D806A8
+        ] = 0xbBC81d23Ea2c3ec7e56D39296F0cbB648873a5d3;
+
+        //SUSD
+
+        depositContracts[
+            0xC25a3A3b969415c80451098fa907EC722572917F
+        ] = 0xFCBa3E75865d2d561BE8D220616520c171F12851;
     }
 
     /// @notice Public function to check whether, for a given gauge address, its possible to permissionlessly create a vault for corressponding LP token
@@ -286,6 +324,50 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
         address lptoken = ICurveGauge(_gauge).lp_token();
 
+        uint256 pid = _getConvexPid(_gauge);
+
+        vault = _createVault(lptoken);
+
+        _recordVault(vault, _poolType, lptoken, _isLendingPool);
+
+        _addStrategyToVault(vault, strategy);
+
+        emit NewVault(lptoken, _gauge, vault, strategy, uint8(_poolType));
+    }
+
+    function _recordVault(
+        address _vault,
+        CurveType _poolType,
+        address _lptoken,
+        bool _isLendingPool
+    ) internal {
+        address deposit = _lptoken;
+
+        bool depositContract = false;
+
+        if (
+            _poolType != CurveType.METAPOOL &&
+            depositContracts[_lptoken] == address(0x0)
+        ) {
+            deposit = ICurveFi(_lptoken).minter();
+        }
+
+        if (depositContracts[_lptoken] != address(0x0)) {
+            deposit = depositContracts[_lptoken];
+            _isLendingPool = true;
+            depositContract = true;
+        }
+
+        deployedVaults[_lptoken] = Vault(
+            _vault,
+            _poolType,
+            deposit,
+            _isLendingPool,
+            depositContract
+        );
+    }
+
+    function _getConvexPid(address _gauge) internal returns (uint256 pid) {
         //get convex pid. if no pid create one
         uint256 pid = getPid(_gauge);
         if (pid == type(uint256).max) {
@@ -297,33 +379,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                 "Unable to add pool to Convex"
             );
         }
-
-        vault = _createVault(lptoken);
-
-        address deposit = lptoken;
-
-        if (_poolType != CurveType.METAPOOL && !_isLendingPool) {
-            deposit = ICurveFi(lptoken).minter();
-        }
-
-        if (_isLendingPool) {
-            deposit = lendingPools[lptoken];
-        }
-
-        deployedVaults[lptoken] = Vault(
-            vault,
-            _poolType,
-            deposit,
-            _isLendingPool
-        );
-
-        IVault v = IVault(vault);
-
-        strategy = _createStrategy(lptoken, pid, _swapPath, _isLendingPool);
-
-        v.addStrategy(strategy, 10_000, 0, type(uint256).max);
-
-        emit NewVault(lptoken, _gauge, vault, strategy, uint8(_poolType));
     }
 
     function _createVault(address _lptoken) internal returns (address vault) {
@@ -357,43 +412,67 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     ) internal returns (address strategy) {
         Vault memory v = deployedVaults[_lptoken];
 
+        string memory symbol = IDetails(_lptoken).name();
+
+        symbol = string(abi.encodePacked("bauConvex", symbol));
+
         //now we create the convex strat
         if (v.poolType == CurveType.METAPOOL) {
-            strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
-                v.vaultAddress,
-                management,
-                treasury,
-                keeper,
-                _pid,
-                _lptoken,
-                string(
-                    abi.encodePacked(
-                        "yieldConvex",
-                        IDetails(address(_lptoken)).symbol()
-                    )
-                )
-            );
+            strategy = _createStrategyMetaPool(v, _pid, symbol);
         } else {
-            address minter = v.deposit;
-
-            strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
-                v.vaultAddress,
-                management,
-                treasury,
-                keeper,
-                _pid,
-                minter,
-                _swapPath,
-                string(
-                    abi.encodePacked(
-                        "yieldConvex",
-                        IDetails(address(minter)).symbol()
-                    )
-                ),
-                uint8(v.poolType),
-                _isLendingPool
-            );
+            strategy = _createStrategyPool(v, _pid, _swapPath, symbol);
         }
+    }
+
+    function _createStrategyMetaPool(
+        Vault memory v,
+        uint256 _pid,
+        string memory _symbol
+    ) internal returns (address strategy) {
+        strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
+            v.vaultAddress,
+            management,
+            treasury,
+            keeper,
+            _pid,
+            v.deposit,
+            _symbol
+        );
+    }
+
+    function _createStrategyPool(
+        Vault memory v,
+        uint256 _pid,
+        bytes calldata _swapPath,
+        string memory _symbol
+    ) internal returns (address strategy) {
+        address minter;
+
+        if (v.depositContract) {
+            minter = ICurveFi(v.deposit).curve();
+        } else {
+            minter = v.deposit;
+        }
+
+        strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
+            v.vaultAddress,
+            management,
+            treasury,
+            keeper,
+            _pid,
+            minter,
+            _swapPath,
+            _symbol,
+            uint8(v.poolType),
+            v.isLendingPool,
+            v.depositContract
+        );
+    }
+
+    function _addStrategyToVault(address _vault, address _strategy) internal {
+        IVault v = IVault(_vault);
+
+        v.addStrategy(_strategy, 10_000, 0, type(uint256).max);
     }
 
     ///////////////////////////////////
@@ -418,20 +497,26 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         } else {
             address minter = v.deposit;
 
-            if (v.isLendingPool) {
-                coin = ICurveFi(minter).underlying_coins(0);
+            if (v.depositContract) {
+                if (_token == SUSD) {
+                    coin = ICurveFi(minter).underlying_coins(uint256(0));
+                } else {
+                    coin = ICurveFi(minter).underlying_coins(int128(int256(0)));
+                }
 
-                index += 1;
+                //
+            } else if (v.isLendingPool) {
+                coin = ICurveFi(minter).underlying_coins(uint256(0));
 
                 if (coin == eth) {
-                    coin = ICurveFi(minter).underlying_coins(0);
+                    index += 1;
+                    coin = ICurveFi(minter).underlying_coins(index);
                 }
             } else {
                 coin = ICurveFi(minter).coins(0);
 
-                index += 1;
-
                 if (coin == eth) {
+                    index += 1;
                     coin = ICurveFi(minter).coins(index);
                 }
             }
@@ -704,6 +789,12 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             revert VaultDoesntExist();
         }
 
+        IERC20(v.vaultAddress).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _shareAmount
+        );
+
         uint256 lptokenAmount = _withdrawFromVault(
             v.vaultAddress,
             _token,
@@ -736,6 +827,12 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         (bool supported, uint256 index) = supportedCoin(_token, _targetCoin);
 
         require(supported, "");
+
+        IERC20(v.vaultAddress).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _shareAmount
+        );
 
         uint256 lptokenAmount = _withdrawFromVault(
             v.vaultAddress,
