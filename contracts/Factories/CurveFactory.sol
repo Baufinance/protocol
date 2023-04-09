@@ -16,6 +16,8 @@ import {ICurveGauge, ICurveFi} from "../interfaces/ICurve.sol";
 contract CurveFactory is Initializable, IFactoryAdapter {
     using SafeERC20 for IERC20;
 
+    uint256 internal constant MAX_BPS = 10_000; //100%
+
     enum CurveType {
         NONE,
         METAPOOL,
@@ -150,8 +152,16 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
     function setDepositFee(uint256 _depositFee) external {
         require(msg.sender == owner);
-        require(_depositFee <= 1_000);
+        require(_depositFee <= 10_000);
         depositFee = _depositFee;
+    }
+
+    uint256 public zapFee = 5;
+
+    function setZapFee(uint256 _zapFee) external {
+        require(msg.sender == owner);
+        require(_zapFee <= 10_000);
+        zapFee = _zapFee;
     }
 
     ///////////////////////////////////
@@ -516,6 +526,8 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         (address targetToken, uint256 index) = targetCoin(_token);
 
+        _targetAmount = _zapFee(targetToken, _targetAmount);
+
         IERC20(targetToken).transferFrom(
             msg.sender,
             address(this),
@@ -565,6 +577,8 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         (bool supported, uint256 index) = supportedCoin(_token, _targetToken);
 
         require(supported, "");
+
+        _targetAmount = _zapFee(_targetToken, _targetAmount);
 
         IERC20(_targetToken).transferFrom(
             msg.sender,
@@ -819,5 +833,16 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             int128(int256(_index)),
             0
         );
+    }
+
+    function _zapFee(
+        address _token,
+        uint256 _amount
+    ) internal returns (uint256 targetAmount) {
+        uint256 amountFee = (_amount * zapFee) / MAX_BPS;
+
+        IERC20(_token).safeTransfer(treasury, amountFee);
+
+        targetAmount = _amount - amountFee;
     }
 }

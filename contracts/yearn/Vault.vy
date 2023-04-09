@@ -301,7 +301,7 @@ def initialize(
     self.guardian = guardian
     log UpdateGuardian(guardian)
 
-    self.depositFee = 50 #0.5% from deposit
+    self.depositFee = 5 #0.5% from deposit
 
     self.lastReport = block.timestamp
     self.activation = block.timestamp
