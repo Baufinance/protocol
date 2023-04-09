@@ -23,6 +23,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
     address eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
+    address public targetCoin;
     uint256 public targetCoinIndex;
 
     bytes public swapPath;
@@ -70,9 +71,13 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             revert InvalidNCoins();
         }
         for (uint256 i; i < _nCoins; i++) {
-            address coin = ICurveFi(_curvePool).coins(int128(int256(i)));
+            address coin;
 
-            targetCoinIndex = i;
+            if (_isLendingPool) {
+                coin = ICurveFi(_curvePool).underlying_coins(int128(int256(i)));
+            } else {
+                coin = ICurveFi(_curvePool).coins(i);
+            }
 
             if (coin == eth) {
                 isETHPool = true;
@@ -95,9 +100,13 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             }
         }
 
-        address targetCoin = ICurveFi(_curvePool).coins(
-            int128(int256(targetCoinIndex))
-        );
+        if (_isLendingPool) {
+            targetCoin = ICurveFi(_curvePool).underlying_coins(
+                int128(int256(targetCoinIndex))
+            );
+        } else {
+            targetCoin = ICurveFi(_curvePool).coins(targetCoinIndex);
+        }
 
         IERC20(targetCoin).approve(_curvePool, type(uint256).max);
 
@@ -277,13 +286,17 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     function setOptimalTargetCoinIndex(
         uint256 _targetCoinIndex
     ) external onlyVaultManagers {
-        address targetCoin = curve.coins(int128(int256(targetCoinIndex)));
-
         IERC20(targetCoin).approve(address(curve), 0);
 
         targetCoinIndex = _targetCoinIndex;
 
-        targetCoin = curve.coins(int128(int256(targetCoinIndex)));
+        if (isUseUnderlying) {
+            targetCoin = curve.underlying_coins(
+                int128(int256(targetCoinIndex))
+            );
+        } else {
+            targetCoin = curve.coins(targetCoinIndex);
+        }
 
         IERC20(targetCoin).approve(address(curve), type(uint256).max);
     }

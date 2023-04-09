@@ -432,7 +432,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                 index += 1;
 
                 if (coin == eth) {
-                    coin = ICurveFi(minter).coins(int128(int256(index)));
+                    coin = ICurveFi(minter).coins(index);
                 }
             }
         }
@@ -452,7 +452,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         if (v.poolType == CurveType.METAPOOL) {
             for (uint256 i; i < 4; i++) {
-                address coin = ICurveFi(_token).coins(int128(int256(i)));
+                address coin = ICurveFi(_token).coins(i);
 
                 if (_targetToken == coin) {
                     supported = true;
@@ -466,7 +466,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                 if (v.isLendingPool) {
                     coin = ICurveFi(_token).underlying_coins(int128(int256(i)));
                 } else {
-                    coin = ICurveFi(_token).coins(int128(int256(i)));
+                    coin = ICurveFi(_token).coins(i);
                 }
 
                 if (_targetToken == coin) {
@@ -481,7 +481,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                 if (v.isLendingPool) {
                     coin = ICurveFi(_token).underlying_coins(int128(int256(i)));
                 } else {
-                    coin = ICurveFi(_token).coins(int128(int256(i)));
+                    coin = ICurveFi(_token).coins(i);
                 }
 
                 if (_targetToken == coin) {
@@ -496,7 +496,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                 if (v.isLendingPool) {
                     coin = ICurveFi(_token).underlying_coins(int128(int256(i)));
                 } else {
-                    coin = ICurveFi(_token).coins(int128(int256(i)));
+                    coin = ICurveFi(_token).coins(i);
                 }
 
                 if (_targetToken == coin) {
@@ -526,7 +526,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         (address targetToken, uint256 index) = targetCoin(_token);
 
-        _targetAmount = _zapFee(targetToken, _targetAmount);
+        _targetAmount = _takeZapFee(targetToken, _targetAmount);
 
         IERC20(targetToken).transferFrom(
             msg.sender,
@@ -578,7 +578,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         require(supported, "");
 
-        _targetAmount = _zapFee(_targetToken, _targetAmount);
+        _targetAmount = _takeZapFee(_targetToken, _targetAmount);
 
         IERC20(_targetToken).transferFrom(
             msg.sender,
@@ -835,7 +835,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         );
     }
 
-    function _zapFee(
+    function _takeZapFee(
         address _token,
         uint256 _amount
     ) internal returns (uint256 targetAmount) {
