@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+
     // Curve stuff
     ICurveFi public curve; // Curve Token, this is our pool specific to this vault
 
@@ -69,7 +70,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             revert InvalidNCoins();
         }
         for (uint256 i; i < _nCoins; i++) {
-            address coin = ICurveFi(_curvePool).coins(i);
+            address coin = ICurveFi(_curvePool).coins(int128(int256(i)));
 
             targetCoinIndex = i;
 
@@ -94,7 +95,9 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             }
         }
 
-        address targetCoin = ICurveFi(_curvePool).coins(targetCoinIndex);
+        address targetCoin = ICurveFi(_curvePool).coins(
+            int128(int256(targetCoinIndex))
+        );
 
         IERC20(targetCoin).approve(_curvePool, type(uint256).max);
 
@@ -274,13 +277,13 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     function setOptimalTargetCoinIndex(
         uint256 _targetCoinIndex
     ) external onlyVaultManagers {
-        address targetCoin = curve.coins(targetCoinIndex);
+        address targetCoin = curve.coins(int128(int256(targetCoinIndex)));
 
         IERC20(targetCoin).approve(address(curve), 0);
 
         targetCoinIndex = _targetCoinIndex;
 
-        targetCoin = curve.coins(targetCoinIndex);
+        targetCoin = curve.coins(int128(int256(targetCoinIndex)));
 
         IERC20(targetCoin).approve(address(curve), type(uint256).max);
     }

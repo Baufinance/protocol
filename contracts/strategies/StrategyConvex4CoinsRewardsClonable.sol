@@ -24,7 +24,7 @@ contract StrategyConvex4CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
     {}
 
     function _depositToCurve() internal override {
-        address targetCoin = curve.coins(targetCoinIndex);
+        address targetCoin = curve.coins(int128(int256(targetCoinIndex)));
 
         uint256 targetBalance = IERC20(targetCoin).balanceOf(address(this));
 

@@ -31,9 +31,9 @@ interface ICurveFi is IERC20 {
 
     function minter() external view returns (address);
 
-    function coins(uint256) external view returns (address);
+    function coins(int128) external view returns (address);
 
-    function underlying_coins(uint256) external view returns (address);
+    function underlying_coins(int128) external view returns (address);
 
     function add_liquidity(
         // EURt
@@ -91,6 +91,14 @@ interface ICurveFi is IERC20 {
     function remove_liquidity(
         uint256 _amount,
         uint256[2] calldata amounts
+    ) external;
+
+    function remove_liquidity_one_coin(
+        address _pool,
+        uint256 _burn_amount,
+        int128 i,
+        uint256 min_amount,
+        address _receiver
     ) external;
 
     function remove_liquidity_one_coin(

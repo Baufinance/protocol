@@ -4,7 +4,6 @@ pragma solidity 0.8.15;
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 import "../interfaces/IStrategy.sol";
 import "../interfaces/IBooster.sol";
 import "../interfaces/IDetails.sol";
@@ -393,25 +392,25 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
 
         if (v.poolType == CurveType.METAPOOL) {
-            coin = ICurveFi(_token).coins(index);
+            coin = ICurveFi(_token).coins(0);
         } else {
             address minter = ICurveFi(_token).minter();
 
             if (v.isUseUnderlying) {
-                coin = ICurveFi(minter).underlying_coins(index);
+                coin = ICurveFi(minter).underlying_coins(0);
 
                 index += 1;
 
                 if (coin == eth) {
-                    coin = ICurveFi(minter).underlying_coins(index);
+                    coin = ICurveFi(minter).underlying_coins(0);
                 }
             } else {
-                coin = ICurveFi(minter).coins(index);
+                coin = ICurveFi(minter).coins(0);
 
                 index += 1;
 
                 if (coin == eth) {
-                    coin = ICurveFi(minter).coins(index);
+                    coin = ICurveFi(minter).coins(int128(int256(index)));
                 }
             }
         }
@@ -431,7 +430,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         if (v.poolType == CurveType.METAPOOL) {
             for (uint256 i; i < 4; i++) {
-                address coin = ICurveFi(_token).coins(i);
+                address coin = ICurveFi(_token).coins(int128(int256(i)));
 
                 if (_targetToken == coin) {
                     supported = true;
@@ -443,9 +442,9 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                 address coin;
 
                 if (v.isUseUnderlying) {
-                    coin = ICurveFi(_token).underlying_coins(i);
+                    coin = ICurveFi(_token).underlying_coins(int128(int256(i)));
                 } else {
-                    coin = ICurveFi(_token).coins(i);
+                    coin = ICurveFi(_token).coins(int128(int256(i)));
                 }
 
                 if (_targetToken == coin) {
@@ -458,9 +457,9 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                 address coin;
 
                 if (v.isUseUnderlying) {
-                    coin = ICurveFi(_token).underlying_coins(i);
+                    coin = ICurveFi(_token).underlying_coins(int128(int256(i)));
                 } else {
-                    coin = ICurveFi(_token).coins(i);
+                    coin = ICurveFi(_token).coins(int128(int256(i)));
                 }
 
                 if (_targetToken == coin) {
@@ -473,9 +472,9 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                 address coin;
 
                 if (v.isUseUnderlying) {
-                    coin = ICurveFi(_token).underlying_coins(i);
+                    coin = ICurveFi(_token).underlying_coins(int128(int256(i)));
                 } else {
-                    coin = ICurveFi(_token).coins(i);
+                    coin = ICurveFi(_token).coins(int128(int256(i)));
                 }
 
                 if (_targetToken == coin) {
@@ -726,11 +725,52 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     function withdrawWithTargetCoin(
         address _token,
         uint256 _shareAmount
-    ) external override {}
+    ) external override {
+        Vault memory v = deployedVaults[_token];
+
+        address vault = v.vaultAddress;
+
+        if (v.poolType == CurveType.NONE) {
+            revert VaultDoesntExist();
+        }
+    }
 
     function withdrawWithSupportedCoin(
         address _token,
         address _targetCoin,
         uint256 _shareAmount
-    ) external override {}
+    ) external override {
+        Vault memory v = deployedVaults[_token];
+
+        address vault = v.vaultAddress;
+
+        if (v.poolType == CurveType.NONE) {
+            revert VaultDoesntExist();
+        }
+
+        (bool supported, uint256 index) = supportedCoin(_token, _targetCoin);
+
+        require(supported, "");
+
+        if (v.poolType == CurveType.METAPOOL) {} else if (
+            v.poolType == CurveType.COINS2
+        ) {} else if (v.poolType == CurveType.COINS3) {} else if (
+            v.poolType == CurveType.COINS4
+        ) {}
+    }
+
+    function _withdrawFromMetaPool(
+        address _token,
+        uint256 _index,
+        uint256 _shareAmount,
+        address _recipient
+    ) internal {
+        zapContract.remove_liquidity_one_coin(
+            _token,
+            _shareAmount,
+            int128(int256(_index)),
+            0,
+            _recipient
+        );
+    }
 }

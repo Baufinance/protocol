@@ -13,4 +13,6 @@ interface IVault {
     function addStrategy(address, uint256, uint256, uint256) external;
 
     function deposit(uint256 _amount, address _recipient) external;
+
+    //function withdraw()
 }
