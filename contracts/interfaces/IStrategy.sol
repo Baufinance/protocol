@@ -22,7 +22,7 @@ interface IStrategy {
         bytes memory _swapPath,
         string memory _name,
         uint256 _nCoins,
-        bool _isUseUnderlying
+        bool _isLendingPool
     ) external returns (address newStrategy);
 
     function setHealthCheck(address) external;

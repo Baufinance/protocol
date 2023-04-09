@@ -29,12 +29,14 @@ interface IFactoryAdapter {
 
     function withdrawWithTargetCoin(
         address _token,
-        uint256 _shareAmount
+        uint256 _shareAmount,
+        address _recipient
     ) external;
 
     function withdrawWithSupportedCoin(
         address _token,
         address _targetCoin,
-        uint256 _shareAmount
+        uint256 _shareAmount,
+        address _recipient
     ) external;
 }

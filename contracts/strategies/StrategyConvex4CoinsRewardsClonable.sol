@@ -10,7 +10,7 @@ contract StrategyConvex4CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
         address _curvePool,
         bytes memory _swapPath,
         string memory _name,
-        bool _isUseUnderlying
+        bool _isLendingPool
     )
         StrategyConvexCurveRewardsBase(
             _vault,
@@ -19,7 +19,7 @@ contract StrategyConvex4CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
             _swapPath,
             _name,
             3,
-            _isUseUnderlying
+            _isLendingPool
         )
     {}
 

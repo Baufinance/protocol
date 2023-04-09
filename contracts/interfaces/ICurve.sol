@@ -24,6 +24,10 @@ interface ICurveGauge {
     function rewarded_token() external view returns (address); //v1
 
     function lp_token() external view returns (address);
+
+    function curve() external view returns (address);
+
+    function token() external view returns (address);
 }
 
 interface ICurveFi is IERC20 {

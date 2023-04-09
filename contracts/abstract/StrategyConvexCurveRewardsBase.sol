@@ -36,9 +36,9 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bytes memory _swapPath,
         string memory _name,
         uint256 _nCoins,
-        bool _isUseUnderlying
+        bool _isLendingPool
     ) StrategyCurveBase(_vault, _pid, _name) {
-        _initializeStrat(_curvePool, _nCoins, _swapPath, _isUseUnderlying);
+        _initializeStrat(_curvePool, _nCoins, _swapPath, _isLendingPool);
     }
 
     receive() external payable {}
@@ -53,18 +53,18 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bytes memory _swapPath,
         string memory _name,
         uint256 _nCoins,
-        bool _isUseUnderlying
+        bool _isLendingPool
     ) public {
         _initialize(_vault, _strategist, _rewards, _keeper);
         _initializeStratBase(_pid, _name);
-        _initializeStrat(_curvePool, _nCoins, _swapPath, _isUseUnderlying);
+        _initializeStrat(_curvePool, _nCoins, _swapPath, _isLendingPool);
     }
 
     function _initializeStrat(
         address _curvePool,
         uint256 _nCoins,
         bytes memory _swapPath,
-        bool _isUseUnderlying
+        bool _isLendingPool
     ) internal {
         if (_nCoins < 2) {
             revert InvalidNCoins();
@@ -107,7 +107,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         swapPath = _swapPath;
 
-        isUseUnderlying = _isUseUnderlying;
+        isUseUnderlying = _isLendingPool;
     }
 
     // we use this to clone our original strategy to other vaults
@@ -121,7 +121,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bytes memory _swapPath,
         string memory _name,
         uint256 _nCoins,
-        bool _isUseUnderlying
+        bool _isLendingPool
     ) external virtual returns (address newStrategy) {
         require(isOriginal);
         // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactorysol
@@ -151,7 +151,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             _swapPath,
             _name,
             _nCoins,
-            _isUseUnderlying
+            _isLendingPool
         );
 
         emit Cloned(newStrategy);

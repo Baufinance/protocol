@@ -14,5 +14,9 @@ interface IVault {
 
     function deposit(uint256 _amount, address _recipient) external;
 
-    //function withdraw()
+    function withdraw(
+        uint256 maxShares,
+        address _recipient,
+        uint256 _maxLoss
+    ) external;
 }
