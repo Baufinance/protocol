@@ -15,7 +15,6 @@ import "../interfaces/IFactoryAdapter.sol";
 import {ICurveGauge, ICurveFi} from "../interfaces/ICurve.sol";
 
 contract CurveFactory is Initializable, IFactoryAdapter {
-
     using SafeERC20 for IERC20;
 
     enum CurveType {
@@ -128,7 +127,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     }
 
     uint256 public depositLimit;
-
 
     address public zapper;
 
@@ -296,11 +294,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         vault = _createVault(lptoken);
 
-        deployedVaults[lptoken] = Vault(
-            vault,
-            _poolType,
-            _isUseUnderlying
-        );
+        deployedVaults[lptoken] = Vault(vault, _poolType, _isUseUnderlying);
 
         IVault v = IVault(vault);
 
@@ -391,7 +385,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     function targetCoin(
         address _token
     ) public view override returns (address coin, uint256 index) {
-
         index = 0;
         Vault memory v = deployedVaults[_token];
 
@@ -400,15 +393,14 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
 
         if (v.poolType == CurveType.METAPOOL) {
-            coin = ICurveFi(minter).coins(index);
+            coin = ICurveFi(_token).coins(index);
         } else {
-
             address minter = ICurveFi(_token).minter();
 
             if (v.isUseUnderlying) {
                 coin = ICurveFi(minter).underlying_coins(index);
 
-                index+= 1;
+                index += 1;
 
                 if (coin == eth) {
                     coin = ICurveFi(minter).underlying_coins(index);
@@ -416,7 +408,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             } else {
                 coin = ICurveFi(minter).coins(index);
 
-                index+= 1;
+                index += 1;
 
                 if (coin == eth) {
                     coin = ICurveFi(minter).coins(index);
@@ -425,7 +417,10 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
     }
 
-    function supportedCoin(address _token, address _targetToken) public view override returns (bool supported, uint256 index) {
+    function supportedCoin(
+        address _token,
+        address _targetToken
+    ) public view override returns (bool supported, uint256 index) {
         Vault memory v = deployedVaults[_token];
 
         require(_token != eth);
@@ -435,19 +430,16 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
 
         if (v.poolType == CurveType.METAPOOL) {
+            for (uint256 i; i < 4; i++) {
+                address coin = ICurveFi(_token).coins(i);
 
-            for (uint256 i; i < 4;i++ ) {
-
-                address coin =  ICurveFi(_token).coins(i);
-
-                if (_targetToken == coin ) {
+                if (_targetToken == coin) {
                     supported = true;
                     index = i;
                 }
             }
         } else if (v.poolType == CurveType.COINS2) {
-            for (uint256 i; i < 2;i++ ) {
-
+            for (uint256 i; i < 2; i++) {
                 address coin;
 
                 if (v.isUseUnderlying) {
@@ -456,14 +448,13 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                     coin = ICurveFi(_token).coins(i);
                 }
 
-                if (_targetToken == coin ) {
+                if (_targetToken == coin) {
                     supported = true;
                     index = i;
                 }
             }
-         } else if (v.poolType == CurveType.COINS3) {
-            for (uint256 i; i < 2;i++ ) {
-
+        } else if (v.poolType == CurveType.COINS3) {
+            for (uint256 i; i < 2; i++) {
                 address coin;
 
                 if (v.isUseUnderlying) {
@@ -472,15 +463,13 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                     coin = ICurveFi(_token).coins(i);
                 }
 
-                if (_targetToken == coin ) {
+                if (_targetToken == coin) {
                     supported = true;
                     index = i;
                 }
             }
-
         } else if (v.poolType == CurveType.COINS4) {
-            for (uint256 i; i < 4;i++ ) {
-
+            for (uint256 i; i < 4; i++) {
                 address coin;
 
                 if (v.isUseUnderlying) {
@@ -489,7 +478,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
                     coin = ICurveFi(_token).coins(i);
                 }
 
-                if (_targetToken == coin ) {
+                if (_targetToken == coin) {
                     supported = true;
                     index = i;
                 }
@@ -499,8 +488,11 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
     // add liquidity for targetAmount with targetCoin, global targetCoin index variable
 
-    function depositWithTargetCoin(address _token, uint256 _targetAmount, address _recipient) external override {
-
+    function depositWithTargetCoin(
+        address _token,
+        uint256 _targetAmount,
+        address _recipient
+    ) external override {
         Vault memory v = deployedVaults[_token];
 
         address vault = v.vaultAddress;
@@ -509,22 +501,43 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             revert VaultDoesntExist();
         }
 
-
         uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
 
         (address targetToken, uint256 index) = targetCoin(_token);
 
-        IERC20(targetToken).transferFrom(msg.sender, address(this), _targetAmount);
+        IERC20(targetToken).transferFrom(
+            msg.sender,
+            address(this),
+            _targetAmount
+        );
         IERC20(targetToken).approve(address(zapContract), _targetAmount);
 
         if (v.poolType == CurveType.METAPOOL) {
             _depositToMetaPool(_token, targetToken, index, _targetAmount);
         } else if (v.poolType == CurveType.COINS2) {
-            _depositTo2Pool(_token, targetToken, index, _targetAmount, v.isUseUnderlying);
+            _depositTo2Pool(
+                _token,
+                targetToken,
+                index,
+                _targetAmount,
+                v.isUseUnderlying
+            );
         } else if (v.poolType == CurveType.COINS3) {
-            _depositTo3Pool(_token, targetToken, index, _targetAmount, v.isUseUnderlying);
+            _depositTo3Pool(
+                _token,
+                targetToken,
+                index,
+                _targetAmount,
+                v.isUseUnderlying
+            );
         } else if (v.poolType == CurveType.COINS4) {
-            _depositTo4Pool(_token, targetToken, index, _targetAmount, v.isUseUnderlying);
+            _depositTo4Pool(
+                _token,
+                targetToken,
+                index,
+                _targetAmount,
+                v.isUseUnderlying
+            );
         }
 
         uint256 tokenBalanceAfter = IERC20(_token).balanceOf(address(this));
@@ -542,8 +555,12 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         IVault(vault).deposit(tokenBalance, _recipient);
     }
 
-
-    function depositWithSupportedCoin(address _token, address _targetToken, uint256 _targetAmount,  address _recipient) external override {
+    function depositWithSupportedCoin(
+        address _token,
+        address _targetToken,
+        uint256 _targetAmount,
+        address _recipient
+    ) external override {
         Vault memory v = deployedVaults[_token];
 
         address vault = v.vaultAddress;
@@ -552,24 +569,46 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             revert VaultDoesntExist();
         }
 
-         uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
+        uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
 
         (bool supported, uint256 index) = supportedCoin(_token, _targetToken);
 
         require(supported, "");
 
-        IERC20(_targetToken).transferFrom(msg.sender, address(this), _targetAmount);
+        IERC20(_targetToken).transferFrom(
+            msg.sender,
+            address(this),
+            _targetAmount
+        );
 
         IERC20(_targetToken).approve(ICurveFi(_token).minter(), _targetAmount);
 
         if (v.poolType == CurveType.METAPOOL) {
             _depositToMetaPool(_token, _targetToken, index, _targetAmount);
         } else if (v.poolType == CurveType.COINS2) {
-            _depositTo2Pool(_token, _targetToken, index, _targetAmount, v.isUseUnderlying);
+            _depositTo2Pool(
+                _token,
+                _targetToken,
+                index,
+                _targetAmount,
+                v.isUseUnderlying
+            );
         } else if (v.poolType == CurveType.COINS3) {
-            _depositTo3Pool(_token, _targetToken, index, _targetAmount, v.isUseUnderlying);
+            _depositTo3Pool(
+                _token,
+                _targetToken,
+                index,
+                _targetAmount,
+                v.isUseUnderlying
+            );
         } else if (v.poolType == CurveType.COINS4) {
-            _depositTo4Pool(_token, _targetToken, index, _targetAmount, v.isUseUnderlying);
+            _depositTo4Pool(
+                _token,
+                _targetToken,
+                index,
+                _targetAmount,
+                v.isUseUnderlying
+            );
         }
 
         uint256 tokenBalanceAfter = IERC20(_token).balanceOf(address(this));
@@ -587,8 +626,12 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         IVault(vault).deposit(tokenBalance, _recipient);
     }
 
-    function _depositToMetaPool(address _token, address _targetCoin, uint256 _index, uint256 _targetAmount) internal {
-
+    function _depositToMetaPool(
+        address _token,
+        address _targetCoin,
+        uint256 _index,
+        uint256 _targetAmount
+    ) internal {
         uint256[4] memory coins;
 
         for (uint256 i; i < 4; i++) {
@@ -599,19 +642,19 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             }
         }
 
-        zapContract.add_liquidity(
-            _token,
-            coins,
-            0
-        );
+        zapContract.add_liquidity(_token, coins, 0);
     }
 
-    function _depositTo2Pool(address _token, address _targetCoin,  uint256 _index, uint256 _targetAmount, bool _isUseUnderlying) internal {
-
+    function _depositTo2Pool(
+        address _token,
+        address _targetCoin,
+        uint256 _index,
+        uint256 _targetAmount,
+        bool _isUseUnderlying
+    ) internal {
         address minter = ICurveFi(_token).minter();
 
         uint256[2] memory coins;
-
 
         for (uint256 i; i < 2; i++) {
             if (i == _index) {
@@ -628,12 +671,16 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
     }
 
-    function _depositTo3Pool(address _token, address _targetCoin,  uint256 _index, uint256 _targetAmount, bool _isUseUnderlying) internal {
-
+    function _depositTo3Pool(
+        address _token,
+        address _targetCoin,
+        uint256 _index,
+        uint256 _targetAmount,
+        bool _isUseUnderlying
+    ) internal {
         address minter = ICurveFi(_token).minter();
 
         uint256[3] memory coins;
-
 
         for (uint256 i; i < 3; i++) {
             if (i == _index) {
@@ -650,13 +697,16 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
     }
 
-
-    function _depositTo4Pool(address _token, address _targetCoin,  uint256 _index, uint256 _targetAmount, bool _isUseUnderlying) internal {
-
+    function _depositTo4Pool(
+        address _token,
+        address _targetCoin,
+        uint256 _index,
+        uint256 _targetAmount,
+        bool _isUseUnderlying
+    ) internal {
         address minter = ICurveFi(_token).minter();
 
         uint256[4] memory coins;
-
 
         for (uint256 i; i < 4; i++) {
             if (i == _index) {
@@ -673,13 +723,14 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         }
     }
 
+    function withdrawWithTargetCoin(
+        address _token,
+        uint256 _shareAmount
+    ) external override {}
 
-    function withdrawWithTargetCoin(address _token, uint256 _shareAmount) external override {
-
-    }
-
-
-    function withdrawWithSupportedCoin(address _token, address _targetCoin, uint256 _shareAmount) external override {
-
-    }
+    function withdrawWithSupportedCoin(
+        address _token,
+        address _targetCoin,
+        uint256 _shareAmount
+    ) external override {}
 }
