@@ -648,8 +648,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         (address targetToken, uint256 index) = targetCoin(_token);
 
-        _targetAmount = _takeZapFee(targetToken, _targetAmount);
-
         IERC20(targetToken).transferFrom(
             msg.sender,
             address(this),
@@ -677,7 +675,15 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         IERC20(_token).approve(vault, tokenBalance);
 
-        IVault(vault).deposit(tokenBalance, _recipient);
+        uint256 vaultBalanceBefore = IERC20(vault).balanceOf(address(this));
+        IVault(vault).deposit(tokenBalance, address(this));
+        uint256 vaultBalanceAfter = IERC20(vault).balanceOf(address(this));
+
+        uint256 vaultBalance = vaultBalanceAfter - vaultBalanceBefore;
+
+        vaultBalance = _takeZapFee(vault, vaultBalance);
+
+        IERC20(vault).safeTransfer(_recipient, vaultBalance);
     }
 
     function depositWithSupportedCoin(
