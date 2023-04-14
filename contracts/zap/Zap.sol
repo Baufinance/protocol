@@ -69,22 +69,8 @@ contract Zap is Initializable {
                 (address, IAggregationRouterV5.SwapDescription, bytes, bytes)
             );
 
-        address factory;
+        (address factory, bool supported,) = _getFactoryAddress(_poolToken, _srcToken);
 
-        bool supported;
-
-        for (uint256 i = 0; i < _factories.length(); i++) {
-            factory = _factories.at(i);
-
-            if (IFactoryAdapter(factory).isVaultExists(_poolToken)) {
-                // if pool doesnt exist it will be reverted
-                (supported, , ) = IFactoryAdapter(factory).supportedCoin(
-                    _poolToken,
-                    _srcToken
-                );
-                break;
-            }
-        }
 
         if (factory != address(0x0)) {
             IERC20(desc.srcToken).safeTransferFrom(
@@ -166,22 +152,7 @@ contract Zap is Initializable {
                 (address, IAggregationRouterV5.SwapDescription, bytes, bytes)
             );
 
-        address factory;
-        address vault;
-        bool supported;
-
-        for (uint256 i = 0; i < _factories.length(); i++) {
-            factory = _factories.at(i);
-
-            if (IFactoryAdapter(factory).isVaultExists(_poolToken)) {
-                // if pool doesnt exist it will be reverted
-                (supported, , vault) = IFactoryAdapter(factory).supportedCoin(
-                    _poolToken,
-                    _dstToken
-                );
-                break;
-            }
-        }
+        (address factory, bool supported,address vault) = _getFactoryAddress(_poolToken, _dstToken);
 
         if (factory != address(0x0)) {
             IERC20(vault).safeTransferFrom(
@@ -262,6 +233,22 @@ contract Zap is Initializable {
             }
 
             IERC20(vault).approve(factory, 0);
+        }
+    }
+
+    function _getFactoryAddress(address _poolToken, address _srcToken) internal view returns(address factory, bool supported, address vault) {
+
+          for (uint256 i = 0; i < _factories.length(); i++) {
+            factory = _factories.at(i);
+
+            if (IFactoryAdapter(factory).isVaultExists(_poolToken)) {
+                // if pool doesnt exist it will be reverted
+                (supported, ,vault) = IFactoryAdapter(factory).supportedCoin(
+                    _poolToken,
+                    _srcToken
+                );
+                break;
+            }
         }
     }
 
