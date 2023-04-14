@@ -13,7 +13,6 @@ contract Zap is Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     EnumerableSet.AddressSet internal _factories;
 
-
     /**
      *  @notice 1Inch aggregation router v5
      */
@@ -22,7 +21,6 @@ contract Zap is Initializable {
 
     address public owner;
     address internal pendingOwner;
-
 
     error InvalidToken(address token);
     error InvalidTokenAmount(uint256 tokenAmount);
@@ -69,8 +67,10 @@ contract Zap is Initializable {
                 (address, IAggregationRouterV5.SwapDescription, bytes, bytes)
             );
 
-        (address factory, bool supported,) = _getFactoryAddress(_poolToken, _srcToken);
-
+        (address factory, bool supported, ) = _getFactoryAddress(
+            _poolToken,
+            _srcToken
+        );
 
         if (factory != address(0x0)) {
             IERC20(desc.srcToken).safeTransferFrom(
@@ -152,7 +152,10 @@ contract Zap is Initializable {
                 (address, IAggregationRouterV5.SwapDescription, bytes, bytes)
             );
 
-        (address factory, bool supported,address vault) = _getFactoryAddress(_poolToken, _dstToken);
+        (address factory, bool supported, address vault) = _getFactoryAddress(
+            _poolToken,
+            _dstToken
+        );
 
         if (factory != address(0x0)) {
             IERC20(vault).safeTransferFrom(
@@ -173,18 +176,7 @@ contract Zap is Initializable {
                     _shareAmount,
                     msg.sender
                 );
-                uint256 shareBalanceAfter = IERC20(vault).balanceOf(
-                    address(this)
-                );
 
-                uint256 withdrawShareBalance = shareBalanceBefore -
-                    shareBalanceAfter;
-
-                if (withdrawShareBalance != _shareAmount) {
-                    uint256 refundBalance = _shareAmount - withdrawShareBalance;
-
-                    IERC20(vault).safeTransfer(msg.sender, refundBalance);
-                }
                 //refund not burned tokens
             } else {
                 if (_dstToken != address(desc.srcToken)) {
@@ -213,8 +205,6 @@ contract Zap is Initializable {
                 uint256 targetTokenBalance = targetTokenBalanceAfter -
                     targetTokenBalanceBefore;
 
-                //refund vault tokens
-
                 if (targetTokenBalance != desc.amount) {
                     desc.amount = targetTokenBalance;
                 }
@@ -233,17 +223,31 @@ contract Zap is Initializable {
             }
 
             IERC20(vault).approve(factory, 0);
+
+            // refund vault tokens
+            uint256 shareBalanceAfter = IERC20(vault).balanceOf(address(this));
+
+            uint256 withdrawShareBalance = shareBalanceBefore -
+                shareBalanceAfter;
+
+            if (withdrawShareBalance != _shareAmount) {
+                uint256 refundBalance = _shareAmount - withdrawShareBalance;
+
+                IERC20(vault).safeTransfer(msg.sender, refundBalance);
+            }
         }
     }
 
-    function _getFactoryAddress(address _poolToken, address _srcToken) internal view returns(address factory, bool supported, address vault) {
-
-          for (uint256 i = 0; i < _factories.length(); i++) {
+    function _getFactoryAddress(
+        address _poolToken,
+        address _srcToken
+    ) internal view returns (address factory, bool supported, address vault) {
+        for (uint256 i = 0; i < _factories.length(); i++) {
             factory = _factories.at(i);
 
             if (IFactoryAdapter(factory).isVaultExists(_poolToken)) {
                 // if pool doesnt exist it will be reverted
-                (supported, ,vault) = IFactoryAdapter(factory).supportedCoin(
+                (supported, , vault) = IFactoryAdapter(factory).supportedCoin(
                     _poolToken,
                     _srcToken
                 );
