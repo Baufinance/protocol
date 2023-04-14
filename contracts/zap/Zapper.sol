@@ -13,6 +13,7 @@ contract Zapper is Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     EnumerableSet.AddressSet internal _factories;
 
+
     /**
      *  @notice 1Inch aggregation router v5
      */
@@ -21,6 +22,11 @@ contract Zapper is Initializable {
 
     address public owner;
     address internal pendingOwner;
+
+
+    error InvalidToken(address token);
+    error InvalidTokenAmount(uint256 tokenAmount);
+    error InvalidReceiver(address receiver);
 
     function initialize(address _owner) public initializer {
         owner = _owner;
@@ -99,11 +105,11 @@ contract Zapper is Initializable {
                 IERC20(_srcToken).approve(factory, 0);
             } else {
                 if (_srcToken != address(desc.srcToken)) {
-                    revert();
+                    revert InvalidToken(_srcToken);
                 }
 
                 if (_tokenAmount != desc.amount) {
-                    revert();
+                    revert InvalidTokenAmount(_tokenAmount);
                 }
 
                 (address targetToken, , ) = IFactoryAdapter(factory).targetCoin(
@@ -111,11 +117,11 @@ contract Zapper is Initializable {
                 );
 
                 if (targetToken != address(desc.dstToken)) {
-                    revert();
+                    revert InvalidToken(targetToken);
                 }
 
                 if (desc.dstReceiver != address(this)) {
-                    revert();
+                    revert InvalidReceiver(desc.dstReceiver);
                 }
 
                 IERC20(desc.srcToken).approve(
@@ -211,11 +217,11 @@ contract Zapper is Initializable {
                 //refund not burned tokens
             } else {
                 if (_dstToken != address(desc.srcToken)) {
-                    revert();
+                    revert InvalidToken(_dstToken);
                 }
 
                 if (desc.dstReceiver != msg.sender) {
-                    revert();
+                    revert InvalidReceiver(desc.dstReceiver);
                 }
 
                 (address targetToken, , ) = IFactoryAdapter(factory).targetCoin(
