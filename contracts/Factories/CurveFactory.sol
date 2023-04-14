@@ -36,7 +36,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         string symbol;
     }
 
-
     mapping(address => CurveType) public curveRegistry;
 
     event NewVault(
@@ -69,21 +68,20 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     // pools, deposit contracts
     mapping(address => address) public depositContracts;
 
-    address eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public constant eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     address public constant cvx = 0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B;
     uint256 public constant category = 0; // 0 for curve
 
     IBooster public booster;
 
-    // always owned by ychad
     address public owner;
     address internal pendingOwner;
 
     IERC20 internal constant usdt =
         IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
 
-    mapping (CurveType => ICurveFi) public zapContract;
+    mapping(CurveType => ICurveFi) public zapContract;
 
     function setOwner(address newOwner) external {
         require(msg.sender == owner);
@@ -185,7 +183,10 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         allowDuplicate = _allowDuplicate;
     }
 
-    function setCurvePoolToRegistry(address _lptoken, CurveType _poolType) external {
+    function setCurvePoolToRegistry(
+        address _lptoken,
+        CurveType _poolType
+    ) external {
         require(msg.sender == owner);
 
         curveRegistry[_lptoken] = _poolType;
@@ -258,9 +259,16 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             0xC25a3A3b969415c80451098fa907EC722572917F
         ] = 0xFCBa3E75865d2d561BE8D220616520c171F12851;
 
+        zapContract[CurveType.METAPOOL_3CRV] = ICurveFi(
+            0xA79828DF1850E8a3A3064576f380D90aECDD3359
+        );
+        zapContract[CurveType.METAPOOL_SBTC] = ICurveFi(
+            0x7AbDBAf29929e7F8621B757D2a7c04d78d633834
+        );
 
-        zapContract[CurveType.METAPOOL_3CRV] = ICurveFi(0xA79828DF1850E8a3A3064576f380D90aECDD3359);
-        zapContract[CurveType.METAPOOL_SBTC] = ICurveFi(0x7AbDBAf29929e7F8621B757D2a7c04d78d633834);
+        depositFee = 50;
+
+        zapFee = 5;
     }
 
     /// @notice Public function to check whether, for a given gauge address, its possible to permissionlessly create a vault for corressponding LP token
@@ -285,6 +293,14 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         address latest = latestVault(lptoken);
 
         return latest;
+    }
+
+    function isVaultExists(address _token) external view returns (bool) {
+        Vault storage v = deployedVaults[_token];
+
+        if (v.vaultAddress != address(0x0)) {
+            return true;
+        }
     }
 
     function latestVault(address _token) public view returns (address) {
@@ -323,21 +339,15 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         address _gauge,
         bytes calldata _swapPath
     ) external returns (address vault, address convexStrategy) {
-
         //require(msg.sender == owner || msg.sender == management);
 
-        return
-            _createNewVaultsAndStrategies(
-                _gauge,
-                _swapPath
-            );
+        return _createNewVaultsAndStrategies(_gauge, _swapPath);
     }
 
     function _createNewVaultsAndStrategies(
         address _gauge,
         bytes calldata _swapPath
     ) internal returns (address vault, address strategy) {
-
         if (!allowDuplicate) {
             require(
                 canCreateVaultPermissionlessly(_gauge),
@@ -363,13 +373,11 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         emit NewVault(lptoken, _gauge, vault, strategy, uint8(poolType));
     }
 
-
     function _recordVault(
         address _vault,
         CurveType _poolType,
         address _lptoken
     ) internal {
-
         bool isLendingPool = false;
 
         address deposit = _lptoken;
@@ -377,7 +385,8 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         bool depositContract = false;
 
         if (
-            _poolType != CurveType.METAPOOL_3CRV && _poolType != CurveType.METAPOOL_3CRV &&
+            _poolType != CurveType.METAPOOL_3CRV &&
+            _poolType != CurveType.METAPOOL_3CRV &&
             depositContracts[_lptoken] == address(0x0)
         ) {
             deposit = ICurveFi(_lptoken).minter();
@@ -454,7 +463,10 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         });
 
         //now we create the convex strat
-        if (v.poolType == CurveType.METAPOOL_3CRV || v.poolType == CurveType.METAPOOL_SBTC) {
+        if (
+            v.poolType == CurveType.METAPOOL_3CRV ||
+            v.poolType == CurveType.METAPOOL_SBTC
+        ) {
             strategy = _createStrategyMETAPOOL(params);
         } else {
             strategy = _createStrategyPool(params);
@@ -480,7 +492,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     function _createStrategyPool(
         PoolParams memory params
     ) internal returns (address strategy) {
-
         Vault memory v = params.vault;
 
         address minter;
@@ -521,7 +532,12 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     // get target coin for add liquidity
     function targetCoin(
         address _token
-    ) public view override returns (address coin, uint256 index) {
+    )
+        public
+        view
+        override
+        returns (address coin, uint256 index, address vault)
+    {
         index = 0;
         Vault memory v = deployedVaults[_token];
 
@@ -529,7 +545,12 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             revert VaultDoesntExist();
         }
 
-        if (v.poolType == CurveType.METAPOOL_3CRV || v.poolType == CurveType.METAPOOL_SBTC) {
+        vault = v.vaultAddress;
+
+        if (
+            v.poolType == CurveType.METAPOOL_3CRV ||
+            v.poolType == CurveType.METAPOOL_SBTC
+        ) {
             coin = ICurveFi(_token).coins(0);
         } else {
             address minter = v.deposit;
@@ -563,7 +584,12 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     function supportedCoin(
         address _token,
         address _targetToken
-    ) public view override returns (bool supported, uint256 index) {
+    )
+        public
+        view
+        override
+        returns (bool supported, uint256 index, address vault)
+    {
         Vault memory v = deployedVaults[_token];
 
         require(_token != eth);
@@ -572,7 +598,12 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             revert VaultDoesntExist();
         }
 
-        if (v.poolType == CurveType.METAPOOL_3CRV || v.poolType == CurveType.METAPOOL_SBTC) {
+        vault = v.vaultAddress;
+
+        if (
+            v.poolType == CurveType.METAPOOL_3CRV ||
+            v.poolType == CurveType.METAPOOL_SBTC
+        ) {
             for (uint256 i; i < 2; i++) {
                 address coin = ICurveFi(_token).coins(i);
 
@@ -646,17 +677,29 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
 
-        (address targetToken, uint256 index) = targetCoin(_token);
+        (address targetToken, uint256 index, ) = targetCoin(_token);
 
         IERC20(targetToken).transferFrom(
             msg.sender,
             address(this),
             _targetAmount
         );
-        IERC20(targetToken).approve(address(zapContract[v.poolType]), _targetAmount);
+        IERC20(targetToken).approve(
+            address(zapContract[v.poolType]),
+            _targetAmount
+        );
 
-        if (v.poolType == CurveType.METAPOOL_3CRV || v.poolType == CurveType.METAPOOL_SBTC) {
-            _depositToMETAPOOL(_token, targetToken, index, _targetAmount, v.poolType);
+        if (
+            v.poolType == CurveType.METAPOOL_3CRV ||
+            v.poolType == CurveType.METAPOOL_SBTC
+        ) {
+            _depositToMETAPOOL(
+                _token,
+                targetToken,
+                index,
+                _targetAmount,
+                v.poolType
+            );
         } else if (v.poolType == CurveType.COINS2) {
             _depositTo2Pool(v.deposit, targetToken, index, _targetAmount);
         } else if (v.poolType == CurveType.COINS3) {
@@ -702,7 +745,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
 
-        (bool supported, uint256 index) = supportedCoin(_token, _targetToken);
+        (bool supported, uint256 index, ) = supportedCoin(_token, _targetToken);
 
         require(supported, "");
 
@@ -716,8 +759,17 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         IERC20(_targetToken).approve(v.deposit, _targetAmount);
 
-        if (v.poolType == CurveType.METAPOOL_3CRV || v.poolType == CurveType.METAPOOL_SBTC) {
-            _depositToMETAPOOL(_token, _targetToken, index, _targetAmount, v.poolType);
+        if (
+            v.poolType == CurveType.METAPOOL_3CRV ||
+            v.poolType == CurveType.METAPOOL_SBTC
+        ) {
+            _depositToMETAPOOL(
+                _token,
+                _targetToken,
+                index,
+                _targetAmount,
+                v.poolType
+            );
         } else if (v.poolType == CurveType.COINS2) {
             _depositTo2Pool(v.deposit, _targetToken, index, _targetAmount);
         } else if (v.poolType == CurveType.COINS3) {
@@ -827,7 +879,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         address vault = v.vaultAddress;
 
-        (address targetToken, uint256 index) = targetCoin(_token);
+        (address targetToken, uint256 index, ) = targetCoin(_token);
 
         if (v.poolType == CurveType.NONE) {
             revert VaultDoesntExist();
@@ -868,7 +920,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             revert VaultDoesntExist();
         }
 
-        (bool supported, uint256 index) = supportedCoin(_token, _targetCoin);
+        (bool supported, uint256 index, ) = supportedCoin(_token, _targetCoin);
 
         require(supported, "");
 
@@ -931,8 +983,17 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     ) internal {
         Vault memory v = deployedVaults[_token];
 
-        if (v.poolType == CurveType.METAPOOL_3CRV || v.poolType == CurveType.METAPOOL_SBTC) {
-            _withdrawFromMETAPOOL(_token, _index, _lptokenAmount, _recipient, v.poolType);
+        if (
+            v.poolType == CurveType.METAPOOL_3CRV ||
+            v.poolType == CurveType.METAPOOL_SBTC
+        ) {
+            _withdrawFromMETAPOOL(
+                _token,
+                _index,
+                _lptokenAmount,
+                _recipient,
+                v.poolType
+            );
         } else {
             uint256 targetTokenBalanceBefore = IERC20(_targetCoin).balanceOf(
                 address(this)

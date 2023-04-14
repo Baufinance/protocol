@@ -10,9 +10,9 @@
     "pretty-quick": "^3.0.2"
   },
   "scripts": {
-    "lint": "pretty-quick --pattern '**/*.*(sol|json)' --verbose",
+    "lint": "pretty-quick --pattern '**/*.*(sol)' --verbose",
     "lint:check": "prettier --check **/*.sol **/*.json",
-    "lint:fix": "pretty-quick --pattern '**/*.*(sol|json)' --staged --verbose",
+    "lint:fix": "pretty-quick --pattern '**/*.*(sol)' --staged --verbose",
     "format": "prettier --write 'contracts/**/*.sol' --verbose",
     "format:check": "prettier --check '**/*.*(sol)'",
     "format:fix": "pretty-quick --pattern '**/*.*(sol)' --staged --verbose",
