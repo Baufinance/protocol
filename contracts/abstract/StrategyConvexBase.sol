@@ -23,11 +23,6 @@ abstract contract StrategyConvexBase is BaseStrategy {
     address public virtualRewardsPool; // This is only if we have bonus rewards
     uint256 public pid; // this is unique to each pool
 
-    // keepCRV stuff
-    uint256 public keepCRV; // the percentage of CRV we re-lock for boost (in basis points)
-    uint256 public keepCVX; // the percentage of CVX we keep for boosting yield (in basis points)
-    address public keepCVXDestination; // where we send the CVX we are keeping
-    address public voter;
     uint256 internal constant FEE_DENOMINATOR = 10000; // this means all of our fee values are in basis points
 
     // Swap stuff
@@ -143,30 +138,6 @@ abstract contract StrategyConvexBase is BaseStrategy {
     {}
 
     /* ========== SETTERS ========== */
-
-    // These functions are useful for setting parameters of the strategy that may need to be adjusted.
-
-    // Set the amount of CRV to be locked in Yield's veCRV voter from each harvest. Default is 10%. Option to keep CVX as well.
-    function setKeep(
-        uint256 _keepCRV,
-        uint256 _keepCVX,
-        address _keepCVXDestination,
-        address _keepCRVDestination
-    ) external onlyGovernance {
-        require(_keepCRV <= 10_000 && _keepCVX <= 10_000);
-        keepCRV = _keepCRV;
-        keepCVX = _keepCVX;
-        keepCVXDestination = _keepCVXDestination;
-        voter = _keepCRVDestination;
-    }
-
-    function setKeepCRV(
-        uint256 _keepCRV,
-        address _keepCRVDestination
-    ) external onlyGovernance {
-        keepCRV = _keepCRV;
-        voter = _keepCRVDestination;
-    }
 
     // We usually don't need to claim rewards on withdrawals, but might change our mind for migrations etc
     function setClaimRewards(bool _claimRewards) external onlyVaultManagers {
