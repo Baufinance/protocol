@@ -96,7 +96,6 @@ event Approval:
 event Deposit:
     recipient: indexed(address)
     shares: uint256
-    depositFee: uint256
     amount: uint256
 
 event Withdraw:
@@ -833,7 +832,16 @@ def _issueSharesForAmount(to: address, amount: uint256) -> uint256:
         shares = amount
     assert shares != 0 # dev: division rounding resulted in zero
 
+    self.totalSupply = totalSupply + shares
 
+    # mint depositFee
+    depositFee: uint256 = (shares * self.depositFee) / MAX_BPS
+    # to rewards address
+    self.balanceOf[self.rewards] = depositFee
+    log Transfer(ZERO_ADDRESS, self.rewards, shares)
+
+    # mint shares to user
+    shares -= depositFee
     self.balanceOf[to] += shares
     log Transfer(ZERO_ADDRESS, to, shares)
 
@@ -897,17 +905,13 @@ def deposit(_amount: uint256 = MAX_UINT256, recipient: address = msg.sender) -> 
     # Shares are issued to recipient (may be different from msg.sender)
     # See @dev note, above.
 
-    amountFee: uint256 = (amount * self.depositFee) / MAX_BPS
-
-    shares: uint256 = self._issueSharesForAmount(recipient, amount - amountFee)
-
-    depositFee: uint256 = self._issueSharesForAmount(self.rewards, amountFee)
+    shares: uint256 = self._issueSharesForAmount(msg.sender, amount)
 
     # Tokens are transferred from msg.sender (may be different from _recipient)
     self.erc20_safe_transferFrom(self.token.address, msg.sender, self, amount)
     self.totalIdle += amount
 
-    log Deposit(recipient, shares, depositFee, amount)
+    log Deposit(recipient, shares, amount)
 
     return shares  # Just in case someone wants them
 
@@ -1683,6 +1687,7 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
         self.strategies[msg.sender].debtRatio,
     )
 
+
     if self.strategies[msg.sender].debtRatio == 0 or self.emergencyShutdown:
         # Take every last penny the Strategy has (Emergency Exit/revokeStrategy)
         # NOTE: This is different than `debt` in order to extract *all* of the returns
@@ -1690,6 +1695,8 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
     else:
         # Otherwise, just return what we have as debt outstanding
         return debt
+
+
 
 
 @external

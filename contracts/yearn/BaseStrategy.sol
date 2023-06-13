@@ -6,7 +6,6 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 struct StrategyParams {
-    uint256 performanceFee;
     uint256 activation;
     uint256 debtRatio;
     uint256 minDebtPerHarvest;
