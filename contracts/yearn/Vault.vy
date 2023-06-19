@@ -837,7 +837,7 @@ def _issueSharesForAmount(to: address, amount: uint256) -> uint256:
     # mint depositFee
     depositFee: uint256 = (shares * self.depositFee) / MAX_BPS
     # to rewards address
-    self.balanceOf[self.rewards] = depositFee
+    self.balanceOf[self.rewards] += depositFee
     log Transfer(ZERO_ADDRESS, self.rewards, shares)
 
     # mint shares to user
@@ -905,7 +905,7 @@ def deposit(_amount: uint256 = MAX_UINT256, recipient: address = msg.sender) -> 
     # Shares are issued to recipient (may be different from msg.sender)
     # See @dev note, above.
 
-    shares: uint256 = self._issueSharesForAmount(msg.sender, amount)
+    shares: uint256 = self._issueSharesForAmount(recipient, amount)
 
     # Tokens are transferred from msg.sender (may be different from _recipient)
     self.erc20_safe_transferFrom(self.token.address, msg.sender, self, amount)

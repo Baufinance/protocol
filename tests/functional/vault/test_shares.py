@@ -143,14 +143,18 @@ def test_delegated_deposit_withdraw(accounts, token, vault):
 
     # 1. Deposit from a and send shares to b
     token.approve(vault, token.balanceOf(a), {"from": a})
+    balanceA = token.balanceOf(a)
+    depositFee = balanceA * vault.depositFee() / 10000
+
+    amount = originalTokenAmount - depositFee
     vault.deposit(token.balanceOf(a), b, {"from": a})
 
     # a no longer has any tokens
     assert token.balanceOf(a) == 0
     # a does not have any vault shares
-    assert vault.balanceOf(a) == 0
+    assert vault.balanceOf(a) == depositFee
     # b has been issued the vault shares
-    assert vault.balanceOf(b) == originalTokenAmount
+    assert vault.balanceOf(b) == amount
 
     # 2. Withdraw from b to c
     vault.withdraw(vault.balanceOf(b), c, {"from": b})
@@ -160,18 +164,24 @@ def test_delegated_deposit_withdraw(accounts, token, vault):
     # b did not receive the tokens
     assert token.balanceOf(b) == 0
     # c has the tokens
-    assert token.balanceOf(c) == originalTokenAmount
+    assert token.balanceOf(c) == amount
+
+
 
     # 3. Deposit all from c and send shares to d
     token.approve(vault, token.balanceOf(c), {"from": c})
     vault.deposit(token.balanceOf(c), d, {"from": c})
+
+    depositFee2 = amount * vault.depositFee() / 10000
+
+    amount2 = amount - depositFee2
 
     # c no longer has the tokens
     assert token.balanceOf(c) == 0
     # c does not have any vault shares
     assert vault.balanceOf(c) == 0
     # d has been issued the vault shares
-    assert vault.balanceOf(d) == originalTokenAmount
+    assert vault.balanceOf(d) == amount2
 
     # 4. Withdraw from d to e
     vault.withdraw(vault.balanceOf(d), e, {"from": d})
@@ -181,7 +191,8 @@ def test_delegated_deposit_withdraw(accounts, token, vault):
     # d did not receive the tokens
     assert token.balanceOf(d) == 0
     # e has the tokens
-    assert token.balanceOf(e) == originalTokenAmount
+    assert token.balanceOf(e) == amount2
+
 
 
 def test_emergencyShutdown(gov, vault, token):

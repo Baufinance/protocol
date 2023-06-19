@@ -125,15 +125,10 @@ def pump_pps(TestStrategy, gov, chain):
         )
         print(f"  {vault}.harvest({amount})")
         token.transfer(strategy, amount, {"from": gov})
-        managementFee = vault.managementFee()
-        performanceFee = vault.performanceFee()
-        vault.setManagementFee(0, {"from": gov})
-        vault.setPerformanceFee(0, {"from": gov})
-        vault.updateStrategyPerformanceFee(strategy, 0, {"from": gov})
+
         strategy.harvest()
         assert token.balanceOf(strategy) == 0
-        vault.setManagementFee(managementFee, {"from": gov})
-        vault.setPerformanceFee(performanceFee, {"from": gov})
+
         chain.mine(timedelta=24 * 60 * 60)
 
     yield pump_pps
