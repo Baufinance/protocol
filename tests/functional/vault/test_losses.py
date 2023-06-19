@@ -22,7 +22,7 @@ def strategy(gov, vault, TestStrategy):
 
 
 def test_losses(chain, vault, strategy, gov, token):
-    vault.addStrategy(strategy, 1000, 0, 1000, 0, {"from": gov})
+    vault.addStrategy(strategy, 1000, 0, 1000, {"from": gov})
     token.approve(vault, 2**256 - 1, {"from": gov})
     vault.deposit(5000, {"from": gov})
 
@@ -64,7 +64,7 @@ def test_losses(chain, vault, strategy, gov, token):
 
 
 def test_total_loss(chain, vault, strategy, gov, token):
-    vault.addStrategy(strategy, 10_000, 0, 2**256 - 1, 1_000, {"from": gov})
+    vault.addStrategy(strategy, 10_000, 0, 2**256 - 1, {"from": gov})
     token.approve(vault, 2**256 - 1, {"from": gov})
     vault.deposit(5000, {"from": gov})
     strategy.harvest({"from": gov})
@@ -84,7 +84,7 @@ def test_total_loss(chain, vault, strategy, gov, token):
 def test_loss_should_be_removed_from_locked_profit(chain, vault, strategy, gov, token):
     vault.setLockedProfitDegradation(1e10, {"from": gov})
 
-    vault.addStrategy(strategy, 1000, 0, 1000, 0, {"from": gov})
+    vault.addStrategy(strategy, 1000, 0, 1000, {"from": gov})
     token.approve(vault, 2**256 - 1, {"from": gov})
     vault.deposit(5000, {"from": gov})
     chain.sleep(1)
@@ -94,9 +94,9 @@ def test_loss_should_be_removed_from_locked_profit(chain, vault, strategy, gov, 
     chain.sleep(1)
     strategy.harvest({"from": gov})
 
-    assert vault.lockedProfit() == 90  # 100 - performance fees
+    assert vault.lockedProfit() == 100  # 100%
 
     token.transfer(token, 40, {"from": strategy})
     chain.sleep(1)
     strategy.harvest({"from": gov})
-    assert vault.lockedProfit() == 50
+    assert vault.lockedProfit() == 60

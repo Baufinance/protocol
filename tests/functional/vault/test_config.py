@@ -78,8 +78,7 @@ def test_vault_reinitialization(guardian, gov, rewards, token, Vault):
         ("rewards", "setRewards", None, False),
         ("lockedProfitDegradation", "setLockedProfitDegradation", 1000, False),
         ("management", "setManagement", None, False),
-        ("performanceFee", "setPerformanceFee", 1000, False),
-        ("managementFee", "setManagementFee", 1000, False),
+        ("depositFee", "setDepositFee", 1000, False),
         ("depositLimit", "setDepositLimit", 1000, False),
     ],
 )
@@ -164,9 +163,9 @@ def test_min_max_debtIncrease(gov, vault, TestStrategy):
     strategy = gov.deploy(TestStrategy, vault)
     # Can't set min > max or max < min in adding a strategy
     with brownie.reverts():
-        vault.addStrategy(strategy, 1_000, 20_000, 10_000, 1_000, {"from": gov})
+        vault.addStrategy(strategy, 1_000, 20_000, 10_000,  {"from": gov})
 
-    vault.addStrategy(strategy, 1_000, 10_000, 10_000, 1_000, {"from": gov})
+    vault.addStrategy(strategy, 1_000, 10_000, 10_000, {"from": gov})
     # Can't set min > max
     with brownie.reverts():
         vault.updateStrategyMaxDebtPerHarvest(
