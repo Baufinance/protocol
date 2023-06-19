@@ -41,7 +41,7 @@ def test_liquidation_after_hack(chain, gov, vault, token, TestStrategy):
 
     # Deploy strategy and seed it with debt
     strategy = gov.deploy(TestStrategy, vault)
-    vault.addStrategy(strategy, 2_000, 0, 10**21, 1000, {"from": gov})
+    vault.addStrategy(strategy, 2_000, 0, 10**21, {"from": gov})
     strategy.harvest({"from": gov})
 
     # The strategy suffers a loss
@@ -104,17 +104,16 @@ def test_addStrategy(
 
     # Only governance can add a strategy
     with brownie.reverts():
-        vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": rando})
+        vault.addStrategy(strategy, 100, 10, 20, {"from": rando})
 
     # Can't add a strategy during emergency shutdown
     vault.setEmergencyShutdown(True, {"from": gov})
     with brownie.reverts():
-        vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
+        vault.addStrategy(strategy, 100, 10, 20, {"from": gov})
     chain.undo()
     chain.undo()
 
     assert vault.strategies(strategy).dict() == {
-        "performanceFee": 0,
         "activation": 0,
         "debtRatio": 0,
         "minDebtPerHarvest": 0,
@@ -125,10 +124,9 @@ def test_addStrategy(
         "totalDebt": 0,
     }
 
-    vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(strategy, 100, 10, 20, {"from": gov})
     activation_timestamp = chain[-1]["timestamp"]
     assert vault.strategies(strategy).dict() == {
-        "performanceFee": 1000,
         "activation": activation_timestamp,
         "debtRatio": 100,
         "minDebtPerHarvest": 10,
@@ -142,30 +140,30 @@ def test_addStrategy(
 
     # Can't add a strategy twice
     with brownie.reverts():
-        vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
+        vault.addStrategy(strategy, 100, 10, 20,  {"from": gov})
 
     # Can't add zero address as a strategy
     with brownie.reverts():
-        vault.addStrategy(ZERO_ADDRESS, 100, 10, 20, 1000, {"from": gov})
+        vault.addStrategy(ZERO_ADDRESS, 100, 10, 20, {"from": gov})
 
     # Can't add a strategy with incorrect vault
     with brownie.reverts():
-        vault.addStrategy(strategy_with_wrong_vault, 100, 10, 20, 1000, {"from": gov})
+        vault.addStrategy(strategy_with_wrong_vault, 100, 10, 20,  {"from": gov})
 
     # Can't add a strategy with incorrect want token
     with brownie.reverts():
         vault.addStrategy(
-            strategy_with_wrong_want_token, 100, 10, 20, 1000, {"from": gov}
+            strategy_with_wrong_want_token, 100, 10, 20, {"from": gov}
         )
 
     # Can't add a strategy with a debt ratio more than the maximum
     leftover_ratio = 10_000 - vault.debtRatio()
     with brownie.reverts():
         vault.addStrategy(
-            other_strategy, leftover_ratio + 1, 10, 20, 1000, {"from": gov}
+            other_strategy, leftover_ratio + 1, 10, 20,  {"from": gov}
         )
 
-    vault.addStrategy(other_strategy, leftover_ratio, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(other_strategy, leftover_ratio, 10, 20,  {"from": gov})
     assert vault.debtRatio() == 10_000
 
 
@@ -177,10 +175,9 @@ def test_updateStrategy(chain, gov, vault, strategy, rando):
         vault.updateStrategyMinDebtPerHarvest(strategy, 15, {"from": gov})
     with brownie.reverts():
         vault.updateStrategyMaxDebtPerHarvest(strategy, 15, {"from": gov})
-    with brownie.reverts():
-        vault.updateStrategyPerformanceFee(strategy, 75, {"from": gov})
 
-    vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
+
+    vault.addStrategy(strategy, 100, 10, 20, {"from": gov})
     activation_timestamp = chain[-1]["timestamp"]
 
     # Not just anyone can update a strategy
@@ -190,12 +187,10 @@ def test_updateStrategy(chain, gov, vault, strategy, rando):
         vault.updateStrategyMinDebtPerHarvest(strategy, 15, {"from": rando})
     with brownie.reverts():
         vault.updateStrategyMaxDebtPerHarvest(strategy, 15, {"from": rando})
-    with brownie.reverts():
-        vault.updateStrategyPerformanceFee(strategy, 75, {"from": rando})
+
 
     vault.updateStrategyDebtRatio(strategy, 500, {"from": gov})
     assert vault.strategies(strategy).dict() == {
-        "performanceFee": 1000,
         "activation": activation_timestamp,
         "debtRatio": 500,  # This changed
         "minDebtPerHarvest": 10,
@@ -208,7 +203,6 @@ def test_updateStrategy(chain, gov, vault, strategy, rando):
 
     vault.updateStrategyMinDebtPerHarvest(strategy, 15, {"from": gov})
     assert vault.strategies(strategy).dict() == {
-        "performanceFee": 1000,
         "activation": activation_timestamp,
         "debtRatio": 500,
         "minDebtPerHarvest": 15,  # This changed
@@ -221,7 +215,6 @@ def test_updateStrategy(chain, gov, vault, strategy, rando):
 
     vault.updateStrategyMaxDebtPerHarvest(strategy, 15, {"from": gov})
     assert vault.strategies(strategy).dict() == {
-        "performanceFee": 1000,
         "activation": activation_timestamp,
         "debtRatio": 500,
         "minDebtPerHarvest": 15,
@@ -232,22 +225,9 @@ def test_updateStrategy(chain, gov, vault, strategy, rando):
         "totalDebt": 0,
     }
 
-    vault.updateStrategyPerformanceFee(strategy, 75, {"from": gov})
-    assert vault.strategies(strategy).dict() == {
-        "performanceFee": 75,  # This changed
-        "activation": activation_timestamp,
-        "debtRatio": 500,
-        "minDebtPerHarvest": 15,
-        "maxDebtPerHarvest": 15,
-        "lastReport": activation_timestamp,
-        "totalGain": 0,
-        "totalLoss": 0,
-        "totalDebt": 0,
-    }
-
 
 def test_migrateStrategy(gov, vault, strategy, other_strategy, rando, TestStrategy):
-    vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(strategy, 100, 10, 20, {"from": gov})
 
     # Not just anyone can migrate
     with brownie.reverts():
@@ -276,13 +256,13 @@ def test_migrateStrategy(gov, vault, strategy, other_strategy, rando, TestStrate
 
     # Can't migrate to an already approved strategy
     approved_strategy = gov.deploy(TestStrategy, vault)
-    vault.addStrategy(approved_strategy, 100, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(approved_strategy, 100, 10, 20, {"from": gov})
     with brownie.reverts():
         vault.migrateStrategy(strategy, approved_strategy, {"from": gov})
 
 
 def test_revokeStrategy(chain, gov, vault, strategy, rando):
-    vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(strategy, 100, 10, 20, {"from": gov})
     activation_timestamp = chain[-1]["timestamp"]
 
     # Not just anyone can revoke a strategy
@@ -298,7 +278,6 @@ def test_revokeStrategy(chain, gov, vault, strategy, rando):
         vault.revokeStrategy(ZERO_ADDRESS, {"from": gov})
 
     assert vault.strategies(strategy).dict() == {
-        "performanceFee": 1000,
         "activation": activation_timestamp,
         "debtRatio": 0,  # This changed
         "minDebtPerHarvest": 10,
@@ -329,7 +308,7 @@ def test_ordering(gov, vault, TestStrategy, rando):
         )
 
     for s in strategies:
-        vault.addStrategy(s, 100, 10, 20, 1000, {"from": gov})
+        vault.addStrategy(s, 100, 10, 20, {"from": gov})
 
     for idx, strategy in enumerate(strategies):
         assert vault.withdrawalQueue(idx) == strategy
@@ -384,7 +363,7 @@ def test_ordering(gov, vault, TestStrategy, rando):
 
     # Show that adding a new one properly orders
     strategy = gov.deploy(TestStrategy, vault)
-    vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(strategy, 100, 10, 20, {"from": gov})
     strategies.append(strategy)
 
     for idx, strategy in enumerate(strategies):
@@ -393,7 +372,7 @@ def test_ordering(gov, vault, TestStrategy, rando):
     # NOTE: limited to only a certain amount of strategies
     with brownie.reverts():
         vault.addStrategy(
-            gov.deploy(TestStrategy, vault), 100, 10, 20, 1000, {"from": gov}
+            gov.deploy(TestStrategy, vault), 100, 10, 20, {"from": gov}
         )
 
     # Show that removing from the middle properly orders
@@ -440,9 +419,9 @@ def test_addStategyToQueue(
         vault.addStrategyToQueue(strategy, {"from": gov})
 
     # Initialize strategies (keep other_strategy in queue to test the queue)
-    vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(strategy, 100, 10, 20, {"from": gov})
     vault.removeStrategyFromQueue(strategy, {"from": gov})
-    vault.addStrategy(other_strategy, 100, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(other_strategy, 100, 10, 20, {"from": gov})
 
     # Not just anyone can add a strategy to the queue
     with brownie.reverts():
@@ -466,7 +445,7 @@ def test_addStategyToQueue(
     # Can't add a strategy to an already full queue
     strategies = [gov.deploy(TestStrategy, vault) for _ in range(20)]
     for s in strategies:
-        vault.addStrategy(s, 100, 10, 20, 1000, {"from": gov})
+        vault.addStrategy(s, 100, 10, 20, {"from": gov})
     with brownie.reverts():
         vault.addStrategyToQueue(strategy, {"from": gov})
 
@@ -478,7 +457,7 @@ def test_reporting(vault, token, strategy, gov, rando):
 
     strategy.tend({"from": gov})  # Do this for converage of `Strategy.tend()`
 
-    vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(strategy, 100, 10, 20, {"from": gov})
     vault.expectedReturn(strategy)  # Do this for coverage of `Vault._expectedReturn()`
 
     # Can't have more loss than strategy debt
@@ -493,9 +472,7 @@ def test_reporting(vault, token, strategy, gov, rando):
 
 
 def test_reporting_gains_without_fee(chain, vault, token, strategy, gov, rando):
-    vault.setManagementFee(0, {"from": gov})
-    vault.setPerformanceFee(0, {"from": gov})
-    vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(strategy, 100, 10, 20, {"from": gov})
     gain = 1000000
     assert token.balanceOf(strategy) == 0
     chain.sleep(1)
@@ -509,8 +486,8 @@ def test_reporting_gains_without_fee(chain, vault, token, strategy, gov, rando):
 
 
 def test_withdrawalQueue(chain, gov, management, vault, strategy, other_strategy):
-    vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
-    vault.addStrategy(other_strategy, 100, 10, 20, 1000, {"from": gov})
+    vault.addStrategy(strategy, 100, 10, 20,  {"from": gov})
+    vault.addStrategy(other_strategy, 100, 10, 20, {"from": gov})
 
     assert vault.withdrawalQueue(0) == strategy
     assert vault.withdrawalQueue(1) == other_strategy
@@ -549,17 +526,17 @@ def test_withdrawalQueue(chain, gov, management, vault, strategy, other_strategy
 
 def test_update_debtRatio_to_add_second_strategy(gov, vault, strategy, other_strategy):
 
-    vault.addStrategy(strategy, 10_000, 0, 0, 0, {"from": gov})
+    vault.addStrategy(strategy, 10_000, 0, 0, {"from": gov})
 
     # Can't add a second strategy if first one is taking 100%
     with brownie.reverts():
-        vault.addStrategy(other_strategy, 5_000, 0, 0, 0, {"from": gov})
+        vault.addStrategy(other_strategy, 5_000, 0, 0, {"from": gov})
 
     vault.updateStrategyDebtRatio(strategy, 5_000, {"from": gov})
 
     # Can't add the second strategy going over 100%
     with brownie.reverts():
-        vault.addStrategy(other_strategy, 5_001, 0, 0, 0, {"from": gov})
+        vault.addStrategy(other_strategy, 5_001, 0, 0, {"from": gov})
 
     # But 50% should work
-    vault.addStrategy(other_strategy, 5_000, 0, 0, 0, {"from": gov})
+    vault.addStrategy(other_strategy, 5_000, 0, 0, {"from": gov})
