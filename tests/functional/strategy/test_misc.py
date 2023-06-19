@@ -33,7 +33,7 @@ def test_harvest_tend_trigger(chain, gov, vault, token, TestStrategy, base_fee_o
     assert not strategy.harvestTrigger(0)
 
     # Must wait at least the minimum amount of time for it to be active
-    vault.addStrategy(strategy, 2_000, 0, MAX_UINT256, 50, {"from": gov})
+    vault.addStrategy(strategy, 2_000, 0, MAX_UINT256, {"from": gov})
     last_report = vault.strategies(strategy).dict()["lastReport"]
     strategy.harvest({"from": gov})  # Sends funds into strategy
     strategy.setMinReportDelay(10, {"from": gov})

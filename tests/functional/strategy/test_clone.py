@@ -25,7 +25,6 @@ def strategy(gov, strategist, keeper, rewards, vault, TestStrategy):
         4_000,  # 40% of Vault
         0,  # Minimum debt increase per harvest
         2**256 - 1,  # maximum debt increase per harvest
-        1000,  # 10% performance fee for Strategist
         {"from": gov},
     )
     yield strategy
