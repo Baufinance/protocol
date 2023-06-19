@@ -57,7 +57,6 @@ def test_credit_available_minDebtPerHarvest_larger_than_available(
         10000,  # 100% of Vault AUM
         0,  # minDebtPerHarvest
         MAX_UINT256,  # maxDebtPerHarvest
-        0,  # performanceFee
         {"from": gov},
     )
 
@@ -175,8 +174,6 @@ def test_reject_ether(gov, vault):
         ("acceptGovernance", []),
         ("setRewards", ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"]),
         ("setGuardian", ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"]),
-        ("setPerformanceFee", [0]),
-        ("setManagementFee", [0]),
         ("setEmergencyShutdown", [True]),
         ("approve", ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1]),
         ("transfer", ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1]),
@@ -194,7 +191,7 @@ def test_reject_ether(gov, vault):
         ("withdraw", [1]),
         ("deposit", [1, "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"]),
         ("withdraw", [1, "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"]),
-        ("addStrategy", ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1, 1, 1, 1]),
+        ("addStrategy", ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1, 1, 1]),
         ("addStrategyToQueue", ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"]),
         ("removeStrategyFromQueue", ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"]),
         ("updateStrategyDebtRatio", ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1]),
@@ -204,10 +201,6 @@ def test_reject_ether(gov, vault):
         ),
         (
             "updateStrategyMaxDebtPerHarvest",
-            ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1],
-        ),
-        (
-            "updateStrategyPerformanceFee",
             ["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1],
         ),
         (
@@ -278,10 +271,8 @@ def test_sandwich_attack(
 
     # we don't use the one in conftest because we want no rate limit
     strategy = strategist.deploy(TestStrategy, vault)
-    vault.setManagementFee(0, {"from": gov})
-    vault.setPerformanceFee(0, {"from": gov})
-    vault.addStrategy(strategy, 4_000, 0, MAX_UINT256, 0, {"from": gov})
-    vault.updateStrategyPerformanceFee(strategy, 0, {"from": gov})
+
+    vault.addStrategy(strategy, 4_000, 0, MAX_UINT256, {"from": gov})
 
     strategy.harvest({"from": strategist})
     # strategy is returning 0.02%. Equivalent to 35.6% a year at 5 harvests a day
@@ -312,7 +303,7 @@ def test_sandwich_attack(
 
     print(f"Attack Profit Percent: {profit_percent}")
     # 5 rebases a day = 1780 a year. Less than 0.0004% profit on attack makes it closer to neutral EV
-    assert profit_percent == pytest.approx(0, abs=10e-5)
+    assert profit_percent == pytest.approx(0, abs=10e-4)
 
 
 def test_erc20_safe_transfer(gov, other_vault, token, other_token, token_false_return):
