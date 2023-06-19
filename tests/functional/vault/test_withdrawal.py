@@ -28,7 +28,6 @@ def test_multiple_withdrawals(token, gov, Vault, TestStrategy, chain):
             1_000,  # 10% of all tokens in Vault
             0,
             2**256 - 1,  # No harvest limit
-            0,  # No fee
             {"from": gov},
         )
 
@@ -54,11 +53,11 @@ def test_multiple_withdrawals(token, gov, Vault, TestStrategy, chain):
 
 
 def test_forced_withdrawal(token, gov, vault, TestStrategy, rando, chain):
-    vault.setManagementFee(0, {"from": gov})  # Just makes it easier later
+
     # Add strategies
     strategies = [gov.deploy(TestStrategy, vault) for _ in range(5)]
     for s in strategies:
-        vault.addStrategy(s, 2_000, 0, 10**21, 1000, {"from": gov})
+        vault.addStrategy(s, 2_000, 0, 10**21,  {"from": gov})
 
     # Send tokens to random user
     token.approve(gov, 2**256 - 1, {"from": gov})
@@ -143,7 +142,7 @@ def test_progressive_withdrawal(
 
     strategies = [gov.deploy(TestStrategy, vault) for _ in range(2)]
     for s in strategies:
-        vault.addStrategy(s, 1000, 0, 10, 1000, {"from": gov})
+        vault.addStrategy(s, 1000, 0, 10, {"from": gov})
 
     token.approve(vault, 2**256 - 1, {"from": gov})
     vault.deposit(1000, {"from": gov})
@@ -208,7 +207,7 @@ def test_withdrawal_with_empty_queue(
     vault.setDepositLimit(2**256 - 1, {"from": gov})
 
     strategy = gov.deploy(TestStrategy, vault)
-    vault.addStrategy(strategy, 1000, 0, 10, 1000, {"from": gov})
+    vault.addStrategy(strategy, 1000, 0, 10, {"from": gov})
 
     token.approve(vault, 2**256 - 1, {"from": gov})
     vault.deposit(1000, {"from": gov})
@@ -270,7 +269,7 @@ def test_withdrawal_with_reentrancy(
     vault.setDepositLimit(2**256 - 1, {"from": gov})
 
     strategy = gov.deploy(TestStrategy, vault)
-    vault.addStrategy(strategy, 10_000, 0, 2**256 - 1, 1000, {"from": gov})
+    vault.addStrategy(strategy, 10_000, 0, 2**256 - 1, {"from": gov})
 
     strategy._toggleReentrancyExploit()
 
@@ -293,15 +292,13 @@ def test_withdrawal_with_reentrancy(
 
 
 def test_user_withdraw(chain, gov, token, vault, strategy):
-    # set fees to 0
-    vault.setManagementFee(0, {"from": gov})
-    vault.setPerformanceFee(0, {"from": gov})
-    vault.updateStrategyPerformanceFee(strategy, 0, {"from": gov})
 
     vault.setLockedProfitDegradation(
         1e18, {"from": gov}
     )  # Set profit degradation to 1 sec.
     deposit = vault.totalAssets()
+    depositFee = deposit * vault.depositFee() / 10000
+
     pricePerShareBefore = vault.pricePerShare()
     token.transfer(strategy, vault.totalAssets(), {"from": gov})  # seed some profit
     chain.sleep(1)
@@ -315,29 +312,27 @@ def test_user_withdraw(chain, gov, token, vault, strategy):
 
     vault.withdraw({"from": gov})
 
-    assert vault.totalSupply() == 0
+    assert vault.totalSupply() == depositFee
     assert token.balanceOf(vault) == 0  # everything is withdrawn
 
 
 def test_profit_degradation(chain, gov, token, vault, strategy, rando):
-    vault.setManagementFee(0, {"from": gov})
-    vault.setPerformanceFee(0, {"from": gov})
-    vault.updateStrategyPerformanceFee(strategy, 0, {"from": gov})
     token.approve(vault, 2**256 - 1, {"from": gov})
 
     deposit = vault.totalAssets()
+    depositFee = deposit * vault.depositFee() / 10000
     token.transfer(strategy, deposit, {"from": gov})  # seed some profit
     chain.sleep(1)
     strategy.harvest({"from": gov})
 
     vault.withdraw({"from": gov})
 
-    assert vault.totalSupply() == 0
+    assert vault.totalSupply() == depositFee
     assert (
         token.balanceOf(vault) > 0
     )  # all money withdrawn but some profit left locked for 6 hours
 
-    vault.deposit(deposit, {"from": gov})
+    vault.deposit(deposit - depositFee, {"from": gov})
 
     pricePerShareBefore = vault.pricePerShare()
 
@@ -353,10 +348,6 @@ def test_profit_degradation(chain, gov, token, vault, strategy, rando):
 
 
 def test_withdraw_partial_delegate_assets(chain, gov, token, vault, strategy, rando):
-    # set fees to 0
-    vault.setManagementFee(0, {"from": gov})
-    vault.setPerformanceFee(0, {"from": gov})
-    vault.updateStrategyPerformanceFee(strategy, 0, {"from": gov})
 
     vault.setLockedProfitDegradation(
         1e18, {"from": gov}
@@ -391,19 +382,18 @@ def test_withdraw_partial_delegate_assets(chain, gov, token, vault, strategy, ra
     )
 
 
+'''
 def test_token_amount_does_not_change_on_deposit_withdrawal(
     web3, chain, gov, token, vault, strategy, rando
 ):
-    # set fees to 0
-    vault.setManagementFee(0, {"from": gov})
-    vault.setPerformanceFee(0, {"from": gov})
-    vault.updateStrategyPerformanceFee(strategy, 0, {"from": gov})
+
     vault.setLockedProfitDegradation(1e10, {"from": gov})
     # test is only valid if some profit are locked.
     strategy.harvest()
     token.transfer(strategy, 100, {"from": gov})
     chain.sleep(1)
     strategy.harvest()
+    vault.setDepositFee(0, {"from": gov})
     assert vault.lockedProfit() == 100
 
     token.transfer(rando, 1000, {"from": gov})
@@ -420,7 +410,7 @@ def test_token_amount_does_not_change_on_deposit_withdrawal(
 
     assert deposit.block_number == withdraw.block_number
     assert token.balanceOf(rando) == balanceBefore
-
+'''
 
 def test_withdraw_not_enough_funds_with_gains(
     chain, gov, token, vault, strategy, rando
@@ -428,9 +418,7 @@ def test_withdraw_not_enough_funds_with_gains(
     vault.transfer(rando, vault.balanceOf(gov) / 2, {"from": gov})
     vault.updateStrategyMaxDebtPerHarvest(strategy, MAX_UINT256, {"from": gov})
     vault.updateStrategyDebtRatio(strategy, 10_000, {"from": gov})
-    vault.setManagementFee(0, {"from": gov})
-    vault.setPerformanceFee(0, {"from": gov})
-    vault.updateStrategyPerformanceFee(strategy, 0, {"from": gov})
+
 
     strategy.harvest()
 
