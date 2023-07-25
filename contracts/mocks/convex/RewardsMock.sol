@@ -16,7 +16,7 @@ contract RewardsMock {
   }
 
   function getReward(address _account) external {
-    uint256 rewards = block.number * 10**20 / block.timestamp;
+    uint256 rewards = block.number * 10**18 / block.timestamp;
     rewardToken.safeTransfer(_account, rewards);
   }
 }

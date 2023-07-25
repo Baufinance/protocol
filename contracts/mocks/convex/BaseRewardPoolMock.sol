@@ -72,10 +72,10 @@ contract BaseRewardPoolMock {
       uint256 reward = earned(_account);
 
       if (reward > 0) {
-            rewardToken.safeTransfer(_account, reward);
-            uint256 convexReward = block.number * 10**18 / block.timestamp;
+           rewardToken.safeTransfer(_account, reward);
+           uint256 convexReward = block.number * 10**18 / block.timestamp;
 
-            convexToken.safeTransfer(_account, convexReward);
+           convexToken.safeTransfer(_account, convexReward);
         }
 
         //also get rewards from linked rewards
@@ -84,6 +84,7 @@ contract BaseRewardPoolMock {
                 IRewardsMock(extraRewards[i]).getReward(_account);
             }
         }
+
         return true;
     }
 
@@ -99,6 +100,6 @@ contract BaseRewardPoolMock {
     }
 
     function updateReward() external {
-        periodFinish = block.timestamp.add(duration);
+        periodFinish = block.timestamp + duration;
     }
 }

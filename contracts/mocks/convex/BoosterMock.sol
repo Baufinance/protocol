@@ -26,9 +26,13 @@ contract BoosterMock {
     address public crvToken;
     address public rewardFactory;
 
-    constructor(address _crvToken, address _rewardFactory) {
+    constructor(address _crvToken) {
         crvToken = _crvToken;
-        rewardFactory = _rewardFactory;
+
+    }
+
+    function setRewardFactory(address _rewardFactory) external {
+         rewardFactory = _rewardFactory;
     }
 
     function poolLength() external view returns (uint256) {
@@ -40,7 +44,7 @@ contract BoosterMock {
         uint256 pid = poolInfo.length;
         address newRewardPool = IRewardFactoryMock(rewardFactory).createCrvRewards(pid);
 
-         //add the new pool
+        //add the new pool
         poolInfo.push(
             PoolInfo({
                 lptoken: _lptoken,

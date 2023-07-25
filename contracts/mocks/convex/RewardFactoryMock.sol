@@ -10,7 +10,7 @@ contract RewardFactoryMock {
 
     address public operator;
     constructor(address _crvToken, address _convexToken, address _operator) {
-      crvToken = crvToken;
+      crvToken = _crvToken;
       convexToken = _convexToken;
       operator = _operator;
     }
