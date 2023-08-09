@@ -8,10 +8,9 @@ def test_emergency_exit_from_vault(
     token,
     vault,
     strategy,
-    chain
+    chain,
+    management
 ):
-    ## deposit to the vault after approving
-    startingWhale = token.balanceOf(gov)
     token.approve(vault, 2 ** 256 - 1, {"from": gov})
     vault.deposit({"from": gov})
     chain.sleep(1)
@@ -19,6 +18,12 @@ def test_emergency_exit_from_vault(
     chain.sleep(1)
 
 
+    with brownie.reverts():
+        vault.emergencyWithdraw({"from": gov})
+
+
+    with brownie.reverts():
+        vault.emergencyWithdraw({"from": management})
 
     chain.mine(1)
     strategy.harvest({"from": gov})
@@ -40,6 +45,9 @@ def test_emergency_exit_from_vault(
 
     balance_before = token.balanceOf(gov)
     vault_balance = token.balanceOf(vault)
+
+    with brownie.reverts():
+        vault.emergencyWithdraw({"from": management})
 
     vault.emergencyWithdraw({"from": gov})
     balance_after = token.balanceOf(gov)

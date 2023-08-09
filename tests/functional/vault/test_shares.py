@@ -208,7 +208,7 @@ def test_emergencyShutdown(gov, vault, token):
 
     # Deposits are locked out
     with brownie.reverts():
-        vault.deposit({"from": gov})
+        vault.deposit({"from": management})
 
     # But withdrawals are fine
     vault.withdraw(vault.balanceOf(gov), {"from": gov})
