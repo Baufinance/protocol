@@ -132,6 +132,10 @@ interface VaultAPI is IERC20 {
      * is subject to guardian defined by the Vault.
      */
     function guardian() external view returns (address);
+
+    function emergencyShutdown() external view returns(bool);
+
+    function emergencyExit() external view returns(bool);
 }
 
 /**
@@ -841,7 +845,7 @@ abstract contract BaseStrategy {
         uint256 loss = 0;
         uint256 debtOutstanding = vault.debtOutstanding();
         uint256 debtPayment = 0;
-        if (emergencyExit) {
+        if (emergencyExit || vault.emergencyExit() || vault.emergencyShutdown()) { // TODO add for emegencyWithdraw + emergencyExit
             // Free up as much capital as possible
             uint256 amountFreed = liquidateAllPositions();
             if (amountFreed < debtOutstanding) {
