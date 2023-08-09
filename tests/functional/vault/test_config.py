@@ -74,6 +74,8 @@ def test_vault_reinitialization(guardian, gov, rewards, token, Vault):
         ("symbol", "setSymbol", "yvNEW", False),
         ("emergencyShutdown", "setEmergencyShutdown", True, True),
         ("emergencyShutdown", "setEmergencyShutdown", False, False),
+        ("emergencyExit", "setEmergencyExit", True, True),
+        ("emergencyExit", "setEmergencyExit", False, False),
         ("guardian", "setGuardian", None, True),
         ("rewards", "setRewards", None, False),
         ("lockedProfitDegradation", "setLockedProfitDegradation", 1000, False),

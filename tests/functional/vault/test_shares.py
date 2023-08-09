@@ -216,6 +216,26 @@ def test_emergencyShutdown(gov, vault, token):
     assert token.balanceOf(gov) == balance
 
 
+def test_emergencyExit(gov, vault, token):
+    balance = token.balanceOf(gov)
+    token.approve(vault, balance, {"from": gov})
+    vault.deposit(balance // 2, {"from": gov})
+
+    assert token.balanceOf(vault) == balance // 2
+    assert vault.totalDebt() == 0
+    assert vault.pricePerShare() == 10 ** token.decimals()  # 1:1 price
+
+    vault.setEmergencyExit(True, {"from": gov})
+
+    # Deposits are locked out
+    with brownie.reverts():
+        vault.deposit({"from": gov})
+
+    # Withdrawals are locked out
+    with brownie.reverts():
+        vault.withdraw({"from": gov})
+
+
 def test_transfer(accounts, token, vault):
     a, b = accounts[0:2]
     token.approve(vault, token.balanceOf(a), {"from": a})

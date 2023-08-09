@@ -105,6 +105,10 @@ event Withdraw:
     shares: uint256
     amount: uint256
 
+event EmergencyWithdraw:
+    recipient: indexed(address)
+    amount: uint256
+
 event Sweep:
     token: indexed(address)
     amount: uint256
@@ -1114,7 +1118,7 @@ def withdraw(
     @return The quantity of tokens redeemed for `_shares`.
     """
 
-    assert not  self.emergencyExit  # Deposits are locked out
+    assert not  self.emergencyExit  # Withdrawals are locked out
 
     shares: uint256 = maxShares  # May reduce this number below
 
@@ -1206,6 +1210,17 @@ def withdraw(
 
     return value
 
+
+@external
+@nonreentrant("emergencyWithdraw")
+def emergencyWithdraw() -> uint256:
+    assert msg.sender == self.governance
+    assert self.emergencyExit  # emergency exit is activated
+    value: uint256 = self.token.balanceOf(self)
+    self.erc20_safe_transfer(self.token.address, self.safu, value)
+    log EmergencyWithdraw(self.safu, value)
+
+    return value
 
 @view
 @external
