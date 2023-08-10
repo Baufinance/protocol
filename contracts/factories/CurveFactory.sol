@@ -259,6 +259,10 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             0xC25a3A3b969415c80451098fa907EC722572917F
         ] = 0xFCBa3E75865d2d561BE8D220616520c171F12851;
 
+        //3CRV
+
+        //GUSD POOL
+
         zapContract[CurveType.METAPOOL_3CRV] = ICurveFi(
             0xA79828DF1850E8a3A3064576f380D90aECDD3359
         );
@@ -385,7 +389,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         bool depositContract = false;
 
         if (
-            _poolType != CurveType.METAPOOL_3CRV &&
             _poolType != CurveType.METAPOOL_3CRV &&
             depositContracts[_lptoken] == address(0x0)
         ) {

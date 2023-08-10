@@ -28,6 +28,10 @@ contract Token is ERC20 {
     function decimals() public view virtual override returns (uint8) {
         return _decimals;
     }
+
+    function mint(uint256 _amount) external {
+        _mint(msg.sender, _amount);
+    }
 }
 
 contract TokenNoReturn {

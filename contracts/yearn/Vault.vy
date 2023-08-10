@@ -945,7 +945,7 @@ def deposit(_amount: uint256 = MAX_UINT256, recipient: address = msg.sender) -> 
     @return The issued Vault shares.
     """
 
-    assert not self.emergencyShutdown or not self.emergencyExit  # Deposits are locked out
+    assert not self.emergencyShutdown and  not self.emergencyExit  # Deposits are locked out
     assert recipient not in [self, ZERO_ADDRESS]
 
     amount: uint256 = _amount
@@ -1277,7 +1277,7 @@ def addStrategy(
     assert self.withdrawalQueue[MAXIMUM_STRATEGIES - 1] == ZERO_ADDRESS
 
     # Check calling conditions
-    assert not self.emergencyShutdown or not self.emergencyExit
+    assert not self.emergencyShutdown and not self.emergencyExit
     assert msg.sender == self.governance
 
     # Check strategy configuration
