@@ -7,6 +7,8 @@ contract LPToken is ERC20 {
     mapping(address => bool) public _blocked;
     uint8 private immutable _decimals;
 
+    address minter;
+
     constructor(uint8 decimals_) ERC20("bau.finance test token", "TEST") {
         _decimals = decimals_;
     }
@@ -33,5 +35,9 @@ contract LPToken is ERC20 {
 
     function mint(uint256 _amount) public {
         _mint(msg.sender, _amount);
+    }
+
+    function setMinter(address _minter) external {
+      minter = _minter;
     }
 }

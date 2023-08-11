@@ -78,6 +78,8 @@ contract CurveMockBuilder {
             mock = address(new Curve4PoolMock([token1, token2, token3, token4], lpToken));
         }
 
+        LPToken(lpToken).setMinter(mock);
+
         mocks.push(mock);
     }
 
@@ -122,6 +124,8 @@ contract CurveMockBuilder {
 
             mock = address(new Curve4PoolMock([token1, token2, token3, token4], lpToken));
         }
+
+        LPToken(lpToken).setMinter(mock);
 
         mocks.push(mock);
     }
