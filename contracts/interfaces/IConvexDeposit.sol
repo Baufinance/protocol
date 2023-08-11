@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.15;
+pragma solidity ^0.8.15;
 
 interface IConvexDeposit {
     // deposit into convex, receive a tokenized deposit.  parameter to stake immediately (we always do this).

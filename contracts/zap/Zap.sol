@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.15;
+pragma solidity ^0.8.15;
 
 import {IAggregationRouterV5, IAggregationExecutor} from "../interfaces/IAggregationRouterV5.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";

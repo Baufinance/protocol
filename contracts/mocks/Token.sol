@@ -29,7 +29,7 @@ contract Token is ERC20 {
         return _decimals;
     }
 
-    function mint(uint256 _amount) external {
+    function mint(uint256 _amount) public {
         _mint(msg.sender, _amount);
     }
 }
