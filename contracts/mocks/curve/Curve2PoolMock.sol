@@ -52,4 +52,23 @@ contract Curve2PoolMock {
     function underlying_coins(int128 i) external view returns (address) {
         return underlying[uint256(int256(i))];
     }
+
+
+    function exchange(uint256 from,
+        uint256 to,
+        uint256 _from_amount,
+        uint256 _min_to_amount,
+        bool use_eth)
+        external {
+
+        IERC20(coins[from]).transferFrom(msg.sender, address(this), _from_amount);
+
+
+        if (use_eth) {
+            (bool sent, bytes memory data) = msg.sender.call{value: _from_amount}("");
+            require(sent, "Failed to send Ether");
+        } else {
+            IERC20(coins[to]).transfer(address(this), _from_amount);
+        }
+    }
 }
