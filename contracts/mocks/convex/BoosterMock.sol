@@ -2,11 +2,10 @@
 pragma solidity ^0.8.15;
 
 import "./interfaces/IRewardFactoryMock.sol";
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract BoosterMock {
-
     using SafeERC20 for IERC20;
 
     struct PoolInfo {
@@ -28,11 +27,10 @@ contract BoosterMock {
 
     constructor(address _crvToken) {
         crvToken = _crvToken;
-
     }
 
     function setRewardFactory(address _rewardFactory) external {
-         rewardFactory = _rewardFactory;
+        rewardFactory = _rewardFactory;
     }
 
     function poolLength() external view returns (uint256) {
@@ -40,9 +38,14 @@ contract BoosterMock {
     }
 
     //create a new pool
-    function addPool(address _lptoken, address _gauge, uint256 _stashVersion) external returns(bool){
+    function addPool(
+        address _lptoken,
+        address _gauge,
+        uint256 _stashVersion
+    ) external returns (bool) {
         uint256 pid = poolInfo.length;
-        address newRewardPool = IRewardFactoryMock(rewardFactory).createCrvRewards(pid);
+        address newRewardPool = IRewardFactoryMock(rewardFactory)
+            .createCrvRewards(pid);
 
         //add the new pool
         poolInfo.push(
@@ -60,25 +63,35 @@ contract BoosterMock {
         return true;
     }
 
-
-    function deposit(uint256 _pid, uint256 _amount, bool _stake) public returns(bool) {
+    function deposit(
+        uint256 _pid,
+        uint256 _amount,
+        bool _stake
+    ) public returns (bool) {
         PoolInfo storage pool = poolInfo[_pid];
         //send to proxy to stake
         address lptoken = pool.lptoken;
         IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
-
     }
 
-
-    function withdrawTo(uint256 _pid, uint256 _amount, address _to) external returns(bool){
+    function withdrawTo(
+        uint256 _pid,
+        uint256 _amount,
+        address _to
+    ) external returns (bool) {
         address rewardContract = poolInfo[_pid].crvRewards;
-        require(msg.sender == rewardContract,"!auth");
+        require(msg.sender == rewardContract, "!auth");
 
-        _withdraw(_pid,_amount,msg.sender,_to);
+        _withdraw(_pid, _amount, msg.sender, _to);
         return true;
     }
 
-    function _withdraw(uint256 _pid, uint256 _amount, address _from, address _to) internal {
+    function _withdraw(
+        uint256 _pid,
+        uint256 _amount,
+        address _from,
+        address _to
+    ) internal {
         PoolInfo storage pool = poolInfo[_pid];
         address lptoken = pool.lptoken;
         address gauge = pool.gauge;
@@ -88,7 +101,5 @@ contract BoosterMock {
 
         //return lp tokens
         IERC20(lptoken).safeTransfer(_to, _amount);
-
     }
-
 }

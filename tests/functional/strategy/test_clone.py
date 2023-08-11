@@ -51,7 +51,7 @@ def test_clone(
     assert new_strategy.strategist() == rando
     assert new_strategy.rewards() == rando
     assert new_strategy.keeper() == rando
-    assert Token.at(new_strategy.want()).name() == "yearn.finance test token"
+    assert Token.at(new_strategy.want()).name() == "bau.finance test token"
 
     # Test the other clone method with all params
     tx = strategy.clone(other_vault, gov, guardian, strategist, {"from": rando})

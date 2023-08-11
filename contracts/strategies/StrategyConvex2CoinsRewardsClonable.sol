@@ -34,13 +34,15 @@ contract StrategyConvex2CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
 
         uint256[2] memory coins;
 
-        for (uint256 i; i < nCoins; i++) {
+        /*for (uint256 i; i < nCoins; i++) {
             if (i == targetCoinIndex) {
                 coins[i] = targetBalance;
             } else {
                 coins[i] = 0;
             }
-        }
+        }*/
+
+        coins[targetCoinIndex] = targetBalance;
 
         if (isUseUnderlying) {
             curve.add_liquidity(coins, 0, true);

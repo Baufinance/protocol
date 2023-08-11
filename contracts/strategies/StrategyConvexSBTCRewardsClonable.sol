@@ -192,7 +192,6 @@ contract StrategyConvexSBTCRewardsClonable is StrategyConvexBase {
         uint256 crvBalance = crv.balanceOf(address(this));
         uint256 convexBalance = convexToken.balanceOf(address(this));
 
-
         // claim and sell our rewards if we have them
         if (hasRewards) {
             uint256 _rewardsBalance = IERC20(rewardsToken).balanceOf(

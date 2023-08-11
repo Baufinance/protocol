@@ -207,7 +207,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         uint256 crvBalance = crv.balanceOf(address(this));
         uint256 convexBalance = convexToken.balanceOf(address(this));
 
-
         // claim and sell our rewards if we have them
         if (hasRewards) {
             uint256 _rewardsBalance = IERC20(rewardsToken).balanceOf(
@@ -305,6 +304,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         targetCoinIndex = _targetCoinIndex;
 
+        //DEV move to factory
         if (isUseUnderlying) {
             if (isDepositContract) {
                 targetCoin = curve.underlying_coins(targetCoinIndex);

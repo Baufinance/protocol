@@ -2,5 +2,5 @@
 pragma solidity ^0.8.15;
 
 interface IRewardFactoryMock {
-  function createCrvRewards(uint256 _pid) external returns (address);
+    function createCrvRewards(uint256 _pid) external returns (address);
 }

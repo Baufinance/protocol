@@ -133,9 +133,9 @@ interface VaultAPI is IERC20 {
      */
     function guardian() external view returns (address);
 
-    function emergencyShutdown() external view returns(bool);
+    function emergencyShutdown() external view returns (bool);
 
-    function emergencyExit() external view returns(bool);
+    function emergencyExit() external view returns (bool);
 }
 
 /**
@@ -190,7 +190,7 @@ interface IBaseFee {
 
 /**
  * @title Yearn Base Strategy
- * @author yearn.finance
+ * @author bau.finance
  * @notice
  *  BaseStrategy implements all of the required functionality to interoperate
  *  closely with the Vault contract. This contract should be inherited and the
@@ -845,7 +845,10 @@ abstract contract BaseStrategy {
         uint256 loss = 0;
         uint256 debtOutstanding = vault.debtOutstanding();
         uint256 debtPayment = 0;
-        if (emergencyExit || vault.emergencyExit() || vault.emergencyShutdown()) { // TODO add for emegencyWithdraw + emergencyExit
+        if (
+            emergencyExit || vault.emergencyExit() || vault.emergencyShutdown()
+        ) {
+            // TODO add for emegencyWithdraw + emergencyExit
             // Free up as much capital as possible
             uint256 amountFreed = liquidateAllPositions();
             if (amountFreed < debtOutstanding) {

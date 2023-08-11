@@ -2,7 +2,7 @@
 """
 @title Yearn Token Vault
 @license GNU AGPLv3
-@author yearn.finance
+@author bau.finance
 @notice
     Yearn Token Vault. Holds an underlying token, and allows users to interact
     with the Yearn ecosystem through Strategies connected to the Vault.

@@ -2,8 +2,7 @@
 pragma solidity ^0.8.15;
 
 interface IRewardsMock {
+    function getReward(address _account) external;
 
-  function getReward(address _account) external;
-
-  function rewardToken() external view returns(address);
+    function rewardToken() external view returns (address);
 }
