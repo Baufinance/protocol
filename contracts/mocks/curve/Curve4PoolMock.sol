@@ -10,6 +10,7 @@ contract Curve4PoolMock {
     address[4] public underlying;
     address public token;
 
+
     constructor(address[4] memory _coins, address _token) {
         coins = _coins;
         underlying = _coins;

@@ -16,7 +16,7 @@ contract UniswapV3Mock is IUniV3 {
     ) override external payable returns (uint256 amountOut) {
       (address tokenA, address tokenB, uint256 fee) = params.path.decodeFirstPool();
 
-      IERC20(tokenB).transfer(params.recipient, params.amountIn*rate / 10^18);
+      IERC20(tokenB).transfer(params.recipient, params.amountIn*rate / 10**18);
     }
 
     function setRate(uint256 _rate) external {

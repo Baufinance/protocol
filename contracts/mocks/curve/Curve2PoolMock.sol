@@ -10,6 +10,12 @@ contract Curve2PoolMock {
     address public token;
     address[4] public underlying;
 
+    uint256 public rate;
+
+    function setRate(uint256 _rate) external {
+      rate = _rate;
+    }
+
     constructor(address[2] memory _coins, address _token) {
         coins = _coins;
         underlying = _coins;
@@ -65,10 +71,10 @@ contract Curve2PoolMock {
 
 
         if (use_eth) {
-            (bool sent, bytes memory data) = msg.sender.call{value: _from_amount}("");
+            (bool sent, bytes memory data) = msg.sender.call{value: _from_amount * rate / 10**18}("");
             require(sent, "Failed to send Ether");
         } else {
-            IERC20(coins[to]).transfer(address(this), _from_amount);
+            IERC20(coins[to]).transfer(address(this), _from_amount * rate / 10**18);
         }
     }
 }
