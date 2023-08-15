@@ -298,18 +298,22 @@ def test_curve_builder_can_build_2_pool_weth_eth(curve_mock_builder, gov):
 
     assert token2_balance_before - token2_balance_after == 1*10**18
 
-'''
-def test_curve_builder_can_build_2_pool_weth_weth(curve_mock_builder, gov):
+
+
+def test_curve_builder_can_build_2_pool_with_weth(curve_mock_builder, gov, weth):
 
 
     # try to build 2 pool with erc 20 tokens with plain and lending liquidity
-    curve_mock_builder.build(2, False)
+    curve_mock_builder.buildWETH(2)
 
     pool_address = curve_mock_builder.mocks(curve_mock_builder.length()-1)
 
     pool = Curve2PoolMock.at(pool_address)
 
     token1 = Token.at(pool.coins(0))
+
+    assert token1 == weth
+
     token2 = Token.at(pool.coins(1))
 
 
@@ -386,4 +390,25 @@ def test_curve_builder_can_build_2_pool_weth_weth(curve_mock_builder, gov):
 
     assert token1_balance_before - token1_balance_after == 1_000*10**18
     assert token2_balance_after - token2_balance_before == 1_000*10**18
-'''
+
+    pool.setRate(2*10**18, {"from": gov})
+    token1.mint(3_000*10**18, pool,  {"from": gov})
+    token2.mint(3_000*10**18, pool, {"from": gov})
+    token2.approve(pool, 3_000*10**18, {"from": gov})
+
+    token1_balance_before = token1.balanceOf(gov)
+    token2_balance_before = token2.balanceOf(gov)
+
+    pool.exchange(1,
+        0,
+        1_000*10**18,
+        0,
+        False,
+        {"from": gov}
+    )
+
+    token1_balance_after = token1.balanceOf(gov)
+    token2_balance_after = token2.balanceOf(gov)
+
+    assert token2_balance_before - token2_balance_after == 1_000*10**18
+    assert token1_balance_after - token1_balance_before == 2_000*10**18
