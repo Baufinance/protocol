@@ -24,6 +24,6 @@ contract CurveMetaPoolMock is LPToken {
             }
         }
 
-        mint(amount);
+        mint(amount, msg.sender);
     }
 }

@@ -9,7 +9,7 @@ contract Curve3PoolMock {
     address[3] public coins;
     address public token;
     address[4] public underlying;
-    uint256 public rate;
+    uint256 public rate = 1 ether;
 
     function setRate(uint256 _rate) external {
       rate = _rate;
@@ -32,7 +32,7 @@ contract Curve3PoolMock {
                 break;
             }
         }
-        IToken(msg.sender).mint(amount);
+        IToken(token).mint(amount, msg.sender);
     }
 
     function add_liquidity(
@@ -47,7 +47,7 @@ contract Curve3PoolMock {
                 break;
             }
         }
-        IToken(msg.sender).mint(amount);
+        IToken(token).mint(amount, msg.sender);
     }
 
     function underlying_coins(uint256 i) external view returns (address) {

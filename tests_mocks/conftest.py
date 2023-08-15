@@ -1,5 +1,5 @@
 import pytest
-from brownie import BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock, BaseRewardPoolMock, RewardsMock
+from brownie import BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder
 
 
 
@@ -21,6 +21,14 @@ def account3(accounts):
 @pytest.fixture
 def account4(accounts):
     yield accounts[3]
+
+@pytest.fixture
+
+def create_token(gov):
+    def create_token(decimal=18):
+        return gov.deploy(Token, decimal)
+
+    yield create_token
 
 @pytest.fixture
 def crv(gov):
@@ -68,3 +76,12 @@ def gauge(lp_token, gov):
 def ldo_rewards(ldo, gov):
     ldo_rewards = gov.deploy(RewardsMock, ldo)
     yield ldo_rewards
+
+@pytest.fixture
+def weth(create_token):
+    yield create_token()
+
+@pytest.fixture
+def curve_mock_builder(weth, gov):
+    builder = gov.deploy(CurveMockBuilder, weth)
+    yield builder

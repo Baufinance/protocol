@@ -8,9 +8,9 @@ contract Curve2PoolMock {
     using SafeERC20 for IERC20;
     address[2] public coins;
     address public token;
-    address[4] public underlying;
+    address[2] public underlying;
 
-    uint256 public rate;
+    uint256 public rate = 1 ether;
 
     function setRate(uint256 _rate) external {
       rate = _rate;
@@ -30,10 +30,13 @@ contract Curve2PoolMock {
         for (uint256 i = 0; i < 2; i++) {
             if (amounts[i] > 0) {
                 amount = amounts[i];
+                IERC20(coins[i]).transferFrom(msg.sender, address(this), amount);
                 break;
             }
         }
-        IToken(msg.sender).mint(amount);
+
+
+        IToken(token).mint(amount, msg.sender);
     }
 
     function add_liquidity(
@@ -45,10 +48,11 @@ contract Curve2PoolMock {
         for (uint256 i = 0; i < 2; i++) {
             if (amounts[i] > 0) {
                 amount = amounts[i];
+                IERC20(underlying[i]).transferFrom(msg.sender, address(this), amount);
                 break;
             }
         }
-        IToken(msg.sender).mint(amount);
+        IToken(token).mint(amount, msg.sender);
     }
 
     function underlying_coins(uint256 i) external view returns (address) {
@@ -74,7 +78,7 @@ contract Curve2PoolMock {
             (bool sent, bytes memory data) = msg.sender.call{value: _from_amount * rate / 10**18}("");
             require(sent, "Failed to send Ether");
         } else {
-            IERC20(coins[to]).transfer(address(this), _from_amount * rate / 10**18);
+            IERC20(coins[to]).transfer(msg.sender, _from_amount * rate / 10**18);
         }
     }
 }

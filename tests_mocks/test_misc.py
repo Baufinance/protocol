@@ -1,5 +1,5 @@
 import brownie
-from brownie import BaseRewardPoolMock
+from brownie import BaseRewardPoolMock, Curve2PoolMock, Token
 
 def test_add_pool(pool_manager, gauge, rewards_factory, booster, lp_token):
     pool_manager.addPool(gauge)
@@ -127,3 +127,92 @@ def test_deposit_and_withdraw_lp_token_from_pool_with_claim_rewards_with_extra(p
     assert balance_crv_after >  balance_crv_before
     assert balance_cvx_after >  balance_cvx_before
     assert balance_ldo_after > balance_crv_before
+
+
+def test_curve_builder_can_build_2_pool(curve_mock_builder, weth, gov):
+
+
+    # try to build 2 pool with erc 20 tokens with plain and lending liquidity
+    curve_mock_builder.build(2, False)
+
+    pool_address = curve_mock_builder.mocks(curve_mock_builder.length()-1)
+
+    pool = Curve2PoolMock.at(pool_address)
+
+    token1 = Token.at(pool.coins(0))
+    token2 = Token.at(pool.coins(1))
+
+
+    with brownie.reverts():
+        pool.coins(2)
+
+    token1.mint(3_000*10**18, {"from": gov})
+    token2.mint(3_000*10**18, {"from": gov})
+
+    token = Token.at(pool.token())
+
+    token_balance_before = token.balanceOf(gov)
+    token1_balance_before = token1.balanceOf(gov)
+
+    token1.approve(pool, 3_000*10**18, {"from": gov})
+
+    pool.add_liquidity([1_000*10**18, 0], 0, {"from": gov})
+
+    token_balance_after = token.balanceOf(gov)
+    token1_balance_after = token1.balanceOf(gov)
+
+    assert token_balance_after - token_balance_before == 1_000*10**18
+    assert token1_balance_before - token1_balance_after  ==  1_000*10**18
+
+
+    #lending liquidity
+
+    pool.add_liquidity([1_000*10**18, 0], 0, True, {"from": gov})
+
+
+    underlying_token1 = Token.at(pool.underlying_coins['int128'](0))
+    underlying_token2 = Token.at(pool.underlying_coins['int128'](1))
+
+
+    with brownie.reverts():
+        pool.underlying_coins['int128'](2)
+
+    underlying_token1.mint(3_000*10**18, {"from": gov})
+    underlying_token2.mint(3_000*10**18, {"from": gov})
+
+    token = Token.at(pool.token())
+
+    token_balance_before = token.balanceOf(gov)
+    underlying_token1_balance_before = token1.balanceOf(gov)
+
+    underlying_token1.approve(pool, 3_000*10**18, {"from": gov})
+
+    pool.add_liquidity([1_000*10**18, 0], 0, {"from": gov})
+
+    token_balance_after = token.balanceOf(gov)
+    underlying_token1_balance_after = underlying_token1.balanceOf(gov)
+
+    assert token_balance_after - token_balance_before == 1_000*10**18
+    assert underlying_token1_balance_before - underlying_token1_balance_after  ==  1_000*10**18
+
+    #exchange
+
+    token1.mint(3_000*10**18, pool,  {"from": gov})
+    token2.mint(3_000*10**18, pool, {"from": gov})
+
+    token1_balance_before = token1.balanceOf(gov)
+    token2_balance_before = token2.balanceOf(gov)
+
+    pool.exchange(0,
+        1,
+        1_000*10**18,
+        0,
+        False,
+        {"from": gov}
+    )
+
+    token1_balance_after = token1.balanceOf(gov)
+    token2_balance_after = token2.balanceOf(gov)
+
+    assert token1_balance_before - token1_balance_after == 1_000*10**18
+    assert token2_balance_after - token2_balance_before == 1_000*10**18

@@ -29,7 +29,7 @@ contract Curve4PoolMock {
             }
         }
 
-        IToken(msg.sender).mint(amount);
+        IToken(token).mint(amount, msg.sender);
     }
 
     function add_liquidity(
@@ -44,7 +44,7 @@ contract Curve4PoolMock {
                 break;
             }
         }
-        IToken(msg.sender).mint(amount);
+        IToken(token).mint(amount, msg.sender);
     }
 
     function underlying_coins(uint256 i) external view returns (address) {
