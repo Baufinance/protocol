@@ -1,5 +1,5 @@
 import brownie
-from brownie import BaseRewardPoolMock, Curve2PoolMock, Curve3PoolMock, Curve4PoolMock, Token
+from brownie import BaseRewardPoolMock, Curve2PoolMock, Curve3PoolMock, Curve4PoolMock, CurveMetaPoolMock, CurveZapMetaPoolMock, Token
 
 def test_add_pool(pool_manager, gauge, rewards_factory, booster, lp_token):
     pool_manager.addPool(gauge)
@@ -779,3 +779,36 @@ def test_curve_builder_can_build_4_pool_with_eth(curve_mock_builder, gov):
 
     assert token_balance_after - token_balance_before == 1*10**18
     assert balance_before - balance_after  >=  1*10**18
+
+
+def test_curve_metapools(curve_mock_builder, gov):
+    curve_mock_builder.build(1, True)
+
+    pool_address = curve_mock_builder.mocks(curve_mock_builder.length()-1)
+
+    pool = CurveMetaPoolMock.at(pool_address)
+
+    token1 = Token.at(pool.coins(0))
+    crv = CurveMetaPoolMock.at(pool.coins(1))
+
+    zap = gov.deploy(CurveZapMetaPoolMock)
+
+    zap.addPool(pool, pool, {"from":gov})
+
+    token1.mint(3000*10**18, {"from":gov})
+
+    token1.approve(zap, 3000*10**18, {"from":gov})
+
+    token = pool
+
+    token_balance_before = token.balanceOf(gov)
+    token1_balance_before = token1.balanceOf(gov)
+
+    zap.add_liquidity(pool, [1000*10**18, 0, 0, 0], 0, {"from":gov})
+
+    token_balance_after = token.balanceOf(gov)
+    token1_balance_after = token1.balanceOf(gov)
+
+
+    assert token_balance_after - token_balance_before == 1_000*10**18
+    assert token1_balance_before - token1_balance_after  ==  1_000*10**18

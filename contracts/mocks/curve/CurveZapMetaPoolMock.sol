@@ -19,6 +19,9 @@ contract CurveZapMetaPoolMock {
 
         uint256[2] memory meta_amounts;
 
+        address coin = ICurveFi(pool).coins(0);
+
+        IERC20(coin).transferFrom(msg.sender, address(this), amounts[0]);
         for (uint256 i =0; i < 4; i++) {
 
             if (amounts[i] > 0) {
@@ -26,10 +29,10 @@ contract CurveZapMetaPoolMock {
                 break;
             }
         }
-        ICurveFi(pools[pool]).add_liquidity(meta_amounts, min_mint_amount);
-        IERC20(pools[pool]).transfer(
+        ICurveFi(pool).add_liquidity(meta_amounts, min_mint_amount);
+        IERC20(pool).transfer(
             msg.sender,
-            IERC20(pools[pool]).balanceOf(address(this))
+            IERC20(pool).balanceOf(address(this))
         );
     }
 
