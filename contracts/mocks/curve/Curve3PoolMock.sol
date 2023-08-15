@@ -5,10 +5,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../IToken.sol";
 
 contract Curve3PoolMock {
+
+    address public constant eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     using SafeERC20 for IERC20;
     address[3] public coins;
     address public token;
-    address[4] public underlying;
+    address[3] public underlying;
     uint256 public rate = 1 ether;
 
     function setRate(uint256 _rate) external {
@@ -29,6 +32,9 @@ contract Curve3PoolMock {
         for (uint256 i = 0; i < 3; i++) {
             if (amounts[i] > 0) {
                 amount = amounts[i];
+                if (coins[i] != eth) {
+                    IERC20(coins[i]).transferFrom(msg.sender, address(this), amount);
+                }
                 break;
             }
         }
@@ -44,6 +50,7 @@ contract Curve3PoolMock {
         for (uint256 i = 0; i < 3; i++) {
             if (amounts[i] > 0) {
                 amount = amounts[i];
+                IERC20(underlying[i]).transferFrom(msg.sender, address(this), amount);
                 break;
             }
         }
@@ -72,7 +79,7 @@ contract Curve3PoolMock {
             (bool sent, bytes memory data) = msg.sender.call{value: _from_amount * rate / 10**18}("");
             require(sent, "Failed to send Ether");
         } else {
-            IERC20(coins[to]).transfer(address(this), _from_amount * rate / 10**18);
+            IERC20(coins[to]).transfer(msg.sender, _from_amount * rate / 10**18);
         }
     }
 }
