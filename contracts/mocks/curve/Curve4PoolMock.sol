@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../IToken.sol";
 
 contract Curve4PoolMock {
+
+    address public constant eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     using SafeERC20 for IERC20;
     address[4] public coins;
     address[4] public underlying;
@@ -22,9 +25,15 @@ contract Curve4PoolMock {
         uint256 min_mint_amount
     ) external payable {
         uint256 amount;
+
         for (uint256 i = 0; i < 4; i++) {
             if (amounts[i] > 0) {
                 amount = amounts[i];
+
+                if (coins[i] != eth) {
+                    IERC20(coins[i]).transferFrom(msg.sender, address(this), amount);
+                }
+
                 break;
             }
         }
@@ -40,6 +49,7 @@ contract Curve4PoolMock {
         uint256 amount;
         for (uint256 i = 0; i < 4; i++) {
             if (amounts[i] > 0) {
+
                 amount = amounts[i];
                 break;
             }
