@@ -514,3 +514,58 @@ def test_curve_builder_can_build_3_pool(curve_mock_builder, gov):
 
     assert token3_balance_before - token3_balance_after == 1_000*10**18
     assert token1_balance_after - token1_balance_before == 2_000*10**18
+
+
+def test_curve_builder_can_build_2_pool_with_eth(curve_mock_builder, gov):
+
+    # try to build 3 pool with erc 20 tokens with plain and lending liquidity
+    curve_mock_builder.build(3, True)
+
+    pool_address = curve_mock_builder.mocks(curve_mock_builder.length()-1)
+
+    pool = Curve3PoolMock.at(pool_address)
+
+    token3 = Token.at(pool.coins(2))
+
+
+    with brownie.reverts():
+        pool.coins(3)
+
+    token3.mint(3_000*10**18, {"from": gov})
+
+    token = Token.at(pool.token())
+
+    token_balance_before = token.balanceOf(gov)
+    balance_before = gov.balance()
+
+    pool.add_liquidity([1*10**18, 0, 0], 0, {"from": gov, "value": 1*10**18})
+
+    token_balance_after = token.balanceOf(gov)
+    balance_after = gov.balance()
+
+    assert token_balance_after - token_balance_before == 1*10**18
+    assert balance_before - balance_after  >=  1*10**18
+
+    #exchange
+
+    token3.mint(3_000*10**18, pool, {"from": gov})
+
+    balance_before = gov.balance()
+    token3_balance_before = token3.balanceOf(gov)
+    token3.approve(pool, 3_000*10**18, {"from": gov})
+
+    pool.exchange(2,
+        0,
+        1*10**18,
+        0,
+        True,
+        {"from": gov}
+    )
+
+    balance_after = gov.balance()
+
+    token3_balance_after = token3.balanceOf(gov)
+
+    assert balance_after - balance_before == 1*10**18
+
+    assert token3_balance_before - token3_balance_after == 1*10**18
