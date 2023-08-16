@@ -13,21 +13,17 @@ contract Zap is Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     EnumerableSet.AddressSet internal _factories;
 
-    /**
-     *  @notice 1Inch aggregation router v5
-     */
-    IAggregationRouterV5 private constant AGGREGATION_ROUTER_V5 =
-        IAggregationRouterV5(0x1111111254EEB25477B68fb85Ed929f73A960582);
-
     address public owner;
     address internal pendingOwner;
+    address public aggregationRouterV5;
 
     error InvalidToken(address token);
     error InvalidTokenAmount(uint256 tokenAmount);
     error InvalidReceiver(address receiver);
 
-    function initialize(address _owner) public initializer {
+    function initialize(address _owner, address _aggregationRouterV5) public initializer {
         owner = _owner;
+        aggregationRouterV5 = _aggregationRouterV5;
     }
 
     function setOwner(address newOwner) external {
@@ -111,11 +107,11 @@ contract Zap is Initializable {
                 }
 
                 IERC20(desc.srcToken).approve(
-                    address(AGGREGATION_ROUTER_V5),
+                    address(aggregationRouterV5),
                     desc.amount
                 );
 
-                (uint256 amountOut, ) = AGGREGATION_ROUTER_V5.swap(
+                (uint256 amountOut, ) = IAggregationRouterV5(aggregationRouterV5).swap(
                     IAggregationExecutor(caller),
                     desc,
                     new bytes(0),
@@ -210,11 +206,11 @@ contract Zap is Initializable {
                 }
 
                 IERC20(targetToken).approve(
-                    address(AGGREGATION_ROUTER_V5),
+                    aggregationRouterV5,
                     desc.amount
                 );
 
-                (uint256 amountOut, ) = AGGREGATION_ROUTER_V5.swap(
+                (uint256 amountOut, ) = IAggregationRouterV5(aggregationRouterV5).swap(
                     IAggregationExecutor(caller),
                     desc,
                     new bytes(0),
@@ -264,5 +260,11 @@ contract Zap is Initializable {
         if (balance > 0) {
             IERC20(_token).safeTransfer(_receiver, balance);
         }
+    }
+
+    function setAggregationRouterV5Address(address _aggregationRouterV5) external {
+        require(msg.sender == owner);
+
+        aggregationRouterV5 = _aggregationRouterV5;
     }
 }
