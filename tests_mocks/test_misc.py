@@ -833,3 +833,41 @@ def test_inch_router_swap(gov, aggregation_router_mock):
 
     assert token1BalanceBefore - token1BalanceAfter == 100*10**18
     assert token2BalanceAfter - token2BalanceBefore == 500*10**18
+
+def test_univ2_swap(gov, univ2_mock):
+    token1 = gov.deploy(Token, 18)
+    token2 = gov.deploy(Token, 18)
+
+    token1.transfer(univ2_mock, 1000*10**18, {"from": gov})
+    token2.transfer(univ2_mock, 1000*10**18, {"from": gov})
+
+    token1.approve(univ2_mock, 1000*10**18, {"from": gov})
+
+    token1BalanceBefore = token1.balanceOf(gov)
+    token2BalanceBefore = token2.balanceOf(gov)
+
+    univ2_mock.swapExactTokensForTokens(100*10**18, 0, [token1, token2], gov, 0, {"from": gov})
+
+    token1BalanceAfter = token1.balanceOf(gov)
+    token2BalanceAfter = token2.balanceOf(gov)
+
+    assert token1BalanceBefore - token1BalanceAfter == 100*10**18
+    assert token2BalanceAfter - token2BalanceBefore == 100*10**18
+
+    token1.transfer(univ2_mock, 1000*10**18, {"from": gov})
+    token2.transfer(univ2_mock, 1000*10**18, {"from": gov})
+
+    token1.approve(univ2_mock, 1000*10**18, {"from": gov})
+
+    # change rate
+
+    token1BalanceBefore = token1.balanceOf(gov)
+    token2BalanceBefore = token2.balanceOf(gov)
+    univ2_mock.setRate(1.5*10**18)
+    univ2_mock.swapExactTokensForTokens(100*10**18, 0, [token1, token2], gov, 0, {"from": gov})
+
+    token1BalanceAfter = token1.balanceOf(gov)
+    token2BalanceAfter = token2.balanceOf(gov)
+
+    assert token1BalanceBefore - token1BalanceAfter == 100*10**18
+    assert token2BalanceAfter - token2BalanceBefore == 150*10**18
