@@ -812,3 +812,24 @@ def test_curve_metapools(curve_mock_builder, gov):
 
     assert token_balance_after - token_balance_before == 1_000*10**18
     assert token1_balance_before - token1_balance_after  ==  1_000*10**18
+
+
+def test_inch_router_swap(gov, aggregation_router_mock):
+    token1 = gov.deploy(Token, 18)
+    token2 = gov.deploy(Token, 18)
+
+    token1.transfer(aggregation_router_mock, 1000*10**18, {"from": gov})
+    token2.transfer(aggregation_router_mock, 1000*10**18, {"from": gov})
+
+    token1.approve(aggregation_router_mock, 1000*10**18, {"from": gov})
+
+    token1BalanceBefore = token1.balanceOf(gov)
+    token2BalanceBefore = token2.balanceOf(gov)
+
+    aggregation_router_mock.swap(gov, [token1, token2, gov, gov, 100*10**18, 500*10**18, 1], "", "", {"from": gov})
+
+    token1BalanceAfter = token1.balanceOf(gov)
+    token2BalanceAfter = token2.balanceOf(gov)
+
+    assert token1BalanceBefore - token1BalanceAfter == 100*10**18
+    assert token2BalanceAfter - token2BalanceBefore == 500*10**18

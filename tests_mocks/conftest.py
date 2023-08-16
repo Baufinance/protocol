@@ -1,5 +1,5 @@
 import pytest
-from brownie import BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder
+from brownie import BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder, AggregationRouterV5Mock,UniswapV2Mock, UniswapV3Mock
 
 
 
@@ -85,3 +85,19 @@ def weth(create_token):
 def curve_mock_builder(weth, gov):
     builder = gov.deploy(CurveMockBuilder, weth)
     yield builder
+
+
+@pytest.fixture
+def aggregation_router_mock(gov):
+    inch = gov.deploy(AggregationRouterV5Mock)
+    yield inch
+
+@pytest.fixture
+def univ2_mock(gov):
+    univ2 = gov.deploy(UniswapV2Mock)
+    yield univ2
+
+@pytest.fixture
+def univ3_mock(gov):
+    univ3 = gov.deploy(UniswapV3Mock)
+    yield univ3
