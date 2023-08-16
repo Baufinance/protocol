@@ -871,3 +871,34 @@ def test_univ2_swap(gov, univ2_mock):
 
     assert token1BalanceBefore - token1BalanceAfter == 100*10**18
     assert token2BalanceAfter - token2BalanceBefore == 150*10**18
+
+
+def test_univ3_swap(gov, univ3_mock):
+    token1 = gov.deploy(Token, 18)
+    token2 = gov.deploy(Token, 18)
+
+    token1.transfer(univ3_mock, 1000*10**18, {"from": gov})
+    token2.transfer(univ3_mock, 1000*10**18, {"from": gov})
+
+    token1.approve(univ3_mock, 1000*10**18, {"from": gov})
+
+    token1BalanceBefore = token1.balanceOf(gov)
+    token2BalanceBefore = token2.balanceOf(gov)
+
+    path = univ3_mock.setPath(token1, token2)
+
+    univ3_mock.exactInput([path, gov, 0, 100*10**18, 0], {"from": gov})
+
+
+    # change rate
+
+    token1BalanceBefore = token1.balanceOf(gov)
+    token2BalanceBefore = token2.balanceOf(gov)
+    univ3_mock.setRate(1.5*10**18)
+    univ3_mock.exactInput([path, gov, 0, 100*10**18, 0], {"from": gov})
+
+    token1BalanceAfter = token1.balanceOf(gov)
+    token2BalanceAfter = token2.balanceOf(gov)
+
+    assert token1BalanceBefore - token1BalanceAfter == 100*10**18
+    assert token2BalanceAfter - token2BalanceBefore == 150*10**18
