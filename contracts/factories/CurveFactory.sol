@@ -29,33 +29,28 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         METAPOOL_SBTC
     }
 
-    struct PoolParams {
-        Vault vault;
+    struct StrategyParams {
+        address strategy;
         uint256 pid;
         bytes swapPath;
         string symbol;
     }
-
-    mapping(address => CurveType) public curveRegistry;
-
-    event NewVault(
-        address indexed lpToken,
-        address gauge,
-        address indexed vault,
-        address strategy,
-        uint8 poolType
-    );
 
     struct Vault {
         address vaultAddress;
         CurveType poolType;
         address deposit;
         bool isLendingPool;
-        bool depositContract;
     }
 
-    error VaultDoesntExist();
-    error BalanceIsZero();
+    struct CustomPool {
+        address deposit;
+        bool isLendingPool;
+        bool isSUSD;
+    }
+
+    mapping(address => CurveType) public curveRegistry;
+    mapping(address => StrategyParams) public vaultStrategies;
 
     ///////////////////////////////////
     //
@@ -66,7 +61,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     mapping(address => Vault) public deployedVaults; //for ZAP V1
 
     // pools, deposit contracts
-    mapping(address => address) public depositContracts;
+    mapping(address => CustomPool) public customPools;
 
     address public constant eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -77,6 +72,18 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
     address public owner;
     address internal pendingOwner;
+
+    event NewVault(
+        address indexed lpToken,
+        address gauge,
+        address indexed vault,
+        address strategy,
+        uint8 poolType
+    );
+
+    error VaultDoesntExist();
+    error BalanceIsZero();
+
 
     IERC20 internal constant usdt =
         IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
@@ -223,39 +230,41 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         booster = IBooster(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
 
-        // depositContracts map
+        // customPools map
 
+
+        /*
         // BUSD
-        depositContracts[
+        customPools[
             0x3B3Ac5386837Dc563660FB6a0937DFAa5924333B
         ] = 0xb6c057591E073249F2D9D88Ba59a46CFC9B59EdB;
 
         //compound
-        depositContracts[
+        customPools[
             0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2
         ] = 0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06;
 
         //PAX
 
-        depositContracts[
+        customPools[
             0xD905e2eaeBe188fc92179b6350807D8bd91Db0D8
         ] = 0xA50cCc70b6a011CffDdf45057E39679379187287;
 
         //USDT
 
-        depositContracts[
+        customPools[
             0x9fC689CCaDa600B6DF723D9E47D84d76664a1F23
         ] = 0xac795D2c97e60DF6a99ff1c814727302fD747a80;
 
         //yDAI
 
-        depositContracts[
+        customPools[
             0xdF5e0e81Dff6FAF3A7e52BA697820c5e32D806A8
         ] = 0xbBC81d23Ea2c3ec7e56D39296F0cbB648873a5d3;
 
         //SUSD
 
-        depositContracts[
+        customPools[
             0xC25a3A3b969415c80451098fa907EC722572917F
         ] = 0xFCBa3E75865d2d561BE8D220616520c171F12851;
 
@@ -269,6 +278,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         zapContract[CurveType.METAPOOL_SBTC] = ICurveFi(
             0x7AbDBAf29929e7F8621B757D2a7c04d78d633834
         );
+        */
 
         depositFee = 50;
 
@@ -386,27 +396,23 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         address deposit = _lptoken;
 
-        bool depositContract = false;
-
         if (
             _poolType != CurveType.METAPOOL_3CRV &&
-            depositContracts[_lptoken] == address(0x0)
+            customPools[_lptoken].deposit == address(0x0)
         ) {
             deposit = ICurveFi(_lptoken).minter();
         }
 
-        if (depositContracts[_lptoken] != address(0x0)) {
-            deposit = depositContracts[_lptoken];
-            isLendingPool = true;
-            depositContract = true;
+        if (customPools[_lptoken].deposit != address(0x0)) {
+            deposit = customPools[_lptoken].deposit;
+            isLendingPool = customPools[_lptoken].isLendingPool;
         }
 
         deployedVaults[_lptoken] = Vault(
             _vault,
             _poolType,
             deposit,
-            isLendingPool,
-            depositContract
+            isLendingPool
         );
     }
 
@@ -458,67 +464,34 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         symbol = string(abi.encodePacked("bauConvex", symbol));
 
-        PoolParams memory params = PoolParams({
-            vault: v,
+        StrategyParams memory params = StrategyParams({
+            strategy: address(0),
             pid: _pid,
             swapPath: _swapPath,
             symbol: symbol
         });
 
-        //now we create the convex strat
-        if (
-            v.poolType == CurveType.METAPOOL_3CRV ||
-            v.poolType == CurveType.METAPOOL_SBTC
-        ) {
-            strategy = _createStrategyMETAPOOL(params);
-        } else {
-            strategy = _createStrategyPool(params);
-        }
+
+        vaultStrategies[v.vaultAddress] = params;
+
+        strategy = _deployStrategy(v.vaultAddress);
+
+        vaultStrategies[v.vaultAddress].strategy = strategy;
     }
 
-    function _createStrategyMETAPOOL(
-        PoolParams memory params
+    function _deployStrategy(
+        address _vaultAddress
     ) internal returns (address strategy) {
-        Vault memory v = params.vault;
-
+        Vault memory v = deployedVaults[_vaultAddress];
         strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
-            v.vaultAddress,
+            _vaultAddress,
             management,
             treasury,
             keeper,
-            params.pid,
-            v.deposit,
-            params.symbol
+            address(this)
         );
     }
 
-    function _createStrategyPool(
-        PoolParams memory params
-    ) internal returns (address strategy) {
-        Vault memory v = params.vault;
-
-        address minter;
-
-        if (v.depositContract) {
-            minter = ICurveFi(v.deposit).curve();
-        } else {
-            minter = v.deposit;
-        }
-
-        strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
-            v.vaultAddress,
-            management,
-            treasury,
-            keeper,
-            params.pid,
-            v.deposit,
-            params.swapPath,
-            params.symbol,
-            uint8(v.poolType),
-            v.isLendingPool,
-            v.depositContract
-        );
-    }
 
     function _addStrategyToVault(address _vault, address _strategy) internal {
         IVault v = IVault(_vault);
@@ -533,7 +506,8 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     ////////////////////////////////////
 
     // get target coin for add liquidity
-    function targetCoin(
+
+    /*function targetCoin(
         address _token
     )
         public
@@ -583,8 +557,9 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             }
         }
     }
+    */
 
-    function supportedCoin(
+    /*function supportedCoin(
         address _token,
         address _targetToken
     )
@@ -662,15 +637,30 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             }
         }
     }
+    */
 
     // add liquidity for targetAmount with targetCoin, global targetCoin index variable
 
-    function depositWithTargetCoin(
-        address _token,
+    function vaultAddress(address _lptoken) external view returns(address vault) {
+        Vault storage v = deployedVaults[_lptoken];
+        vault = v.vaultAddress;
+    }
+    function targetCoin(
+        address _lptoken
+    ) public view returns (address token, uint256 index) {
+        Vault memory v = deployedVaults[_lptoken];
+        StrategyParams memory s = vaultStrategies[v.vaultAddress];
+
+        token = IStrategy(s.strategy).targetCoin();
+        index = IStrategy(s.strategy).targetCoinIndex();
+    }
+
+    function deposit(
+        address _lptoken,
         uint256 _targetAmount,
         address _recipient
     ) external override {
-        Vault memory v = deployedVaults[_token];
+        Vault memory v = deployedVaults[_lptoken];
 
         address vault = v.vaultAddress;
 
@@ -678,9 +668,9 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             revert VaultDoesntExist();
         }
 
-        uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
+        uint256 tokenBalanceBefore = IERC20(_lptoken).balanceOf(address(this));
 
-        (address targetToken, uint256 index, ) = targetCoin(_token);
+        (address targetToken, uint256 index) = targetCoin(_lptoken);
 
         IERC20(targetToken).transferFrom(
             msg.sender,
@@ -697,7 +687,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             v.poolType == CurveType.METAPOOL_SBTC
         ) {
             _depositToMETAPOOL(
-                _token,
+                _lptoken,
                 targetToken,
                 index,
                 _targetAmount,
@@ -711,7 +701,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             _depositTo4Pool(v.deposit, targetToken, index, _targetAmount);
         }
 
-        uint256 tokenBalanceAfter = IERC20(_token).balanceOf(address(this));
+        uint256 tokenBalanceAfter = IERC20(_lptoken).balanceOf(address(this));
 
         uint256 tokenBalance = tokenBalanceAfter - tokenBalanceBefore;
 
@@ -719,7 +709,7 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             revert BalanceIsZero();
         }
 
-        IERC20(_token).approve(vault, tokenBalance);
+        IERC20(_lptoken).approve(vault, tokenBalance);
 
         uint256 vaultBalanceBefore = IERC20(vault).balanceOf(address(this));
         IVault(vault).deposit(tokenBalance, address(this));
@@ -730,70 +720,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         vaultBalance = _takeZapFee(vault, vaultBalance);
 
         IERC20(vault).safeTransfer(_recipient, vaultBalance);
-    }
-
-    function depositWithSupportedCoin(
-        address _token,
-        address _targetToken,
-        uint256 _targetAmount,
-        address _recipient
-    ) external override {
-        Vault memory v = deployedVaults[_token];
-
-        address vault = v.vaultAddress;
-
-        if (v.poolType == CurveType.NONE) {
-            revert VaultDoesntExist();
-        }
-
-        uint256 tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
-
-        (bool supported, uint256 index, ) = supportedCoin(_token, _targetToken);
-
-        require(supported, "");
-
-        _targetAmount = _takeZapFee(_targetToken, _targetAmount);
-
-        IERC20(_targetToken).transferFrom(
-            msg.sender,
-            address(this),
-            _targetAmount
-        );
-
-        IERC20(_targetToken).approve(v.deposit, _targetAmount);
-
-        if (
-            v.poolType == CurveType.METAPOOL_3CRV ||
-            v.poolType == CurveType.METAPOOL_SBTC
-        ) {
-            _depositToMETAPOOL(
-                _token,
-                _targetToken,
-                index,
-                _targetAmount,
-                v.poolType
-            );
-        } else if (v.poolType == CurveType.COINS2) {
-            _depositTo2Pool(v.deposit, _targetToken, index, _targetAmount);
-        } else if (v.poolType == CurveType.COINS3) {
-            _depositTo3Pool(v.deposit, _targetToken, index, _targetAmount);
-        } else if (v.poolType == CurveType.COINS4) {
-            _depositTo4Pool(v.deposit, _targetToken, index, _targetAmount);
-        }
-
-        uint256 tokenBalanceAfter = IERC20(_token).balanceOf(address(this));
-
-        uint256 tokenBalance = tokenBalanceAfter - tokenBalanceBefore;
-
-        if (tokenBalance == 0) {
-            revert BalanceIsZero();
-        }
-
-        IERC20(_token).approve(vault, tokenBalance);
-
-        uint256 vaultBalanceBefore = IERC20(vault).balanceOf(address(this));
-
-        IVault(vault).deposit(tokenBalance, _recipient);
     }
 
     function _depositToMETAPOOL(
@@ -873,16 +799,14 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         ICurveFi(_minter).add_liquidity(coins, 0);
     }
 
-    function withdrawWithTargetCoin(
-        address _token,
+    function withdraw(
+        address _lptoken,
         uint256 _shareAmount,
         address _recipient
     ) external override {
-        Vault memory v = deployedVaults[_token];
+        Vault memory v = deployedVaults[_lptoken];
 
-        address vault = v.vaultAddress;
-
-        (address targetToken, uint256 index, ) = targetCoin(_token);
+        (address targetToken, uint256 index) = targetCoin(_lptoken);
 
         if (v.poolType == CurveType.NONE) {
             revert VaultDoesntExist();
@@ -896,12 +820,12 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
         uint256 lptokenAmount = _withdrawFromVault(
             v.vaultAddress,
-            _token,
+            _lptoken,
             _shareAmount
         );
 
         _withdrawFromProtocol(
-            _token,
+            _lptoken,
             targetToken,
             index,
             lptokenAmount,
@@ -909,44 +833,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         );
     }
 
-    function withdrawWithSupportedCoin(
-        address _token,
-        address _targetCoin,
-        uint256 _shareAmount,
-        address _recipient
-    ) external override {
-        Vault memory v = deployedVaults[_token];
-
-        address vault = v.vaultAddress;
-
-        if (v.poolType == CurveType.NONE) {
-            revert VaultDoesntExist();
-        }
-
-        (bool supported, uint256 index, ) = supportedCoin(_token, _targetCoin);
-
-        require(supported, "");
-
-        IERC20(v.vaultAddress).safeTransferFrom(
-            msg.sender,
-            address(this),
-            _shareAmount
-        );
-
-        uint256 lptokenAmount = _withdrawFromVault(
-            v.vaultAddress,
-            _token,
-            _shareAmount
-        );
-
-        _withdrawFromProtocol(
-            _token,
-            _targetCoin,
-            index,
-            lptokenAmount,
-            _recipient
-        );
-    }
 
     function _withdrawFromVault(
         address _vault,

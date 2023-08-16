@@ -12,6 +12,15 @@ interface IStrategy {
         string memory _name
     ) external returns (address newStrategy);
 
+
+    function clone(
+        address _vault,
+        address _strategist,
+        address _rewards,
+        address _keeper,
+        address _factory
+    ) external returns (address newStrategy);
+
     function clone(
         address _vault,
         address _strategist,
@@ -27,4 +36,7 @@ interface IStrategy {
     ) external returns (address newStrategy);
 
     function setHealthCheck(address) external;
+
+    function targetCoin() external view returns(address);
+    function targetCoinIndex() external view returns(uint256);
 }

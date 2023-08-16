@@ -63,9 +63,10 @@ contract Zap is Initializable {
                 (address, IAggregationRouterV5.SwapDescription, bytes, bytes)
             );
 
-        (address factory, bool supported, ) = _getFactoryAddress(
+
+        (address factory, bool supported, address vault, address targetCoin) = _getFactoryAddress(
             _poolToken,
-            _srcToken
+            address(desc.dstToken)
         );
 
         if (factory != address(0x0)) {
@@ -75,17 +76,7 @@ contract Zap is Initializable {
                 _tokenAmount
             );
 
-            if (supported) {
-                IERC20(_srcToken).approve(factory, _tokenAmount);
-                IFactoryAdapter(factory).depositWithSupportedCoin(
-                    _poolToken,
-                    _srcToken,
-                    _tokenAmount,
-                    msg.sender
-                );
-
-                IERC20(_srcToken).approve(factory, 0);
-            } else {
+            if (!supported) {
                 if (_srcToken != address(desc.srcToken)) {
                     revert InvalidToken(_srcToken);
                 }
@@ -94,12 +85,8 @@ contract Zap is Initializable {
                     revert InvalidTokenAmount(_tokenAmount);
                 }
 
-                (address targetToken, , ) = IFactoryAdapter(factory).targetCoin(
-                    _poolToken
-                );
-
-                if (targetToken != address(desc.dstToken)) {
-                    revert InvalidToken(targetToken);
+                if (targetCoin != address(desc.dstToken)) {
+                    revert InvalidToken(targetCoin);
                 }
 
                 if (desc.dstReceiver != address(this)) {
@@ -118,20 +105,20 @@ contract Zap is Initializable {
                     data
                 );
 
-                IERC20(targetToken).approve(factory, amountOut);
-
-                IFactoryAdapter(factory).depositWithTargetCoin(
-                    _poolToken,
-                    amountOut,
-                    msg.sender
-                );
-
-                IERC20(targetToken).approve(factory, 0);
             }
+
+            IERC20(_srcToken).approve(factory, _tokenAmount);
+            IFactoryAdapter(factory).deposit(
+                    _poolToken,
+                    _tokenAmount,
+                    msg.sender
+            );
+
+            IERC20(_srcToken).approve(factory, 0);
         }
     }
 
-    function unzap(
+     function unzap(
         address _dstToken,
         address _poolToken,
         uint256 _shareAmount,
@@ -148,9 +135,9 @@ contract Zap is Initializable {
                 (address, IAggregationRouterV5.SwapDescription, bytes, bytes)
             );
 
-        (address factory, bool supported, address vault) = _getFactoryAddress(
+        (address factory, bool supported, address vault, address targetCoin) = _getFactoryAddress(
             _poolToken,
-            _dstToken
+            address(desc.srcToken)
         );
 
         if (factory != address(0x0)) {
@@ -164,17 +151,16 @@ contract Zap is Initializable {
 
             uint256 shareBalanceBefore = IERC20(vault).balanceOf(address(this));
 
-            // transfer lp tokens
-            if (supported) {
-                IFactoryAdapter(factory).withdrawWithSupportedCoin(
+
+            IFactoryAdapter(factory).withdraw(
                     _poolToken,
-                    _dstToken,
                     _shareAmount,
                     msg.sender
-                );
+            );
 
-                //refund not burned tokens
-            } else {
+            // transfer lp tokens
+            if (!supported) {
+
                 if (_dstToken != address(desc.srcToken)) {
                     revert InvalidToken(_dstToken);
                 }
@@ -183,29 +169,25 @@ contract Zap is Initializable {
                     revert InvalidReceiver(desc.dstReceiver);
                 }
 
-                (address targetToken, , ) = IFactoryAdapter(factory).targetCoin(
-                    _poolToken
-                );
-
-                uint256 targetTokenBalanceBefore = IERC20(targetToken)
+                uint256 targetCoinBalanceBefore = IERC20(targetCoin)
                     .balanceOf(address(this));
-                IFactoryAdapter(factory).withdrawWithTargetCoin(
+                IFactoryAdapter(factory).withdraw(
                     _poolToken,
                     _shareAmount,
                     address(this)
                 );
-                uint256 targetTokenBalanceAfter = IERC20(targetToken).balanceOf(
+                uint256 targetCoinBalanceAfter = IERC20(targetCoin).balanceOf(
                     address(this)
                 );
 
-                uint256 targetTokenBalance = targetTokenBalanceAfter -
-                    targetTokenBalanceBefore;
+                uint256 targetCoinBalance = targetCoinBalanceAfter -
+                    targetCoinBalanceBefore;
 
-                if (targetTokenBalance != desc.amount) {
-                    desc.amount = targetTokenBalance;
+                if (targetCoinBalance != desc.amount) {
+                    desc.amount = targetCoinBalance;
                 }
 
-                IERC20(targetToken).approve(
+                IERC20(targetCoin).approve(
                     aggregationRouterV5,
                     desc.amount
                 );
@@ -234,19 +216,28 @@ contract Zap is Initializable {
         }
     }
 
+
     function _getFactoryAddress(
         address _poolToken,
         address _srcToken
-    ) internal view returns (address factory, bool supported, address vault) {
+    ) internal view returns (address factory, bool supported, address vault, address targetCoin) {
         for (uint256 i = 0; i < _factories.length(); i++) {
             factory = _factories.at(i);
 
             if (IFactoryAdapter(factory).isVaultExists(_poolToken)) {
+
+                vault = IFactoryAdapter(factory).vaultAddress(_poolToken);
+
+
+
                 // if pool doesnt exist it will be reverted
-                (supported, , vault) = IFactoryAdapter(factory).supportedCoin(
-                    _poolToken,
-                    _srcToken
+                (targetCoin, ) = IFactoryAdapter(factory).targetCoin(
+                    _poolToken
                 );
+
+                if (_srcToken != targetCoin) {
+                    supported = false;
+                }
                 break;
             }
         }
