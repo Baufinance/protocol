@@ -8,7 +8,6 @@ import "./CurveMetaPoolMock.sol";
 import "../LPToken.sol";
 
 contract CurveMockBuilder {
-
     address public constant eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     enum CurveType {
@@ -24,27 +23,29 @@ contract CurveMockBuilder {
     address public weth;
 
     constructor(address _weth) {
-      weth = _weth;
+        weth = _weth;
     }
 
-    function build(CurveType _curveType, bool _isETH) public returns (address mock) {
-            address token1;
+    function build(
+        CurveType _curveType,
+        bool _isETH
+    ) public returns (address mock) {
+        address token1;
 
-            if (_isETH) {
-              token1 = eth;
-            } else {
-              token1 = address(new LPToken(18));
-            }
-
+        if (_isETH) {
+            token1 = eth;
+        } else {
+            token1 = address(new LPToken(18));
+        }
 
         address lpToken = address(new LPToken(18));
 
-
         if (_curveType == CurveType.METAPOOL) {
-
             address token2 = address(new LPToken(18));
             address token3 = address(new LPToken(18));
-            address crv3 = address(new Curve3PoolMock([token1, token2, token3], lpToken));
+            address crv3 = address(
+                new Curve3PoolMock([token1, token2, token3], lpToken)
+            );
 
             address token4 = address(new LPToken(18));
 
@@ -52,30 +53,28 @@ contract CurveMockBuilder {
         }
 
         if (_curveType == CurveType.COINS2) {
-
             address token2 = address(new LPToken(18));
 
             mock = address(new Curve2PoolMock([token1, token2], lpToken));
         }
 
         if (_curveType == CurveType.COINS3) {
-
-
             address token2 = address(new LPToken(18));
             address token3 = address(new LPToken(18));
 
-
-            mock = address(new Curve3PoolMock([token1, token2, token3], lpToken));
+            mock = address(
+                new Curve3PoolMock([token1, token2, token3], lpToken)
+            );
         }
 
         if (_curveType == CurveType.COINS4) {
-
-
             address token2 = address(new LPToken(18));
             address token3 = address(new LPToken(18));
             address token4 = address(new LPToken(18));
 
-            mock = address(new Curve4PoolMock([token1, token2, token3, token4], lpToken));
+            mock = address(
+                new Curve4PoolMock([token1, token2, token3, token4], lpToken)
+            );
         }
 
         LPToken(lpToken).setMinter(mock);
@@ -83,17 +82,17 @@ contract CurveMockBuilder {
         mocks.push(mock);
     }
 
+    function buildWETH(CurveType _curveType) public returns (address mock) {
+        address lpToken = address(new LPToken(18));
 
-    function buildWETH(CurveType _curveType) public returns (address mock)  {
-
-      address lpToken = address(new LPToken(18));
-
-       if (_curveType == CurveType.METAPOOL) {
+        if (_curveType == CurveType.METAPOOL) {
             address token1 = weth;
             address token2 = address(new LPToken(18));
             address token3 = address(new LPToken(18));
 
-            address crv3 = address(new Curve3PoolMock([token1, token2, token3], lpToken));
+            address crv3 = address(
+                new Curve3PoolMock([token1, token2, token3], lpToken)
+            );
 
             address token4 = address(new LPToken(18));
 
@@ -112,17 +111,20 @@ contract CurveMockBuilder {
             address token2 = address(new LPToken(18));
             address token3 = address(new LPToken(18));
 
-            mock = address(new Curve3PoolMock([token1, token2, token3], lpToken));
+            mock = address(
+                new Curve3PoolMock([token1, token2, token3], lpToken)
+            );
         }
 
         if (_curveType == CurveType.COINS4) {
-
             address token1 = weth;
             address token2 = address(new LPToken(18));
             address token3 = address(new LPToken(18));
             address token4 = address(new LPToken(18));
 
-            mock = address(new Curve4PoolMock([token1, token2, token3, token4], lpToken));
+            mock = address(
+                new Curve4PoolMock([token1, token2, token3, token4], lpToken)
+            );
         }
 
         LPToken(lpToken).setMinter(mock);

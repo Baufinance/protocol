@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../IToken.sol";
 
 contract Curve3PoolMock {
-
     address public constant eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     using SafeERC20 for IERC20;
@@ -15,7 +14,7 @@ contract Curve3PoolMock {
     uint256 public rate = 1 ether;
 
     function setRate(uint256 _rate) external {
-      rate = _rate;
+        rate = _rate;
     }
 
     constructor(address[3] memory _coins, address _token) {
@@ -33,7 +32,11 @@ contract Curve3PoolMock {
             if (amounts[i] > 0) {
                 amount = amounts[i];
                 if (coins[i] != eth) {
-                    IERC20(coins[i]).transferFrom(msg.sender, address(this), amount);
+                    IERC20(coins[i]).transferFrom(
+                        msg.sender,
+                        address(this),
+                        amount
+                    );
                 }
                 break;
             }
@@ -50,7 +53,11 @@ contract Curve3PoolMock {
         for (uint256 i = 0; i < 3; i++) {
             if (amounts[i] > 0) {
                 amount = amounts[i];
-                IERC20(underlying[i]).transferFrom(msg.sender, address(this), amount);
+                IERC20(underlying[i]).transferFrom(
+                    msg.sender,
+                    address(this),
+                    amount
+                );
                 break;
             }
         }
@@ -65,21 +72,29 @@ contract Curve3PoolMock {
         return underlying[uint256(int256(i))];
     }
 
-    function exchange(uint256 from,
+    function exchange(
+        uint256 from,
         uint256 to,
         uint256 _from_amount,
         uint256 _min_to_amount,
-        bool use_eth)
-        external {
-
-        IERC20(coins[from]).transferFrom(msg.sender, address(this), _from_amount);
-
+        bool use_eth
+    ) external {
+        IERC20(coins[from]).transferFrom(
+            msg.sender,
+            address(this),
+            _from_amount
+        );
 
         if (use_eth) {
-            (bool sent, bytes memory data) = msg.sender.call{value: _from_amount * rate / 10**18}("");
+            (bool sent, bytes memory data) = msg.sender.call{
+                value: (_from_amount * rate) / 10 ** 18
+            }("");
             require(sent, "Failed to send Ether");
         } else {
-            IERC20(coins[to]).transfer(msg.sender, _from_amount * rate / 10**18);
+            IERC20(coins[to]).transfer(
+                msg.sender,
+                (_from_amount * rate) / 10 ** 18
+            );
         }
     }
 }

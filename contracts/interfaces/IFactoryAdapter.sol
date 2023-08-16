@@ -2,8 +2,6 @@
 pragma solidity ^0.8.15;
 
 interface IFactoryAdapter {
-
-
     // get target coin for add liquidity
 
     function isVaultExists(address _token) external view returns (bool);
@@ -12,7 +10,7 @@ interface IFactoryAdapter {
         address _token
     ) external view returns (address coin, uint256 index);
 
-    function vaultAddress(address lptoken) external view returns(address);
+    function vaultAddress(address lptoken) external view returns (address);
 
     // add liquidity for targetAmount
     function deposit(
@@ -20,7 +18,6 @@ interface IFactoryAdapter {
         uint256 _targetAmount,
         address _recipient
     ) external;
-
 
     function withdraw(
         address _token,

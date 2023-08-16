@@ -42,6 +42,6 @@ contract LPToken is ERC20 {
     }
 
     function setMinter(address _minter) external {
-      minter = _minter;
+        minter = _minter;
     }
 }

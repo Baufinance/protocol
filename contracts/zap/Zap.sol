@@ -21,7 +21,10 @@ contract Zap is Initializable {
     error InvalidTokenAmount(uint256 tokenAmount);
     error InvalidReceiver(address receiver);
 
-    function initialize(address _owner, address _aggregationRouterV5) public initializer {
+    function initialize(
+        address _owner,
+        address _aggregationRouterV5
+    ) public initializer {
         owner = _owner;
         aggregationRouterV5 = _aggregationRouterV5;
     }
@@ -63,11 +66,12 @@ contract Zap is Initializable {
                 (address, IAggregationRouterV5.SwapDescription, bytes, bytes)
             );
 
-
-        (address factory, bool supported, address vault, address targetCoin) = _getFactoryAddress(
-            _poolToken,
-            address(desc.dstToken)
-        );
+        (
+            address factory,
+            bool supported,
+            address vault,
+            address targetCoin
+        ) = _getFactoryAddress(_poolToken, address(desc.dstToken));
 
         if (factory != address(0x0)) {
             IERC20(desc.srcToken).safeTransferFrom(
@@ -98,27 +102,23 @@ contract Zap is Initializable {
                     desc.amount
                 );
 
-                (uint256 amountOut, ) = IAggregationRouterV5(aggregationRouterV5).swap(
-                    IAggregationExecutor(caller),
-                    desc,
-                    new bytes(0),
-                    data
-                );
-
+                (uint256 amountOut, ) = IAggregationRouterV5(
+                    aggregationRouterV5
+                ).swap(IAggregationExecutor(caller), desc, new bytes(0), data);
             }
 
             IERC20(_srcToken).approve(factory, _tokenAmount);
             IFactoryAdapter(factory).deposit(
-                    _poolToken,
-                    _tokenAmount,
-                    msg.sender
+                _poolToken,
+                _tokenAmount,
+                msg.sender
             );
 
             IERC20(_srcToken).approve(factory, 0);
         }
     }
 
-     function unzap(
+    function unzap(
         address _dstToken,
         address _poolToken,
         uint256 _shareAmount,
@@ -135,10 +135,12 @@ contract Zap is Initializable {
                 (address, IAggregationRouterV5.SwapDescription, bytes, bytes)
             );
 
-        (address factory, bool supported, address vault, address targetCoin) = _getFactoryAddress(
-            _poolToken,
-            address(desc.srcToken)
-        );
+        (
+            address factory,
+            bool supported,
+            address vault,
+            address targetCoin
+        ) = _getFactoryAddress(_poolToken, address(desc.srcToken));
 
         if (factory != address(0x0)) {
             IERC20(vault).safeTransferFrom(
@@ -151,16 +153,14 @@ contract Zap is Initializable {
 
             uint256 shareBalanceBefore = IERC20(vault).balanceOf(address(this));
 
-
             IFactoryAdapter(factory).withdraw(
-                    _poolToken,
-                    _shareAmount,
-                    msg.sender
+                _poolToken,
+                _shareAmount,
+                msg.sender
             );
 
             // transfer lp tokens
             if (!supported) {
-
                 if (_dstToken != address(desc.srcToken)) {
                     revert InvalidToken(_dstToken);
                 }
@@ -169,8 +169,9 @@ contract Zap is Initializable {
                     revert InvalidReceiver(desc.dstReceiver);
                 }
 
-                uint256 targetCoinBalanceBefore = IERC20(targetCoin)
-                    .balanceOf(address(this));
+                uint256 targetCoinBalanceBefore = IERC20(targetCoin).balanceOf(
+                    address(this)
+                );
                 IFactoryAdapter(factory).withdraw(
                     _poolToken,
                     _shareAmount,
@@ -187,17 +188,11 @@ contract Zap is Initializable {
                     desc.amount = targetCoinBalance;
                 }
 
-                IERC20(targetCoin).approve(
-                    aggregationRouterV5,
-                    desc.amount
-                );
+                IERC20(targetCoin).approve(aggregationRouterV5, desc.amount);
 
-                (uint256 amountOut, ) = IAggregationRouterV5(aggregationRouterV5).swap(
-                    IAggregationExecutor(caller),
-                    desc,
-                    new bytes(0),
-                    data
-                );
+                (uint256 amountOut, ) = IAggregationRouterV5(
+                    aggregationRouterV5
+                ).swap(IAggregationExecutor(caller), desc, new bytes(0), data);
             }
 
             IERC20(vault).approve(factory, 0);
@@ -216,19 +211,24 @@ contract Zap is Initializable {
         }
     }
 
-
     function _getFactoryAddress(
         address _poolToken,
         address _srcToken
-    ) internal view returns (address factory, bool supported, address vault, address targetCoin) {
+    )
+        internal
+        view
+        returns (
+            address factory,
+            bool supported,
+            address vault,
+            address targetCoin
+        )
+    {
         for (uint256 i = 0; i < _factories.length(); i++) {
             factory = _factories.at(i);
 
             if (IFactoryAdapter(factory).isVaultExists(_poolToken)) {
-
                 vault = IFactoryAdapter(factory).vaultAddress(_poolToken);
-
-
 
                 // if pool doesnt exist it will be reverted
                 (targetCoin, ) = IFactoryAdapter(factory).targetCoin(
@@ -253,7 +253,9 @@ contract Zap is Initializable {
         }
     }
 
-    function setAggregationRouterV5Address(address _aggregationRouterV5) external {
+    function setAggregationRouterV5Address(
+        address _aggregationRouterV5
+    ) external {
         require(msg.sender == owner);
 
         aggregationRouterV5 = _aggregationRouterV5;

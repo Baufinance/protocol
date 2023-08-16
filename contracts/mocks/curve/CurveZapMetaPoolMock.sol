@@ -16,14 +16,12 @@ contract CurveZapMetaPoolMock {
         uint256[4] calldata amounts,
         uint256 min_mint_amount
     ) external {
-
         uint256[2] memory meta_amounts;
 
         address coin = ICurveFi(pool).coins(0);
 
         IERC20(coin).transferFrom(msg.sender, address(this), amounts[0]);
-        for (uint256 i =0; i < 4; i++) {
-
+        for (uint256 i = 0; i < 4; i++) {
             if (amounts[i] > 0) {
                 meta_amounts[0] = amounts[i];
                 break;

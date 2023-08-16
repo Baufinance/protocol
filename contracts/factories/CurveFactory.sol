@@ -84,7 +84,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
     error VaultDoesntExist();
     error BalanceIsZero();
 
-
     IERC20 internal constant usdt =
         IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
 
@@ -231,7 +230,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         booster = IBooster(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
 
         // customPools map
-
 
         /*
         // BUSD
@@ -471,7 +469,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             symbol: symbol
         });
 
-
         vaultStrategies[v.vaultAddress] = params;
 
         strategy = _deployStrategy(v.vaultAddress);
@@ -492,7 +489,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
         );
     }
 
-
     function _addStrategyToVault(address _vault, address _strategy) internal {
         IVault v = IVault(_vault);
 
@@ -507,144 +503,15 @@ contract CurveFactory is Initializable, IFactoryAdapter {
 
     // get target coin for add liquidity
 
-    /*function targetCoin(
-        address _token
-    )
-        public
-        view
-        override
-        returns (address coin, uint256 index, address vault)
-    {
-        index = 0;
-        Vault memory v = deployedVaults[_token];
-
-        if (v.poolType == CurveType.NONE) {
-            revert VaultDoesntExist();
-        }
-
-        vault = v.vaultAddress;
-
-        if (
-            v.poolType == CurveType.METAPOOL_3CRV ||
-            v.poolType == CurveType.METAPOOL_SBTC
-        ) {
-            coin = ICurveFi(_token).coins(0);
-        } else {
-            address minter = v.deposit;
-
-            if (v.depositContract) {
-                if (_token == SUSD) {
-                    coin = ICurveFi(minter).underlying_coins(uint256(0));
-                } else {
-                    coin = ICurveFi(minter).underlying_coins(int128(int256(0)));
-                }
-
-                //
-            } else if (v.isLendingPool) {
-                coin = ICurveFi(minter).underlying_coins(uint256(0));
-
-                if (coin == eth) {
-                    index += 1;
-                    coin = ICurveFi(minter).underlying_coins(index);
-                }
-            } else {
-                coin = ICurveFi(minter).coins(0);
-
-                if (coin == eth) {
-                    index += 1;
-                    coin = ICurveFi(minter).coins(index);
-                }
-            }
-        }
-    }
-    */
-
-    /*function supportedCoin(
-        address _token,
-        address _targetToken
-    )
-        public
-        view
-        override
-        returns (bool supported, uint256 index, address vault)
-    {
-        Vault memory v = deployedVaults[_token];
-
-        require(_token != eth);
-
-        if (v.poolType == CurveType.NONE) {
-            revert VaultDoesntExist();
-        }
-
-        vault = v.vaultAddress;
-
-        if (
-            v.poolType == CurveType.METAPOOL_3CRV ||
-            v.poolType == CurveType.METAPOOL_SBTC
-        ) {
-            for (uint256 i; i < 2; i++) {
-                address coin = ICurveFi(_token).coins(i);
-
-                if (_targetToken == coin) {
-                    supported = true;
-                    index = i;
-                }
-            }
-        } else if (v.poolType == CurveType.COINS2) {
-            for (uint256 i; i < 2; i++) {
-                address coin;
-
-                if (v.isLendingPool) {
-                    coin = ICurveFi(_token).underlying_coins(int128(int256(i)));
-                } else {
-                    coin = ICurveFi(_token).coins(i);
-                }
-
-                if (_targetToken == coin) {
-                    supported = true;
-                    index = i;
-                }
-            }
-        } else if (v.poolType == CurveType.COINS3) {
-            for (uint256 i; i < 2; i++) {
-                address coin;
-
-                if (v.isLendingPool) {
-                    coin = ICurveFi(_token).underlying_coins(int128(int256(i)));
-                } else {
-                    coin = ICurveFi(_token).coins(i);
-                }
-
-                if (_targetToken == coin) {
-                    supported = true;
-                    index = i;
-                }
-            }
-        } else if (v.poolType == CurveType.COINS4) {
-            for (uint256 i; i < 4; i++) {
-                address coin;
-
-                if (v.isLendingPool) {
-                    coin = ICurveFi(_token).underlying_coins(int128(int256(i)));
-                } else {
-                    coin = ICurveFi(_token).coins(i);
-                }
-
-                if (_targetToken == coin) {
-                    supported = true;
-                    index = i;
-                }
-            }
-        }
-    }
-    */
-
     // add liquidity for targetAmount with targetCoin, global targetCoin index variable
 
-    function vaultAddress(address _lptoken) external view returns(address vault) {
+    function vaultAddress(
+        address _lptoken
+    ) external view returns (address vault) {
         Vault storage v = deployedVaults[_lptoken];
         vault = v.vaultAddress;
     }
+
     function targetCoin(
         address _lptoken
     ) public view returns (address token, uint256 index) {
@@ -832,7 +699,6 @@ contract CurveFactory is Initializable, IFactoryAdapter {
             _recipient
         );
     }
-
 
     function _withdrawFromVault(
         address _vault,
