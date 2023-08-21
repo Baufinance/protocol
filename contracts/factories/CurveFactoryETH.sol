@@ -40,6 +40,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         CurveType poolType;
         address deposit;
         bool isLendingPool;
+        bool isSUSD;
     }
 
     struct CustomPool {
@@ -427,7 +428,8 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             _lptoken,
             _poolType,
             deposit,
-            isLendingPool
+            isLendingPool,
+            customPools[_lptoken].isSUSD
         );
     }
 
@@ -507,9 +509,10 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             address(this)
         );
 
+        IStrategy(strategy).setOptimalTargetCoinIndex(0, vaultStrategies[_vaultAddress].swapPath);
+
         if (v.poolType == CurveType.METAPOOL_3CRV || v.poolType == CurveType.METAPOOL_SBTC) {
             IStrategy(strategy).setZapContract(address(zapContract[v.poolType]));
-            IStrategy(strategy).setOptimalTargetCoinIndex(0, vaultStrategies[_vaultAddress].swapPath);
         }
     }
 

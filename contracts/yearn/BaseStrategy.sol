@@ -386,9 +386,7 @@ abstract contract BaseStrategy {
         require(msg.sender == vault.management() || msg.sender == governance());
     }
 
-    constructor(address _vault) {
-        _initialize(_vault, msg.sender, msg.sender, msg.sender);
-    }
+    constructor() {}
 
     /**
      * @notice
@@ -1014,7 +1012,6 @@ abstract contract BaseStrategyInitializable is BaseStrategy {
     bool public isOriginal = true;
     event Cloned(address indexed clone);
 
-    constructor(address _vault) BaseStrategy(_vault) {}
 
     function initialize(
         address _vault,

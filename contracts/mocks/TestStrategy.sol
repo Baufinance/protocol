@@ -20,7 +20,9 @@ contract TestStrategy is BaseStrategyInitializable {
     // to test `BaseStrategy.protectedTokens()`
     address public constant protectedToken = address(0xbad);
 
-    constructor(address _vault) BaseStrategyInitializable(_vault) {}
+    constructor(address _vault) {
+        _initialize(_vault, msg.sender, msg.sender, msg.sender);
+    }
 
     function name() external view override returns (string memory) {
         return string(abi.encodePacked("TestStrategy ", apiVersion()));

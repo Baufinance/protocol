@@ -18,11 +18,6 @@ interface ICurveFactory {
         string symbol;
     }
 
-    struct CustomPool {
-        address deposit;
-        bool isLendingPool;
-        bool isSUSD;
-    }
 
     struct Vault {
         address vaultAddress;
@@ -30,11 +25,10 @@ interface ICurveFactory {
         CurveType poolType;
         address deposit;
         bool isLendingPool;
+        bool isSUSD;
     }
 
     function deployedVaults(address _vault) external view returns (Vault memory);
 
     function vaultStrategies(address _vault) external view returns (StrategyParams memory);
-
-    function customPools(address _lpToken) external view returns (CustomPool memory);
 }

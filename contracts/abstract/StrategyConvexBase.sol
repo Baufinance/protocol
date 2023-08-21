@@ -17,28 +17,15 @@ abstract contract StrategyConvexBase is BaseStrategy {
     // these should stay the same across different wants.
 
     // convex stuff
-    address internal constant depositContract =
-        0xF403C135812408BFbE8713b5A23a04b3D48AAE31; // this is the deposit contract that all pools use, aka booster
+
     IConvexRewards public rewardsContract; // This is unique to each curve pool
     address public virtualRewardsPool; // This is only if we have bonus rewards
     uint256 public pid; // this is unique to each pool
 
     uint256 internal constant FEE_DENOMINATOR = 10000; // this means all of our fee values are in basis points
 
-    // Swap stuff
-    address internal constant sushiswap =
-        0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // we use this to sell our bonus token
+    address internal constant eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-    IERC20 internal constant crv =
-        IERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);
-    IERC20 internal constant convexToken =
-        IERC20(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
-    IERC20 internal constant weth =
-        IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-
-    // keeper stuff
-    uint256 public harvestProfitMin; // minimum size in USD (6 decimals) that we want to harvest
-    uint256 public harvestProfitMax; // maximum size in USD (6 decimals) that we want to harvest
 
     string internal stratName;
 
@@ -47,7 +34,11 @@ abstract contract StrategyConvexBase is BaseStrategy {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _vault) BaseStrategy(_vault) {}
+    IERC20 public crv;
+    IERC20 public convexToken;
+    IERC20 public weth;
+    address public sushiswap;
+    address public depositContract;
 
     /* ========== VIEWS ========== */
 
@@ -142,5 +133,13 @@ abstract contract StrategyConvexBase is BaseStrategy {
     // We usually don't need to claim rewards on withdrawals, but might change our mind for migrations etc
     function setClaimRewards(bool _claimRewards) external onlyVaultManagers {
         claimRewards = _claimRewards;
+    }
+
+    function _initializeConvexBase() internal {
+        crv = IERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);
+        convexToken = IERC20(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
+        weth = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+        sushiswap = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+        depositContract = 0xF403C135812408BFbE8713b5A23a04b3D48AAE31;
     }
 }

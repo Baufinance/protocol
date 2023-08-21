@@ -12,19 +12,16 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     using SafeERC20 for IERC20;
 
     // Curve stuff
-    ICurveFi public curve; // Curve Token, this is our pool specific to this vault
+    ICurveFi public curve; // this is our pool specific to this vault
 
     bool isETHPool;
     bool public isWETHPool;
     bool public isCRVPool;
     bool public isCVXPool;
-    bool public isUseUnderlying;
+
 
     bool public isSUSD;
-
-
-    address eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
+    bool public isLendingPool;
     address public targetCoin;
     uint256 public targetCoinIndex;
 
@@ -32,22 +29,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
     error InvalidNCoins();
 
-    constructor(
-        address _vault,
-        uint256 _pid,
-        address _curvePool,
-        bytes memory _swapPath,
-        string memory _name,
-        bool _isLendingPool,
-        bool _isSUSD
-    ) StrategyCurveBase(_vault, _pid, _name) {
-        _initializeStrat(
-            _curvePool,
-            _swapPath,
-            _isLendingPool,
-            _isSUSD
-        );
-    }
+    constructor() StrategyCurveBase() {}
 
     receive() external payable {}
 
@@ -61,30 +43,30 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         _initialize(_vault, _strategist, _rewards, _keeper);
         ICurveFactory.Vault memory v = ICurveFactory(_factory).deployedVaults(_vault);
         ICurveFactory.StrategyParams memory s = ICurveFactory(_factory).vaultStrategies(_vault);
-        ICurveFactory.CustomPool memory p = ICurveFactory(_factory).customPools(v.lptoken);
-
 
         _initializeStratBase(s.pid, s.symbol);
         _initializeStrat(
             v.deposit,
-            s.swapPath,
             v.isLendingPool,
-            p.isSUSD
+            v.isSUSD
         );
     }
 
     function _initializeStrat(
         address _curvePool,
-        bytes memory _swapPath,
         bool _isLendingPool,
         bool _isSUSD
     ) internal {
+
+        isSUSD = _isSUSD;
+        isLendingPool = _isLendingPool;
+
         uint256 _nCoins = nCoins();
         for (uint256 i; i < _nCoins; i++) {
             address coin;
 
-            if (_isLendingPool) {
-                if (_isSUSD) {
+            if (isLendingPool) {
+                if (isSUSD) {
                     coin = ICurveFi(_curvePool).underlying_coins(
                         int128(int256(i))
                     );
@@ -116,23 +98,9 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             }
         }
 
-        if (_isLendingPool) {
-            targetCoin = ICurveFi(_curvePool).underlying_coins(
-                int128(int256(targetCoinIndex))
-            );
-        } else {
-            targetCoin = ICurveFi(_curvePool).coins(targetCoinIndex);
-        }
-
-        IERC20(targetCoin).approve(_curvePool, type(uint256).max);
-
         curve = ICurveFi(_curvePool);
 
-        swapPath = _swapPath;
-
-        isUseUnderlying = _isLendingPool;
-
-        isSUSD = _isSUSD;
+        _initializeConvexBase();
     }
 
     // we use this to clone our original strategy to other vaults
@@ -232,9 +200,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         else {
             _loss = debt.sub(assets);
         }
-
-        // we're done harvesting, so reset our trigger if we used it
-        forceHarvestTriggerOnce = false;
     }
 
     // Sells our CRV and CVX on Curve, then WETH -> stables together on UniV3
@@ -251,7 +216,15 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         if (_crvAmount > 1e17 && !isCRVPool) {
             // don't want to swap dust or we might revert
-            crveth.exchange(1, 0, _crvAmount, 0, isSwapToETH);
+            IUniV3(uniswapv3).exactInput(
+                IUniV3.ExactInputParams(
+                    crvethPath,
+                    address(this),
+                    block.timestamp,
+                    _crvAmount,
+                     uint256(1)
+                )
+            );
         }
 
         if (!isWETHPool && !isETHPool) {
@@ -286,7 +259,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         targetCoinIndex = _targetCoinIndex;
 
         //DEV move to factory
-        if (isUseUnderlying) {
+        if (isLendingPool) {
             if (isSUSD) {
                 targetCoin = curve.underlying_coins(
                     int128(int256(targetCoinIndex))
