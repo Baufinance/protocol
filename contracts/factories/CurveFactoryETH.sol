@@ -36,6 +36,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
     struct Vault {
         address vaultAddress;
+        address lptoken;
         CurveType poolType;
         address deposit;
         bool isLendingPool;
@@ -423,6 +424,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
         deployedVaults[_lptoken] = Vault(
             _vault,
+            _lptoken,
             _poolType,
             deposit,
             isLendingPool
@@ -477,6 +479,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
         symbol = string(abi.encodePacked("bauConvex", symbol));
 
+
         StrategyParams memory params = StrategyParams({
             strategy: address(0),
             pid: _pid,
@@ -495,6 +498,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         address _vaultAddress
     ) internal returns (address strategy) {
         Vault memory v = deployedVaults[_vaultAddress];
+
         strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
             _vaultAddress,
             management,
@@ -502,6 +506,11 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             keeper,
             address(this)
         );
+
+        if (v.poolType == CurveType.METAPOOL_3CRV || v.poolType == CurveType.METAPOOL_SBTC) {
+            IStrategy(strategy).setZapContract(address(zapContract[v.poolType]));
+            IStrategy(strategy).setOptimalTargetCoinIndex(0, vaultStrategies[_vaultAddress].swapPath);
+        }
     }
 
     function _addStrategyToVault(address _vault, address _strategy) internal {

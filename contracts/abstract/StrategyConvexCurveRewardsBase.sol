@@ -2,6 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "../interfaces/ICurve.sol";
+import "../interfaces/ICurveFactoryETH.sol";
 import "../abstract/StrategyCurveBase.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -19,8 +20,8 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     bool public isCVXPool;
     bool public isUseUnderlying;
 
-    bool public isDepositContract;
-    uint256 nCoins;
+    bool public isSUSD;
+
 
     address eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -37,16 +38,14 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         address _curvePool,
         bytes memory _swapPath,
         string memory _name,
-        uint256 _nCoins,
         bool _isLendingPool,
-        bool _isDepositContract
+        bool _isSUSD
     ) StrategyCurveBase(_vault, _pid, _name) {
         _initializeStrat(
             _curvePool,
-            _nCoins,
             _swapPath,
             _isLendingPool,
-            _isDepositContract
+            _isSUSD
         );
     }
 
@@ -57,40 +56,35 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         address _strategist,
         address _rewards,
         address _keeper,
-        uint256 _pid,
-        address _curvePool,
-        bytes memory _swapPath,
-        string memory _name,
-        uint256 _nCoins,
-        bool _isLendingPool,
-        bool _isDepositContract
+        address _factory
     ) public {
         _initialize(_vault, _strategist, _rewards, _keeper);
-        _initializeStratBase(_pid, _name);
+        ICurveFactory.Vault memory v = ICurveFactory(_factory).deployedVaults(_vault);
+        ICurveFactory.StrategyParams memory s = ICurveFactory(_factory).vaultStrategies(_vault);
+        ICurveFactory.CustomPool memory p = ICurveFactory(_factory).customPools(v.lptoken);
+
+
+        _initializeStratBase(s.pid, s.symbol);
         _initializeStrat(
-            _curvePool,
-            _nCoins,
-            _swapPath,
-            _isLendingPool,
-            _isDepositContract
+            v.deposit,
+            s.swapPath,
+            v.isLendingPool,
+            p.isSUSD
         );
     }
 
     function _initializeStrat(
         address _curvePool,
-        uint256 _nCoins,
         bytes memory _swapPath,
         bool _isLendingPool,
-        bool _isDepositContract
+        bool _isSUSD
     ) internal {
-        if (_nCoins < 2) {
-            revert InvalidNCoins();
-        }
+        uint256 _nCoins = nCoins();
         for (uint256 i; i < _nCoins; i++) {
             address coin;
 
             if (_isLendingPool) {
-                if (_isDepositContract) {
+                if (_isSUSD) {
                     coin = ICurveFi(_curvePool).underlying_coins(
                         int128(int256(i))
                     );
@@ -134,13 +128,11 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         curve = ICurveFi(_curvePool);
 
-        nCoins = _nCoins;
-
         swapPath = _swapPath;
 
         isUseUnderlying = _isLendingPool;
 
-        isDepositContract = _isDepositContract;
+        isSUSD = _isSUSD;
     }
 
     // we use this to clone our original strategy to other vaults
@@ -149,13 +141,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         address _strategist,
         address _rewards,
         address _keeper,
-        uint256 _pid,
-        address _curvePool,
-        bytes memory _swapPath,
-        string memory _name,
-        uint256 _nCoins,
-        bool _isLendingPool,
-        bool _isDepositContract
+        address _factory
     ) external virtual returns (address newStrategy) {
         require(isOriginal);
         // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactorysol
@@ -180,13 +166,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             _strategist,
             _rewards,
             _keeper,
-            _pid,
-            _curvePool,
-            _swapPath,
-            _name,
-            _nCoins,
-            _isLendingPool,
-            _isDepositContract
+            _factory
         );
 
         emit Cloned(newStrategy);
@@ -298,25 +278,30 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     }
 
     function setOptimalTargetCoinIndex(
-        uint256 _targetCoinIndex
-    ) external onlyVaultManagers {
+        uint256 _targetCoinIndex,
+        bytes memory _swapPath
+    ) external virtual onlyVaultManagers {
         IERC20(targetCoin).approve(address(curve), 0);
 
         targetCoinIndex = _targetCoinIndex;
 
         //DEV move to factory
         if (isUseUnderlying) {
-            if (isDepositContract) {
-                targetCoin = curve.underlying_coins(targetCoinIndex);
-            } else {
+            if (isSUSD) {
                 targetCoin = curve.underlying_coins(
                     int128(int256(targetCoinIndex))
                 );
+            } else {
+                targetCoin = curve.underlying_coins(targetCoinIndex);
             }
         } else {
             targetCoin = curve.coins(targetCoinIndex);
         }
 
         IERC20(targetCoin).approve(address(curve), type(uint256).max);
+
+        swapPath = _swapPath;
     }
+
+    function nCoins() public virtual view returns (uint256) {}
 }

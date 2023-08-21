@@ -19,7 +19,6 @@ contract StrategyConvex2CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
             _curvePool,
             _swapPath,
             _name,
-            2,
             _isLendingPool,
             _isDepositContract
         )
@@ -34,13 +33,14 @@ contract StrategyConvex2CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
 
         uint256[2] memory coins;
 
-        /*for (uint256 i; i < nCoins; i++) {
+        uint256 _nCoins = nCoins();
+        for (uint256 i; i < _nCoins; i++) {
             if (i == targetCoinIndex) {
                 coins[i] = targetBalance;
             } else {
                 coins[i] = 0;
             }
-        }*/
+        }
 
         coins[targetCoinIndex] = targetBalance;
 
@@ -53,5 +53,10 @@ contract StrategyConvex2CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
                 curve.add_liquidity(coins, 0);
             }
         }
+    }
+
+
+    function nCoins() public virtual override view returns (uint256) {
+        return 2;
     }
 }

@@ -39,4 +39,9 @@ interface IStrategy {
     function targetCoin() external view returns (address);
 
     function targetCoinIndex() external view returns (uint256);
+
+    function setZapContract(address _zapContract) external;
+
+    function setOptimalTargetCoinIndex(
+        uint256 _targetCoinIndex, bytes memory _swapPath) external;
 }
