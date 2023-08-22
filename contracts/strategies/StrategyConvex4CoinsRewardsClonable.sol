@@ -4,10 +4,9 @@ pragma solidity ^0.8.15;
 import "../abstract/StrategyConvexCurveRewardsBase.sol";
 
 contract StrategyConvex4CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
-    constructor(){}
+    constructor() {}
 
     function _depositToCurve() internal override {
-
         uint256 targetBalance = IERC20(targetCoin).balanceOf(address(this));
 
         if (targetCoin == eth) {
@@ -36,7 +35,7 @@ contract StrategyConvex4CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
         }
     }
 
-    function nCoins() public virtual override view returns (uint256) {
+    function nCoins() public view virtual override returns (uint256) {
         return 4;
     }
 }

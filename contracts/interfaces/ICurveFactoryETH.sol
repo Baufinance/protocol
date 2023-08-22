@@ -18,7 +18,6 @@ interface ICurveFactory {
         string symbol;
     }
 
-
     struct Vault {
         address vaultAddress;
         address lptoken;
@@ -28,7 +27,11 @@ interface ICurveFactory {
         bool isSUSD;
     }
 
-    function deployedVaults(address _vault) external view returns (Vault memory);
+    function deployedVaults(
+        address _vault
+    ) external view returns (Vault memory);
 
-    function vaultStrategies(address _vault) external view returns (StrategyParams memory);
+    function vaultStrategies(
+        address _vault
+    ) external view returns (StrategyParams memory);
 }

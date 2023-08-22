@@ -79,7 +79,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
     error VaultDoesntExist();
     error BalanceIsZero();
 
-
     mapping(CurveType => ICurveFi) public zapContract;
 
     function setOwner(address newOwner) external {
@@ -231,60 +230,78 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         initCustomPools();
     }
 
-     function initCustomPools() internal {
+    function initCustomPools() internal {
         //----------------------------------------------------------------------
         // LENDING POOLS
         //NEW API
         //AAVE
-        customPools[
-            0xFd2a8fA60Abd58Efe3EeE34dd494cD491dC14900
-        ] = CustomPool(0xDeBF20617708857ebe4F679508E7b7863a8A8EeE, true, false);
+        customPools[0xFd2a8fA60Abd58Efe3EeE34dd494cD491dC14900] = CustomPool(
+            0xDeBF20617708857ebe4F679508E7b7863a8A8EeE,
+            true,
+            false
+        );
 
         // IRON BANK
-        customPools[
-            0x5282a4eF67D9C33135340fB3289cc1711c13638C
-        ] = CustomPool(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF, true, false);
+        customPools[0x5282a4eF67D9C33135340fB3289cc1711c13638C] = CustomPool(
+            0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF,
+            true,
+            false
+        );
 
         //OLD API
         // BUSD
-        customPools[
-            0x3B3Ac5386837Dc563660FB6a0937DFAa5924333B
-        ] = CustomPool(0xb6c057591E073249F2D9D88Ba59a46CFC9B59EdB, true, false);
+        customPools[0x3B3Ac5386837Dc563660FB6a0937DFAa5924333B] = CustomPool(
+            0xb6c057591E073249F2D9D88Ba59a46CFC9B59EdB,
+            true,
+            false
+        );
 
         //compound
-        customPools[
-            0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2
-        ] = CustomPool(0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06, true, false);
+        customPools[0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2] = CustomPool(
+            0xeB21209ae4C2c9FF2a86ACA31E123764A3B6Bc06,
+            true,
+            false
+        );
 
         //PAX
 
-        customPools[
-            0xD905e2eaeBe188fc92179b6350807D8bd91Db0D8
-        ] = CustomPool(0xA50cCc70b6a011CffDdf45057E39679379187287, true, false);
+        customPools[0xD905e2eaeBe188fc92179b6350807D8bd91Db0D8] = CustomPool(
+            0xA50cCc70b6a011CffDdf45057E39679379187287,
+            true,
+            false
+        );
 
         //USDT
 
-        customPools[
-            0x9fC689CCaDa600B6DF723D9E47D84d76664a1F23
-        ] = CustomPool(0xac795D2c97e60DF6a99ff1c814727302fD747a80, true, false);
+        customPools[0x9fC689CCaDa600B6DF723D9E47D84d76664a1F23] = CustomPool(
+            0xac795D2c97e60DF6a99ff1c814727302fD747a80,
+            true,
+            false
+        );
 
         //yDAI
 
-        customPools[
-            0xdF5e0e81Dff6FAF3A7e52BA697820c5e32D806A8
-        ] = CustomPool(0xbBC81d23Ea2c3ec7e56D39296F0cbB648873a5d3, true, false);
+        customPools[0xdF5e0e81Dff6FAF3A7e52BA697820c5e32D806A8] = CustomPool(
+            0xbBC81d23Ea2c3ec7e56D39296F0cbB648873a5d3,
+            true,
+            false
+        );
 
         //----------------------------------------------------------------------
         //SUSD
 
-        customPools[
-            0xC25a3A3b969415c80451098fa907EC722572917F
-        ] = CustomPool(0xFCBa3E75865d2d561BE8D220616520c171F12851, false, true);
-
+        customPools[0xC25a3A3b969415c80451098fa907EC722572917F] = CustomPool(
+            0xFCBa3E75865d2d561BE8D220616520c171F12851,
+            false,
+            true
+        );
 
         // 3CRV
-        customPools[0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490] = CustomPool(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7, false, true);
-
+        customPools[0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490] = CustomPool(
+            0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7,
+            false,
+            true
+        );
 
         //GUSD POOL
         zapContract[CurveType.METAPOOL_3CRV] = ICurveFi(
@@ -407,10 +424,10 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         address deposit = _lptoken;
 
         if (
-            _poolType != CurveType.METAPOOL_3CRV && _poolType != CurveType.METAPOOL_SBTC &&
+            _poolType != CurveType.METAPOOL_3CRV &&
+            _poolType != CurveType.METAPOOL_SBTC &&
             customPools[_lptoken].deposit == address(0x0)
         ) {
-
             if (checkLatestCurveAPI(_lptoken)) {
                 deposit = _lptoken;
             } else {
@@ -481,7 +498,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
         symbol = string(abi.encodePacked("bauConvex", symbol));
 
-
         StrategyParams memory params = StrategyParams({
             strategy: address(0),
             pid: _pid,
@@ -509,10 +525,18 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             address(this)
         );
 
-        IStrategy(strategy).setOptimalTargetCoinIndex(0, vaultStrategies[_vaultAddress].swapPath);
+        IStrategy(strategy).setOptimalTargetCoinIndex(
+            0,
+            vaultStrategies[_vaultAddress].swapPath
+        );
 
-        if (v.poolType == CurveType.METAPOOL_3CRV || v.poolType == CurveType.METAPOOL_SBTC) {
-            IStrategy(strategy).setZapContract(address(zapContract[v.poolType]));
+        if (
+            v.poolType == CurveType.METAPOOL_3CRV ||
+            v.poolType == CurveType.METAPOOL_SBTC
+        ) {
+            IStrategy(strategy).setZapContract(
+                address(zapContract[v.poolType])
+            );
         }
     }
 
@@ -831,36 +855,45 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         targetAmount = _amount - amountFee;
     }
 
-
-    function setZapContract(CurveType _curveType, address _zapContract) external {
-        require(_curveType != CurveType.METAPOOL_3CRV && _curveType != CurveType.METAPOOL_SBTC, "wrong type");
+    function setZapContract(
+        CurveType _curveType,
+        address _zapContract
+    ) external {
+        require(
+            _curveType != CurveType.METAPOOL_3CRV &&
+                _curveType != CurveType.METAPOOL_SBTC,
+            "wrong type"
+        );
 
         require(msg.sender == owner);
 
-        zapContract[CurveType.METAPOOL_3CRV] = ICurveFi(
-            _zapContract
-        );
+        zapContract[CurveType.METAPOOL_3CRV] = ICurveFi(_zapContract);
     }
 
-
-    function setCustomPool(address _lptoken, bool _isLendingPool, bool _isSUSD) external {
+    function setCustomPool(
+        address _lptoken,
+        bool _isLendingPool,
+        bool _isSUSD
+    ) external {
         // CustomPools Map
         customPools[_lptoken] = CustomPool(_lptoken, _isLendingPool, _isSUSD);
     }
 
-    function checkLatestCurveAPI(address _contractAddress) public view returns (bool) {
+    function checkLatestCurveAPI(
+        address _contractAddress
+    ) public view returns (bool) {
         bytes4 selector = bytes4(keccak256("A()"));
         bool success;
         bytes memory data = abi.encodeWithSelector(selector);
 
         assembly {
             success := staticcall(
-                gas(),            // gas remaining
+                gas(), // gas remaining
                 _contractAddress, // destination address
-                add(data, 32),    // input buffer (starts after the first 32 bytes in the `data` array)
-                mload(data),      // input length (loaded from the first 32 bytes in the `data` array)
-                0,                // output buffer
-                0                 // output length
+                add(data, 32), // input buffer (starts after the first 32 bytes in the `data` array)
+                mload(data), // input length (loaded from the first 32 bytes in the `data` array)
+                0, // output buffer
+                0 // output length
             )
         }
 

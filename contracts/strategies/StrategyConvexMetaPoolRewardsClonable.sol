@@ -4,11 +4,12 @@ pragma solidity ^0.8.15;
 import "../abstract/StrategyConvexCurveRewardsBase.sol";
 import {ICurveFi} from "../interfaces/ICurve.sol";
 
-contract StrategyConvexMetaPoolRewardsClonable is StrategyConvexCurveRewardsBase {
-
+contract StrategyConvexMetaPoolRewardsClonable is
+    StrategyConvexCurveRewardsBase
+{
     address zapContract;
 
-    constructor(){}
+    constructor() {}
 
     function _depositToCurve() internal override {
         uint256 targetBalance = IERC20(targetCoin).balanceOf(address(this));
@@ -28,22 +29,16 @@ contract StrategyConvexMetaPoolRewardsClonable is StrategyConvexCurveRewardsBase
             }
         }
 
-
-        ICurveFi(zapContract).add_liquidity(
-                address(curve),
-                coins,
-                0
-        );
+        ICurveFi(zapContract).add_liquidity(address(curve), coins, 0);
     }
 
-    function nCoins() public virtual override view returns (uint256) {
+    function nCoins() public view virtual override returns (uint256) {
         return 4;
     }
 
     function setZapContract(address _zapContract) external onlyVaultManagers {
         zapContract = _zapContract;
     }
-
 
     function setOptimalTargetCoinIndex(
         uint256 _targetCoinIndex,

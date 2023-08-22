@@ -44,7 +44,15 @@ interface IStrategy {
     function setZapContract(address _zapContract) external;
 
     function setOptimalTargetCoinIndex(
-        uint256 _targetCoinIndex, bytes memory _swapPath) external;
+        uint256 _targetCoinIndex,
+        bytes memory _swapPath
+    ) external;
 
-    function initializeConvexBase(IERC20 _crv, IERC20 _convexToken, IERC20 _weth, address _sushiswap, address _depositContract) external;
+    function initializeConvexBase(
+        IERC20 _crv,
+        IERC20 _convexToken,
+        IERC20 _weth,
+        address _sushiswap,
+        address _depositContract
+    ) external;
 }

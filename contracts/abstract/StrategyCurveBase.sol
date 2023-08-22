@@ -26,8 +26,7 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
     bool public hasRewards;
     address[] internal rewardsPath;
 
-
-        // use Curve to sell our CVX and CRV rewards to WETH
+    // use Curve to sell our CVX and CRV rewards to WETH
 
     ICurveFi public cvxeth; // use curve's new CVX-ETH crypto pool to sell our CVX
     bytes public crvethPath; // use curve's new CRV-ETH crypto pool to sell our CRV
@@ -57,7 +56,7 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
         //crvethPath = add crvethpath
         cvxeth = ICurveFi(0xB576491F1E6e5E62f1d8F26062Ee822B40B0E0d4); // use curve's new CVX-ETH crypto pool to sell our CVX
 
-    // we use these to deposit to our curve pool
+        // we use these to deposit to our curve pool
 
         uniswapv3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
         usdt = IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
@@ -113,8 +112,28 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
     // use this to determine when to harvest
     function harvestTrigger(
         uint256 callCostinEth
-    ) public view override returns (bool) {}
+    ) public view override returns (bool) {
+        if (!isActive()) {
+            return false;
+        }
 
+        if (!isBaseFeeAcceptable()) {
+            return false;
+        }
+
+        // trigger if we want to manually harvest, but only if our gas price is acceptable
+        if (forceHarvestTriggerOnce) {
+            return true;
+        }
+
+        // harvest our credit if it's above our threshold
+        if (vault.creditAvailable() > creditThreshold) {
+            return true;
+        }
+
+        // otherwise, we don't harvest
+        return false;
+    }
 
     // convert our keeper's eth cost into want, we don't need this anymore since we don't use baseStrategy harvestTrigger
     function ethToWant(

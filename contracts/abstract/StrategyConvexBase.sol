@@ -26,7 +26,6 @@ abstract contract StrategyConvexBase is BaseStrategy {
 
     address internal constant eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-
     string internal stratName;
 
     // convex-specific variables

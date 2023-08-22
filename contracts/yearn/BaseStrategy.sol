@@ -1012,7 +1012,6 @@ abstract contract BaseStrategyInitializable is BaseStrategy {
     bool public isOriginal = true;
     event Cloned(address indexed clone);
 
-
     function initialize(
         address _vault,
         address _strategist,

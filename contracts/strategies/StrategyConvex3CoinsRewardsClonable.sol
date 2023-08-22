@@ -4,11 +4,10 @@ pragma solidity ^0.8.15;
 import "../abstract/StrategyConvexCurveRewardsBase.sol";
 
 contract StrategyConvex3CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
-    constructor(){}
+    constructor() {}
 
     function _depositToCurve() internal override {
         uint256 targetBalance = IERC20(targetCoin).balanceOf(address(this));
-
 
         if (targetCoin == eth) {
             targetBalance = address(this).balance;
@@ -25,7 +24,6 @@ contract StrategyConvex3CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
             }
         }
 
-
         if (isLendingPool) {
             curve.add_liquidity(coins, 0, true);
         } else {
@@ -37,7 +35,7 @@ contract StrategyConvex3CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
         }
     }
 
-    function nCoins() public virtual override view returns (uint256) {
+    function nCoins() public view virtual override returns (uint256) {
         return 3;
     }
 }

@@ -19,7 +19,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     bool public isCRVPool;
     bool public isCVXPool;
 
-
     bool public isSUSD;
     bool public isLendingPool;
     address public targetCoin;
@@ -41,15 +40,14 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         address _factory
     ) public {
         _initialize(_vault, _strategist, _rewards, _keeper);
-        ICurveFactory.Vault memory v = ICurveFactory(_factory).deployedVaults(_vault);
-        ICurveFactory.StrategyParams memory s = ICurveFactory(_factory).vaultStrategies(_vault);
+        ICurveFactory.Vault memory v = ICurveFactory(_factory).deployedVaults(
+            _vault
+        );
+        ICurveFactory.StrategyParams memory s = ICurveFactory(_factory)
+            .vaultStrategies(_vault);
 
         _initializeStratBase(s.pid, s.symbol);
-        _initializeStrat(
-            v.deposit,
-            v.isLendingPool,
-            v.isSUSD
-        );
+        _initializeStrat(v.deposit, v.isLendingPool, v.isSUSD);
     }
 
     function _initializeStrat(
@@ -57,7 +55,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bool _isLendingPool,
         bool _isSUSD
     ) internal {
-
         isSUSD = _isSUSD;
         isLendingPool = _isLendingPool;
 
@@ -222,7 +219,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
                     address(this),
                     block.timestamp,
                     _crvAmount,
-                     uint256(1)
+                    uint256(1)
                 )
             );
         }
@@ -276,5 +273,5 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         swapPath = _swapPath;
     }
 
-    function nCoins() public virtual view returns (uint256) {}
+    function nCoins() public view virtual returns (uint256) {}
 }
