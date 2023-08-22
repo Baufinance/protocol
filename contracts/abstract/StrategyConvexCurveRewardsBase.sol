@@ -28,6 +28,10 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
     error InvalidNCoins();
 
+    event Log(address t);
+    event LogUint(uint i);
+
+
     constructor() StrategyCurveBase() {}
 
     receive() external payable {}
@@ -40,13 +44,17 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         address _factory
     ) public {
         _initialize(_vault, _strategist, _rewards, _keeper);
+
+
         ICurveFactory.Vault memory v = ICurveFactory(_factory).deployedVaults(
-            _vault
+            VaultAPI(_vault).token()
         );
         ICurveFactory.StrategyParams memory s = ICurveFactory(_factory)
             .vaultStrategies(_vault);
 
         _initializeStratBase(s.pid, s.symbol);
+
+        emit Log(v.deposit);
         _initializeStrat(v.deposit, v.isLendingPool, v.isSUSD);
     }
 
@@ -55,10 +63,14 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bool _isLendingPool,
         bool _isSUSD
     ) internal {
+
+        emit Log(_curvePool);
+
         isSUSD = _isSUSD;
         isLendingPool = _isLendingPool;
 
         uint256 _nCoins = nCoins();
+        emit LogUint(_nCoins);
         for (uint256 i; i < _nCoins; i++) {
             address coin;
 
@@ -96,8 +108,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         }
 
         curve = ICurveFi(_curvePool);
-
-        _initializeConvexBase();
     }
 
     // we use this to clone our original strategy to other vaults
@@ -146,6 +156,8 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         override
         returns (uint256 _profit, uint256 _loss, uint256 _debtPayment)
     {
+
+
         // this claims our CRV, CVX, and any extra tokens like SNX or ANKR. no harm leaving this true even if no extra rewards currently.
         rewardsContract.getReward(address(this), true);
 
@@ -167,6 +179,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         _depositToCurve();
 
+
         // debtOustanding will only be > 0 in the event of revoking or if we need to rebalance from a withdrawal or lowering the debtRatio
         if (_debtOutstanding > 0) {
             uint256 _stakedBal = stakedBalance();
@@ -182,6 +195,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         // serious loss should never happen, but if it does (for instance, if Curve is hacked), let's record it accurately
         uint256 assets = estimatedTotalAssets();
+
         uint256 debt = vault.strategies(address(this)).totalDebt;
 
         // if assets are greater than debt, things are working great!
@@ -206,12 +220,17 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     ) internal {
         bool isSwapToETH = isETHPool;
 
-        if (_convexAmount > 1e17 && !isCVXPool) {
+
+        emit LogUint(_crvAmount);
+        emit LogUint(_convexAmount);
+
+
+        if (/*_convexAmount > 1e17 &&*/ !isCVXPool) {
             // don't want to swap dust or we might revert
             cvxeth.exchange(1, 0, _convexAmount, 0, isSwapToETH);
         }
 
-        if (_crvAmount > 1e17 && !isCRVPool) {
+        if (/*_crvAmount > 1e17 && */ !isCRVPool) {
             // don't want to swap dust or we might revert
             IUniV3(uniswapv3).exactInput(
                 IUniV3.ExactInputParams(
@@ -224,9 +243,12 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             );
         }
 
+
         if (!isWETHPool && !isETHPool) {
             uint256 _wethBalance = weth.balanceOf(address(this));
-            if (_wethBalance > 1e15) {
+
+
+            //if (_wethBalance > 1e15) {
                 // don't want to swap dust or we might revert
                 IUniV3(uniswapv3).exactInput(
                     IUniV3.ExactInputParams(
@@ -237,7 +259,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
                         uint256(1)
                     )
                 );
-            }
+            //}
         }
     }
 
@@ -251,7 +273,10 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         uint256 _targetCoinIndex,
         bytes memory _swapPath
     ) external virtual onlyVaultManagers {
-        IERC20(targetCoin).approve(address(curve), 0);
+
+        if (targetCoin != address(0x0)) {
+            IERC20(targetCoin).approve(address(curve), 0);
+        }
 
         targetCoinIndex = _targetCoinIndex;
 

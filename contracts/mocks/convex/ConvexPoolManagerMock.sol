@@ -11,9 +11,10 @@ contract ConvexPoolManagerMock {
         booster = _booster;
     }
 
-    function addPool(address _gauge) external {
+    function addPool(address _gauge) external returns(bool) {
         address lptoken = ICurveGauge(_gauge).lp_token();
 
         IBoosterMock(booster).addPool(lptoken, _gauge, 0);
+        return true;
     }
 }

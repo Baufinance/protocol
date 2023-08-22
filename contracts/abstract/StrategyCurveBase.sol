@@ -45,7 +45,7 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
 
     event Cloned(address indexed clone);
 
-    function _initializeStratBase(uint256 _pid, string memory _name) internal {
+    function _initializeStratBase(uint256 _pid, string memory _name) internal virtual {
         // make sure that we haven't initialized this before
         require(address(rewardsContract) == address(0)); // already initialized.
 
@@ -62,6 +62,12 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
 
         uniswapv3 = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
         usdt = IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+
+        crv = IERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);
+        convexToken = IERC20(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
+        weth = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+        sushiswap = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+        depositContract = 0xF403C135812408BFbE8713b5A23a04b3D48AAE31;
 
         // want = Curve LP
         want.approve(address(depositContract), type(uint256).max);

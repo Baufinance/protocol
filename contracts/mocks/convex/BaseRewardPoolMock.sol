@@ -18,7 +18,13 @@ contract BaseRewardPoolMock {
 
     uint256 public periodFinish;
 
+    address public lptoken;
+
     uint256 public constant duration = 7 days;
+
+
+    event Log(address t);
+    event LogUint(uint i);
 
     constructor(
         uint256 _pid,
@@ -33,11 +39,13 @@ contract BaseRewardPoolMock {
     }
 
     // strategy's staked balance in the synthetix staking contract
-    function balanceOf(address account) external view returns (uint256) {}
+    function balanceOf(address account) external view returns (uint256) {
+        return IERC20(lptoken).balanceOf(operator);
+    }
 
     // read how much claimable CRV a strategy has
     function earned(address account) public view returns (uint256) {
-        return (2 * block.number * 10 ** 18) / block.timestamp;
+        return (2 * block.number * 10**18) / block.timestamp;
     }
 
     // withdraw to a convex tokenized deposit, probably never need to use this
@@ -67,13 +75,14 @@ contract BaseRewardPoolMock {
         address _account,
         bool _claimExtras
     ) public returns (bool) {
+
         uint256 reward = earned(_account);
 
-        if (reward > 0) {
-            rewardToken.safeTransfer(_account, reward);
-            uint256 convexReward = (block.number * 10 ** 18) / block.timestamp;
+        if (reward > 0 && rewardToken.balanceOf(address(this)) > 0) {
 
-            convexToken.safeTransfer(_account, convexReward);
+            rewardToken.safeTransfer(_account, reward);
+
+            convexToken.safeTransfer(_account, reward);
         }
 
         //also get rewards from linked rewards
@@ -99,5 +108,9 @@ contract BaseRewardPoolMock {
 
     function updateReward() external {
         periodFinish = block.timestamp + duration;
+    }
+
+    function setLptoken(address _lpToken) external {
+        lptoken = _lpToken;
     }
 }

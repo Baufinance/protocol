@@ -2,6 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "./interfaces/IRewardFactoryMock.sol";
+import "./interfaces/IBaseRewardMock.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -44,8 +45,11 @@ contract BoosterMock {
         uint256 _stashVersion
     ) external returns (bool) {
         uint256 pid = poolInfo.length;
+
         address newRewardPool = IRewardFactoryMock(rewardFactory)
             .createCrvRewards(pid);
+
+        IBaseRewardMock(newRewardPool).setLptoken(_lptoken);
 
         //add the new pool
         poolInfo.push(

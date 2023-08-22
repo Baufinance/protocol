@@ -81,6 +81,9 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
     mapping(CurveType => ICurveFi) public zapContract;
 
+    event Log(address test);
+    event LogUint8(uint8 v);
+
     function setOwner(address newOwner) external {
         require(msg.sender == owner);
         pendingOwner = newOwner;
@@ -397,17 +400,19 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         }
         address lptoken = ICurveGauge(_gauge).lp_token();
 
-        uint256 pid = _getConvexPid(_gauge);
-
-        vault = _createVault(lptoken);
-
         CurveType poolType = curveRegistry[lptoken];
 
         require(poolType != CurveType.NONE);
 
+        uint256 pid = _getConvexPid(_gauge);
+
+        vault = _createVault(lptoken);
+
         _recordVault(vault, poolType, lptoken);
 
-        _createStrategy(lptoken, pid, _swapPath);
+
+        strategy = _createStrategy(lptoken, pid, _swapPath);
+
 
         _addStrategyToVault(vault, strategy);
 
@@ -507,18 +512,18 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
         vaultStrategies[v.vaultAddress] = params;
 
-        strategy = _deployStrategy(v.vaultAddress);
+        strategy = _deployStrategy(_lptoken);
 
         vaultStrategies[v.vaultAddress].strategy = strategy;
     }
 
     function _deployStrategy(
-        address _vaultAddress
+        address _lptoken
     ) internal returns (address strategy) {
-        Vault memory v = deployedVaults[_vaultAddress];
+        Vault memory v = deployedVaults[_lptoken];
 
         strategy = IStrategy(convexStratImplementation[v.poolType]).clone(
-            _vaultAddress,
+            v.vaultAddress,
             management,
             treasury,
             keeper,
@@ -527,7 +532,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
         IStrategy(strategy).setOptimalTargetCoinIndex(
             0,
-            vaultStrategies[_vaultAddress].swapPath
+            vaultStrategies[v.vaultAddress].swapPath
         );
 
         if (
@@ -544,6 +549,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         IVault v = IVault(_vault);
 
         v.addStrategy(_strategy, 10_000, 0, type(uint256).max);
+        emit Log(_strategy);
     }
 
     ///////////////////////////////////
@@ -896,7 +902,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
                 0 // output length
             )
         }
-
-        return success;
+        return false;
     }
 }

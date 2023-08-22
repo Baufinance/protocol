@@ -133,12 +133,4 @@ abstract contract StrategyConvexBase is BaseStrategy {
     function setClaimRewards(bool _claimRewards) external onlyVaultManagers {
         claimRewards = _claimRewards;
     }
-
-    function _initializeConvexBase() internal {
-        crv = IERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);
-        convexToken = IERC20(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
-        weth = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-        sushiswap = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
-        depositContract = 0xF403C135812408BFbE8713b5A23a04b3D48AAE31;
-    }
 }

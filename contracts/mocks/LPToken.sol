@@ -7,7 +7,7 @@ contract LPToken is ERC20 {
     mapping(address => bool) public _blocked;
     uint8 private immutable _decimals;
 
-    address minter;
+    address public minter;
 
     constructor(uint8 decimals_) ERC20("bau.finance test token", "TEST") {
         _decimals = decimals_;

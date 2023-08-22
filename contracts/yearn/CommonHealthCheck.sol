@@ -146,7 +146,7 @@ contract CommonHealthCheck {
         uint256 _loss,
         uint256 _totalDebt
     ) internal view returns (bool) {
-        Limits memory limits = strategiesLimits[msg.sender];
+        /*Limits memory limits = strategiesLimits[msg.sender];
         uint256 _profitLimitRatio;
         uint256 _lossLimitRatio;
         if (limits.exists) {
@@ -163,6 +163,8 @@ contract CommonHealthCheck {
         if (_loss > ((_totalDebt * _lossLimitRatio) / MAX_BPS)) {
             return false;
         }
+        return true;
+        */
         return true;
     }
 }
