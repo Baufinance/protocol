@@ -39,6 +39,8 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
     // check for cloning
     bool internal isOriginal = true;
 
+    bool public checkEarmark; // this determines if we should check if we need to earmark rewards before harvesting
+
     /* ========== CLONING ========== */
 
     event Cloned(address indexed clone);
@@ -152,6 +154,14 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
                 .periodFinish();
             return rewardsExpiry < block.timestamp;
         }
+
+
+        if (checkEarmark) {
+            // don't harvest if we need to earmark convex rewards
+            if (needsEarmarkReward()) {
+                return false;
+            }
+        }
     }
 
     /// @notice Use to update, add, or remove extra rewards tokens.
@@ -181,5 +191,10 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
             rewardsPath = [address(rewardsToken), address(weth)];
             hasRewards = true;
         }
+    }
+
+    function setCheckEarmark(bool _checkEarmark) external onlyVaultManagers()  {
+        // this determines if we should check if we need to earmark rewards before harvesting)
+        checkEarmark = _checkEarmark;
     }
 }
