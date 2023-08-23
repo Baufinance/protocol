@@ -165,7 +165,6 @@ def test_create_2_coins_strategy(chain, common_health_check, base_fee_oracle,  c
 
 
 
-
 def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin(chain, treasury, common_health_check, base_fee_oracle,  cvx, crv, factory, curve_mock_builder, gov, weth, univ3_mock, univ2_mock, rewards_factory, booster, registry, vault_template):
   # try to build 2 pool with erc 20 tokens with plain and lending liquidity
   curve_mock_builder.build(2, False)

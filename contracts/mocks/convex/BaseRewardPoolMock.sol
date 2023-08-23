@@ -22,10 +22,6 @@ contract BaseRewardPoolMock {
 
     uint256 public constant duration = 7 days;
 
-
-    event Log(address t);
-    event LogUint(uint i);
-
     constructor(
         uint256 _pid,
         address _rewardToken,
@@ -40,7 +36,7 @@ contract BaseRewardPoolMock {
 
     // strategy's staked balance in the synthetix staking contract
     function balanceOf(address account) external view returns (uint256) {
-        return IERC20(lptoken).balanceOf(operator);
+        return IDepositMock(operator).balances(account);
     }
 
     // read how much claimable CRV a strategy has

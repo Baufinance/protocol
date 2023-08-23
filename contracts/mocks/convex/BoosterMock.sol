@@ -22,7 +22,7 @@ contract BoosterMock {
     PoolInfo[] public poolInfo;
 
     mapping(address => bool) public gaugeMap;
-
+    mapping(address => uint256) public balances;
     address public crvToken;
     address public rewardFactory;
 
@@ -75,6 +75,7 @@ contract BoosterMock {
         PoolInfo storage pool = poolInfo[_pid];
         //send to proxy to stake
         address lptoken = pool.lptoken;
+        balances[msg.sender] += _amount;
         IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
     }
 
@@ -103,6 +104,7 @@ contract BoosterMock {
         //remove lp balance
         address token = pool.token;
 
+        balances[_to] -= _amount;
         //return lp tokens
         IERC20(lptoken).safeTransfer(_to, _amount);
     }

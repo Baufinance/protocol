@@ -7,4 +7,6 @@ interface IBoosterMock {
         address _gauge,
         uint256 _stashVersion
     ) external returns (bool);
+
+    function balances(address) external view returns (uint256);
 }

@@ -7,4 +7,6 @@ interface IDepositMock {
         uint256 _amount,
         address _to
     ) external returns (bool);
+
+    function balances(address) external view returns (uint256);
 }
