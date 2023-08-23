@@ -176,14 +176,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         zapFee = _zapFee;
     }
 
-    bool public allowDuplicate;
-
-    function setAllowDuplicate(bool _allowDuplicate) external {
-        require(msg.sender == owner);
-
-        allowDuplicate = _allowDuplicate;
-    }
-
     function setCurvePoolToRegistry(
         address _lptoken,
         CurveType _poolType
@@ -393,12 +385,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         address _gauge,
         bytes calldata _swapPath
     ) internal returns (address vault, address strategy) {
-        if (!allowDuplicate) {
-            require(
-                canCreateVaultPermissionlessly(_gauge),
-                "Vault already exists"
-            );
-        }
+
         address lptoken = ICurveGauge(_gauge).lp_token();
 
         CurveType poolType = curveRegistry[lptoken];
@@ -486,6 +473,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         );
 
         IVault v = IVault(vault);
+        emit Log(governance);
         v.setManagement(management);
         v.setGovernance(governance);
         v.setDepositLimit(depositLimit);
@@ -915,5 +903,12 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             )
         }
         return false;
+    }
+
+    function changeGovernanceForPending(address _lptoken, address _newGovernance) external {
+        require(msg.sender == owner, "not owner");
+        Vault storage v = deployedVaults[_lptoken];
+        require(IVault(v.vaultAddress).governance() == msg.sender, "governance already changed");
+        IVault(v.vaultAddress).setGovernance(_newGovernance);
     }
 }

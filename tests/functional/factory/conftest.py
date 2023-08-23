@@ -4,11 +4,6 @@ from brownie import Vault, CurveFactoryETH, BoosterMock, RewardsMock, RewardFact
 
 
 @pytest.fixture
-def gov(accounts):
-    yield accounts[0]
-
-
-@pytest.fixture
 def account2(accounts):
     yield accounts[1]
 
@@ -25,6 +20,10 @@ def account4(accounts):
 @pytest.fixture
 def treasury(accounts):
     yield accounts[4]
+
+@pytest.fixture
+def rewards(accounts):
+    yield accounts[5]
 
 def create_token(gov):
     def create_token(decimal=18):
@@ -110,6 +109,7 @@ def univ3_mock(gov):
 def factory(CurveFactoryETH, booster, registry, gov, pool_manager):
     factory = gov.deploy(CurveFactoryETH)
     factory.initialize(registry, gov, gov, pool_manager,booster)
+    print(gov)
     yield factory
 
 @pytest.fixture

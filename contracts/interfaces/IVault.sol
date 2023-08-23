@@ -4,6 +4,8 @@ pragma solidity ^0.8.15;
 interface IVault {
     function setGovernance(address) external;
 
+    function governance() external view returns (address);
+
     function setManagement(address) external;
 
     function setDepositFee(uint256) external;
