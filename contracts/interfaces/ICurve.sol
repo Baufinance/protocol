@@ -111,6 +111,20 @@ interface ICurveFi is IERC20 {
         uint256 min_amount
     ) external;
 
+    function remove_liquidity_one_coin(
+        address _pool,
+        uint256 _burn_amount,
+        uint256 i,
+        uint256 min_amount,
+        address _receiver
+    ) external;
+
+    function remove_liquidity_one_coin(
+        uint256 _token_amount,
+        uint256 i,
+        uint256 min_amount
+    ) external;
+
     function exchange(
         // CRV-ETH and CVX-ETH
         uint256 from,

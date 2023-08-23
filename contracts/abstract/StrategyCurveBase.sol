@@ -41,6 +41,8 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
 
     bool public checkEarmark; // this determines if we should check if we need to earmark rewards before harvesting
 
+    uint256 rewardTreshold;
+
     /* ========== CLONING ========== */
 
     event Cloned(address indexed clone);
@@ -89,6 +91,8 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
 
         // set our strategy's name
         stratName = _name;
+
+        rewardTreshold = 1e17;
     }
 
     // migrate our want token to a new strategy if needed, make sure to check claimRewards first
@@ -202,5 +206,9 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
     function setCheckEarmark(bool _checkEarmark) external onlyVaultManagers()  {
         // this determines if we should check if we need to earmark rewards before harvesting)
         checkEarmark = _checkEarmark;
+    }
+
+    function setRewardTreshold(uint256 _rewardTreshold) external onlyVaultManagers {
+        rewardTreshold = _rewardTreshold;
     }
 }

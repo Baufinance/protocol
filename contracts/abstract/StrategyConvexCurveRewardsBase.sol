@@ -225,12 +225,12 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         emit LogUint(_convexAmount);
 
 
-        if (/*_convexAmount > 1e17 &&*/ !isCVXPool) {
+        if (_convexAmount > rewardTreshold && !isCVXPool) {
             // don't want to swap dust or we might revert
             cvxeth.exchange(1, 0, _convexAmount, 0, isSwapToETH);
         }
 
-        if (/*_crvAmount > 1e17 && */ !isCRVPool) {
+        if (_crvAmount > rewardTreshold &&  !isCRVPool) {
             // don't want to swap dust or we might revert
             IUniV3(uniswapv3).exactInput(
                 IUniV3.ExactInputParams(
@@ -248,7 +248,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             uint256 _wethBalance = weth.balanceOf(address(this));
 
 
-            //if (_wethBalance > 1e15) {
+            if (_wethBalance > rewardTreshold) {
                 // don't want to swap dust or we might revert
                 IUniV3(uniswapv3).exactInput(
                     IUniV3.ExactInputParams(
@@ -259,7 +259,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
                         uint256(1)
                     )
                 );
-            //}
+            }
         }
     }
 
@@ -299,4 +299,5 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     }
 
     function nCoins() public view virtual returns (uint256) {}
+
 }

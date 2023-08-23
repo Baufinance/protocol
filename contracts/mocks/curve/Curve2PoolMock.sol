@@ -69,6 +69,14 @@ contract Curve2PoolMock {
         IToken(token).mint(amount, msg.sender);
     }
 
+    function remove_liquidity_one_coin(
+        uint256 _token_amount,
+        uint256 i,
+        uint256 min_amount
+    ) external {
+        IERC20(underlying[i]).transfer(msg.sender, _token_amount);
+    }
+
     function underlying_coins(uint256 i) external view returns (address) {
         return underlying[i];
     }

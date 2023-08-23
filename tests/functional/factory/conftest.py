@@ -23,6 +23,8 @@ def account4(accounts):
     yield accounts[3]
 
 @pytest.fixture
+def treasury(accounts):
+    yield accounts[4]
 
 def create_token(gov):
     def create_token(decimal=18):
