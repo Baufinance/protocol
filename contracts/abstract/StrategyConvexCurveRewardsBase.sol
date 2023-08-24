@@ -41,7 +41,8 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         address _strategist,
         address _rewards,
         address _keeper,
-        address _factory
+        address _factory,
+        bytes memory _swapPath
     ) public {
         _initialize(_vault, _strategist, _rewards, _keeper);
 
@@ -54,14 +55,14 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         _initializeStratBase(s.pid, s.symbol);
 
-        emit Log(v.deposit);
-        _initializeStrat(v.deposit, v.isLendingPool, v.isSUSD);
+        _initializeStrat(v.deposit, v.isLendingPool, v.isSUSD, _swapPath);
     }
 
     function _initializeStrat(
         address _curvePool,
         bool _isLendingPool,
-        bool _isSUSD
+        bool _isSUSD,
+        bytes memory _swapPath
     ) internal {
 
         emit Log(_curvePool);
@@ -70,7 +71,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         isLendingPool = _isLendingPool;
 
         uint256 _nCoins = nCoins();
-
         for (uint256 i; i < _nCoins; i++) {
             address coin;
 
@@ -90,24 +90,13 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
                 isETHPool = true;
                 break;
             }
-
-            if (coin == address(crv)) {
-                isCRVPool = true;
-                break;
-            }
-
-            if (coin == address(convexToken)) {
-                isCVXPool = true;
-                break;
-            }
-
-            if (coin == address(weth)) {
-                isWETHPool = true;
-                break;
-            }
         }
 
         curve = ICurveFi(_curvePool);
+
+        _setOptimalCoinIndex(0, _swapPath);
+        _setPoolFlags(targetCoin);
+
     }
 
     // we use this to clone our original strategy to other vaults
@@ -116,8 +105,9 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         address _strategist,
         address _rewards,
         address _keeper,
-        address _factory
-    ) external virtual returns (address newStrategy) {
+        address _factory,
+        bytes memory _swapPath
+    ) external  returns (address newStrategy) {
         require(isOriginal);
         // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactorysol
         bytes20 addressBytes = bytes20(address(this));
@@ -136,12 +126,14 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             newStrategy := create(0, clone_code, 0x37)
         }
 
+
         StrategyConvexCurveRewardsBase(payable(newStrategy)).initialize(
             _vault,
             _strategist,
             _rewards,
             _keeper,
-            _factory
+            _factory,
+            _swapPath
         );
 
         emit Cloned(newStrategy);
@@ -218,17 +210,16 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         uint256 _crvAmount,
         uint256 _convexAmount
     ) internal {
-        bool isSwapToETH = isETHPool;
 
 
         //emit LogUint(_convexAmount);
 
         if (_convexAmount > rewardTreshold && !isCVXPool) {
             // don't want to swap dust or we might revert
-            cvxeth.exchange(1, 0, _convexAmount, 0, isSwapToETH);
+            cvxeth.exchange(1, 0, _convexAmount, 0, false);
         }
 
-        if (_crvAmount > rewardTreshold &&  !isCRVPool) {
+        if (_crvAmount > rewardTreshold && !isCRVPool) {
 
 
             // don't want to swap dust or we might revert
@@ -243,7 +234,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             );
         }
 
-        if (!isWETHPool && !isETHPool) {
+        if (!isWETHPool) {
             uint256 _wethBalance = weth.balanceOf(address(this));
 
             if (_wethBalance > rewardTreshold) {
@@ -271,8 +262,12 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         uint256 _targetCoinIndex,
         bytes memory _swapPath
     ) external virtual onlyVaultManagers {
+        _setOptimalCoinIndex(_targetCoinIndex, _swapPath);
+        _setPoolFlags(targetCoin);
+    }
 
 
+    function _setOptimalCoinIndex(uint256 _targetCoinIndex, bytes memory _swapPath) internal {
         require(_targetCoinIndex < nCoins(), "invalid index");
 
         if (targetCoin != address(0x0)) {
@@ -311,6 +306,22 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         IERC20(targetCoin).approve(address(curve), type(uint256).max);
 
         swapPath = _swapPath;
+    }
+
+    function _setPoolFlags(address _targetCoin) internal {
+            uint256 _nCoins = nCoins();
+
+            if (_targetCoin == address(crv)) {
+                isCRVPool = true;
+            }
+
+            if (_targetCoin == address(convexToken)) {
+                isCVXPool = true;
+            }
+
+            if (_targetCoin == address(weth)) {
+                isWETHPool = true;
+            }
     }
 
     function nCoins() public view virtual returns (uint256) {}

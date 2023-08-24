@@ -515,11 +515,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             management,
             treasury,
             keeper,
-            address(this)
-        );
-
-        IStrategy(strategy).setOptimalTargetCoinIndex(
-            0,
+            address(this),
             vaultStrategies[v.vaultAddress].swapPath
         );
 

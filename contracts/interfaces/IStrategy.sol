@@ -8,7 +8,8 @@ interface IStrategy {
         address _strategist,
         address _rewards,
         address _keeper,
-        address _factory
+        address _factory,
+        bytes memory _swapPath
     ) external virtual returns (address newStrategy);
 
 
