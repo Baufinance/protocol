@@ -70,7 +70,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         isLendingPool = _isLendingPool;
 
         uint256 _nCoins = nCoins();
-        emit LogUint(_nCoins);
+
         for (uint256 i; i < _nCoins; i++) {
             address coin;
 
@@ -221,9 +221,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bool isSwapToETH = isETHPool;
 
 
-        emit LogUint(_crvAmount);
-        emit LogUint(_convexAmount);
-
+        //emit LogUint(_convexAmount);
 
         if (_convexAmount > rewardTreshold && !isCVXPool) {
             // don't want to swap dust or we might revert
@@ -231,6 +229,8 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         }
 
         if (_crvAmount > rewardTreshold &&  !isCRVPool) {
+
+
             // don't want to swap dust or we might revert
             IUniV3(uniswapv3).exactInput(
                 IUniV3.ExactInputParams(
@@ -243,10 +243,8 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             );
         }
 
-
         if (!isWETHPool && !isETHPool) {
             uint256 _wethBalance = weth.balanceOf(address(this));
-
 
             if (_wethBalance > rewardTreshold) {
                 // don't want to swap dust or we might revert
@@ -274,6 +272,9 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bytes memory _swapPath
     ) external virtual onlyVaultManagers {
 
+
+        require(_targetCoinIndex < nCoins(), "invalid index");
+
         if (targetCoin != address(0x0)) {
             IERC20(targetCoin).approve(address(curve), 0);
         }
@@ -290,7 +291,21 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
                 targetCoin = curve.underlying_coins(targetCoinIndex);
             }
         } else {
+
             targetCoin = curve.coins(targetCoinIndex);
+
+            if (isETHPool) {
+                if (targetCoin == eth) {
+                    //change index
+                    if (targetCoinIndex+1 < nCoins()) {
+                        targetCoinIndex = targetCoinIndex+1;
+                    } else {
+                        targetCoinIndex = 0;
+                    }
+
+                    targetCoin = curve.coins(targetCoinIndex);
+                }
+            }
         }
 
         IERC20(targetCoin).approve(address(curve), type(uint256).max);

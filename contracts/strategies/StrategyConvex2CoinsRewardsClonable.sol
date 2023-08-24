@@ -6,6 +6,8 @@ import "../abstract/StrategyConvexCurveRewardsBase.sol";
 contract StrategyConvex2CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
     constructor() {}
 
+    event Log(uint256 balance);
+
     function _depositToCurve() internal override {
         uint256 targetBalance = IERC20(targetCoin).balanceOf(address(this));
 
@@ -29,11 +31,7 @@ contract StrategyConvex2CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
         if (isLendingPool) {
             curve.add_liquidity(coins, 0, true);
         } else {
-            if (isETHPool) {
-                curve.add_liquidity{value: targetBalance}(coins, 0);
-            } else {
-                curve.add_liquidity(coins, 0);
-            }
+            curve.add_liquidity(coins, 0);
         }
     }
 
