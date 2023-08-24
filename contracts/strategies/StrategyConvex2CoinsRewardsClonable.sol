@@ -28,7 +28,7 @@ contract StrategyConvex2CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
 
         coins[targetCoinIndex] = targetBalance;
 
-        if (isLendingPool) {
+        if (isLendingPool && !isSUSD) {
             curve.add_liquidity(coins, 0, true);
         } else {
             curve.add_liquidity(coins, 0);

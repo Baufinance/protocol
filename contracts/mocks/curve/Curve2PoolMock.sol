@@ -50,10 +50,11 @@ contract Curve2PoolMock {
     }
 
     function add_liquidity(
+        // Iron Bank, Aave
         uint256[2] calldata amounts,
         uint256 min_mint_amount,
         bool _use_underlying
-    ) external payable {
+    ) external payable returns (uint256) {
         uint256 amount;
         for (uint256 i = 0; i < 2; i++) {
             if (amounts[i] > 0) {
@@ -67,6 +68,8 @@ contract Curve2PoolMock {
             }
         }
         IToken(token).mint(amount, msg.sender);
+
+        return amount;
     }
 
     function remove_liquidity_one_coin(

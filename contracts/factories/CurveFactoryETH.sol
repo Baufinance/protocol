@@ -229,7 +229,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         // LENDING POOLS
         //NEW API
         //AAVE
-        customPools[0xFd2a8fA60Abd58Efe3EeE34dd494cD491dC14900] = CustomPool(
+        /*customPools[0xFd2a8fA60Abd58Efe3EeE34dd494cD491dC14900] = CustomPool(
             0xDeBF20617708857ebe4F679508E7b7863a8A8EeE,
             true,
             false
@@ -295,7 +295,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7,
             false,
             true
-        );
+        );*/
 
         //GUSD POOL
         /*zapContract[CurveType.METAPOOL3_3CRV] = ICurveFi(
@@ -872,11 +872,12 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
     function setCustomPool(
         address _lptoken,
+        address _deposit,
         bool _isLendingPool,
         bool _isSUSD
     ) external {
         // CustomPools Map
-        customPools[_lptoken] = CustomPool(_lptoken, _isLendingPool, _isSUSD);
+        customPools[_lptoken] = CustomPool(_deposit, _isLendingPool, _isSUSD);
     }
 
     function checkLatestCurveAPI(

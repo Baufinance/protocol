@@ -94,9 +94,9 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         curve = ICurveFi(_curvePool);
 
+
         _setOptimalCoinIndex(0, _swapPath);
         _setPoolFlags(targetCoin);
-
     }
 
     // we use this to clone our original strategy to other vaults
@@ -232,6 +232,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
                     uint256(1)
                 )
             );
+
         }
 
         if (!isWETHPool) {
