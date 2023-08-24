@@ -29,7 +29,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
     struct StrategyParams {
         address strategy;
         uint256 pid;
-        bytes swapPath;
         string symbol;
     }
 
@@ -398,7 +397,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
         _recordVault(vault, poolType, lptoken);
 
-
         strategy = _createStrategy(lptoken, pid, _swapPath);
 
 
@@ -483,7 +481,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
     function _createStrategy(
         address _lptoken,
         uint256 _pid,
-        bytes calldata _swapPath
+        bytes memory _swapPath
     ) internal returns (address strategy) {
         Vault memory v = deployedVaults[_lptoken];
 
@@ -494,19 +492,19 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         StrategyParams memory params = StrategyParams({
             strategy: address(0),
             pid: _pid,
-            swapPath: _swapPath,
             symbol: symbol
         });
 
         vaultStrategies[v.vaultAddress] = params;
 
-        strategy = _deployStrategy(_lptoken);
+        strategy = _deployStrategy(_lptoken, _swapPath);
 
         vaultStrategies[v.vaultAddress].strategy = strategy;
     }
 
     function _deployStrategy(
-        address _lptoken
+        address _lptoken,
+        bytes memory _swapPath
     ) internal returns (address strategy) {
         Vault memory v = deployedVaults[_lptoken];
 
@@ -516,7 +514,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             treasury,
             keeper,
             address(this),
-            vaultStrategies[v.vaultAddress].swapPath
+            _swapPath
         );
 
         if (
