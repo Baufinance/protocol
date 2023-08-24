@@ -105,16 +105,26 @@ contract Zap is Initializable {
                 (uint256 amountOut, ) = IAggregationRouterV5(
                     aggregationRouterV5
                 ).swap(IAggregationExecutor(caller), desc, new bytes(0), data);
+
+                IERC20(desc.dstToken).approve(factory, _tokenAmount);
+                IFactoryAdapter(factory).deposit(
+                    _poolToken,
+                    _tokenAmount,
+                    msg.sender
+                );
+
+                IERC20(desc.dstToken).approve(factory, 0);
+
+            } else {
+                IERC20(_srcToken).approve(factory, _tokenAmount);
+                IFactoryAdapter(factory).deposit(
+                    _poolToken,
+                    _tokenAmount,
+                    msg.sender
+                );
+
+                IERC20(_srcToken).approve(factory, 0);
             }
-
-            IERC20(_srcToken).approve(factory, _tokenAmount);
-            IFactoryAdapter(factory).deposit(
-                _poolToken,
-                _tokenAmount,
-                msg.sender
-            );
-
-            IERC20(_srcToken).approve(factory, 0);
         }
     }
 
@@ -151,35 +161,29 @@ contract Zap is Initializable {
 
             IERC20(vault).approve(factory, _shareAmount);
 
-            uint256 shareBalanceBefore = IERC20(vault).balanceOf(address(this));
+            uint256 targetCoinBalanceBefore = IERC20(targetCoin).balanceOf(
+                    address(this)
+            );
 
             IFactoryAdapter(factory).withdraw(
                 _poolToken,
                 _shareAmount,
-                msg.sender
+                address(this)
+            );
+
+            uint256 targetCoinBalanceAfter = IERC20(targetCoin).balanceOf(
+                    address(this)
             );
 
             // transfer lp tokens
             if (!supported) {
-                if (_dstToken != address(desc.srcToken)) {
+                if (_dstToken != address(desc.dstToken)) {
                     revert InvalidToken(_dstToken);
                 }
 
                 if (desc.dstReceiver != msg.sender) {
                     revert InvalidReceiver(desc.dstReceiver);
                 }
-
-                uint256 targetCoinBalanceBefore = IERC20(targetCoin).balanceOf(
-                    address(this)
-                );
-                IFactoryAdapter(factory).withdraw(
-                    _poolToken,
-                    _shareAmount,
-                    address(this)
-                );
-                uint256 targetCoinBalanceAfter = IERC20(targetCoin).balanceOf(
-                    address(this)
-                );
 
                 uint256 targetCoinBalance = targetCoinBalanceAfter -
                     targetCoinBalanceBefore;
@@ -200,13 +204,8 @@ contract Zap is Initializable {
             // refund vault tokens
             uint256 shareBalanceAfter = IERC20(vault).balanceOf(address(this));
 
-            uint256 withdrawShareBalance = shareBalanceBefore -
-                shareBalanceAfter;
-
-            if (withdrawShareBalance != _shareAmount) {
-                uint256 refundBalance = _shareAmount - withdrawShareBalance;
-
-                IERC20(vault).safeTransfer(msg.sender, refundBalance);
+            if (shareBalanceAfter  > 0) {
+                IERC20(vault).safeTransfer(msg.sender, shareBalanceAfter);
             }
         }
     }

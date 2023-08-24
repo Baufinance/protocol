@@ -1,5 +1,5 @@
 import pytest
-from brownie import Vault, CurveFactoryETH, BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder, AggregationRouterV5Mock,UniswapV2Mock, UniswapV3Mock
+from brownie import AggregationRouterV5Mock, Zap, Vault, CurveFactoryETH, BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder, AggregationRouterV5Mock,UniswapV2Mock, UniswapV3Mock
 
 
 
@@ -116,3 +116,14 @@ def factory(CurveFactoryETH, booster, registry, gov, pool_manager):
 def vault_template(gov):
     vault = gov.deploy(Vault)
     yield vault
+
+@pytest.fixture
+def aggregationRouter(gov):
+    router = gov.deploy(AggregationRouterV5Mock)
+    yield router
+
+@pytest.fixture
+def zap(gov, aggregationRouter):
+    zap = gov.deploy(Zap)
+    zap.initialize(gov, aggregationRouter)
+    yield zap

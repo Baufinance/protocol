@@ -17,7 +17,7 @@ contract AggregationRouterV5Mock is IAggregationRouterV5 {
         returns (uint256 returnAmount, uint256 spentAmount)
     {
         IERC20(desc.srcToken).transferFrom(
-            desc.srcReceiver,
+            msg.sender,
             address(this),
             desc.amount
         );
@@ -27,6 +27,7 @@ contract AggregationRouterV5Mock is IAggregationRouterV5 {
     function encodeData(
         SwapDescription calldata desc
     ) public view returns (bytes memory data) {
-        data = abi.encode(msg.sender, desc, 0x0, 0x0);
+
+        data = abi.encode(msg.sender, desc, "1", "1");
     }
 }
