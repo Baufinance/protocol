@@ -27,7 +27,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
     }
 
     struct StrategyParams {
-        address strategy;
         uint256 pid;
         string symbol;
     }
@@ -490,7 +489,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         symbol = string(abi.encodePacked("bauConvex", symbol));
 
         StrategyParams memory params = StrategyParams({
-            strategy: address(0),
             pid: _pid,
             symbol: symbol
         });
@@ -499,7 +497,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
         strategy = _deployStrategy(_lptoken, _swapPath);
 
-        vaultStrategies[v.vaultAddress].strategy = strategy;
     }
 
     function _deployStrategy(
@@ -556,10 +553,9 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         address _lptoken
     ) public view returns (address token, uint256 index) {
         Vault memory v = deployedVaults[_lptoken];
-        StrategyParams memory s = vaultStrategies[v.vaultAddress];
-
-        token = IStrategy(s.strategy).targetCoin();
-        index = IStrategy(s.strategy).targetCoinIndex();
+        address strategy = IVault(v.vaultAddress).withdrawalQueue(0);
+        token = IStrategy(strategy).targetCoin();
+        index = IStrategy(strategy).targetCoinIndex();
     }
 
     function deposit(

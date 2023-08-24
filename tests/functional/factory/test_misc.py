@@ -64,9 +64,9 @@ def test_create_2_coins_strategy(chain, common_health_check, base_fee_oracle,  c
 
   vault_address = v[0]
 
-  s = factory.vaultStrategies(vault_address)
+  vault = Vault.at(vault_address)
 
-  strategy_address = s[0]
+  strategy_address = vault.withdrawalQueue(0)
 
   strategy = TestStrategyConvex2CoinsRewardsClonable.at(strategy_address)
 
@@ -86,7 +86,7 @@ def test_create_2_coins_strategy(chain, common_health_check, base_fee_oracle,  c
 
   strategy.setRewardTreshold(10**2, {"from": gov})
 
-  vault = Vault.at(vault_address)
+
 
   curve_pool = Curve2PoolMock.at(pool_address)
 
@@ -222,9 +222,9 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin(chain, tre
 
   vault_address = v[0]
 
-  s = factory.vaultStrategies(vault_address)
+  vault = Vault.at(vault_address)
 
-  strategy_address = s[0]
+  strategy_address = vault.withdrawalQueue(0)
 
   strategy = TestStrategyConvex2CoinsRewardsClonable.at(strategy_address)
 
@@ -354,7 +354,7 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_and_vault_
   registry.newRelease(vault_template)
 
   tx = factory.createNewVaultsAndStrategies(gauge, swap_path)
-  print(tx.events)
+
   crvethpath = univ3_mock.setPath(crv, weth)
 
   cvx_token = gov.deploy(LPToken, 18)
@@ -378,7 +378,9 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_and_vault_
 
   s = factory.vaultStrategies(vault_address)
 
-  strategy_address = s[0]
+  vault = Vault.at(vault_address)
+
+  strategy_address = vault.withdrawalQueue(0)
 
   strategy = TestStrategyConvex2CoinsRewardsClonable.at(strategy_address)
 
@@ -397,8 +399,6 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_and_vault_
   )
 
   strategy.setRewardTreshold(10**2, {"from": gov})
-
-  vault = Vault.at(vault_address)
 
   curve_pool = Curve2PoolMock.at(pool_address)
 
@@ -544,9 +544,9 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_and_vault_
 
   vault_address = v[0]
 
-  s = factory.vaultStrategies(vault_address)
+  vault = Vault.at(vault_address)
 
-  strategy_address = s[0]
+  strategy_address = vault.withdrawalQueue(0)
 
   strategy = TestStrategyConvex2CoinsRewardsClonable.at(strategy_address)
 
@@ -565,9 +565,6 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_and_vault_
   )
 
   strategy.setRewardTreshold(10**2, {"from": gov})
-
-  vault = Vault.at(vault_address)
-
 
   token1.mint(10_000*10**18, {"from":gov})
   token2.mint(10_000*10**18, {"from":gov})
@@ -736,7 +733,9 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_and_vault_
 
   s = factory.vaultStrategies(vault_address)
 
-  strategy_address = s[0]
+  vault = Vault.at(vault_address)
+
+  strategy_address = vault.withdrawalQueue(0)
 
   strategy = TestStrategyConvex2CoinsRewardsClonable.at(strategy_address)
 
@@ -755,9 +754,6 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_and_vault_
   )
 
   strategy.setRewardTreshold(10**2, {"from": gov})
-
-  vault = Vault.at(vault_address)
-
 
   token1.mint(10_000*10**18, {"from":gov})
   token2.mint(10_000*10**18, {"from":gov})
@@ -916,9 +912,9 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_and_change
 
   vault_address = v[0]
 
-  s = factory.vaultStrategies(vault_address)
+  vault = Vault.at(vault_address)
 
-  strategy_address = s[0]
+  strategy_address = vault.withdrawalQueue(0)
 
   strategy = TestStrategyConvex2CoinsRewardsClonable.at(strategy_address)
 
@@ -945,8 +941,6 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_and_change
   assert strategy.targetCoin() == token2
 
   strategy.setRewardTreshold(10**2, {"from": gov})
-
-  vault = Vault.at(vault_address)
 
   token1.mint(10_000*10**18, {"from":gov})
   token2.mint(10_000*10**18, {"from":gov})
@@ -1086,9 +1080,9 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_as_eth(cha
 
   vault_address = v[0]
 
-  s = factory.vaultStrategies(vault_address)
+  vault = Vault.at(vault_address)
 
-  strategy_address = s[0]
+  strategy_address = vault.withdrawalQueue(0)
 
   strategy = TestStrategyConvex2CoinsRewardsClonable.at(strategy_address)
 
@@ -1117,8 +1111,6 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_as_eth(cha
   assert strategy.targetCoin() == token2
 
   strategy.setRewardTreshold(10**2, {"from": gov})
-
-  vault = Vault.at(vault_address)
 
   token2.mint(10_000*10**18, {"from":gov})
 
@@ -1252,9 +1244,9 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_lending_po
 
   vault_address = v[0]
 
-  s = factory.vaultStrategies(vault_address)
+  vault = Vault.at(vault_address)
 
-  strategy_address = s[0]
+  strategy_address = vault.withdrawalQueue(0)
 
   strategy = TestStrategyConvex2CoinsRewardsClonable.at(strategy_address)
 
@@ -1406,9 +1398,9 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_lending_po
 
   vault_address = v[0]
 
-  s = factory.vaultStrategies(vault_address)
+  vault = Vault.at(vault_address)
 
-  strategy_address = s[0]
+  strategy_address = vault.withdrawalQueue(0)
 
   strategy = TestStrategyConvex2CoinsRewardsClonable.at(strategy_address)
 

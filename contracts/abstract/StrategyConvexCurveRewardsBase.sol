@@ -55,7 +55,9 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         _initializeStratBase(s.pid, s.symbol);
 
+
         _initializeStrat(v.deposit, v.isLendingPool, v.isSUSD, _swapPath);
+
     }
 
     function _initializeStrat(

@@ -12,9 +12,7 @@ interface ICurveFactory {
     }
 
     struct StrategyParams {
-        address strategy;
         uint256 pid;
-        bytes swapPath;
         string symbol;
     }
 
