@@ -70,7 +70,6 @@ token: public(ERC20)
 governance: public(address)
 management: public(address)
 guardian: public(address)
-safu: public(address)
 
 pendingGovernance: address
 
@@ -147,9 +146,6 @@ event UpdateGovernance:
 event UpdateManagement:
     management: address # New active manager
 
-event UpdateSafu:
-    safu: address # new address for safu
-
 event UpdateRewards:
     rewards: address # New active rewards recipient
 
@@ -165,9 +161,6 @@ event UpdateGuardian:
 
 event EmergencyShutdown:
     active: bool # New emergency shutdown state (if false, normal operation enabled)
-
-event EmergencyExit:
-    active: bool
 
 event UpdateWithdrawalQueue:
     queue: address[MAXIMUM_STRATEGIES] # New active withdrawal queue
@@ -185,7 +178,6 @@ event StrategyUpdateMinDebtPerHarvest:
 event StrategyUpdateMaxDebtPerHarvest:
     strategy: indexed(address) # Address of the strategy for the rate limit adjustment
     maxDebtPerHarvest: uint256  # Upper limit on the increase of debt since last harvest
-
 
 
 event StrategyMigrated:
@@ -303,9 +295,6 @@ def initialize(
 
     self.governance = governance
     log UpdateGovernance(governance)
-
-    self.safu = governance
-    log UpdateSafu(governance)
 
     self.management = management
     log UpdateManagement(management)
@@ -436,21 +425,6 @@ def setManagement(management: address):
 
 
 @external
-def setSafu(safu: address):
-    """
-    @notice
-        Changes the safu address.
-        Safu is stored user funds, for default, its governance.
-
-        This may only be called by governance.
-    @param safu The address to use for managing.
-    """
-    assert msg.sender == self.governance
-    self.safu = safu
-    log UpdateSafu(safu)
-
-
-@external
 def setRewards(rewards: address):
     """
     @notice
@@ -562,34 +536,6 @@ def setEmergencyShutdown(active: bool):
     log EmergencyShutdown(active)
 
 
-@external
-def setEmergencyExit(active: bool):
-    """
-    @notice
-        Activates or deactivates Vault mode where all Strategies go into full
-        withdrawal.
-
-        During Emergency Exit:
-        1. No Users may deposit into the Vault
-        1. No Users may withdraw from the Vault
-        2. Governance may not add new Strategies.
-        3. Each Strategy must pay back their debt as quickly as reasonable to
-            minimally affect their position to special address
-        4. Only Governance may undo Emergency Exit.
-
-        See contract level note for further details.
-
-        This may only be called by governance or the guardian.
-    @param active
-        If true, the Vault goes into Emergency Shutdown. If false, the Vault
-        goes back into Normal Operation.
-    """
-    if active:
-        assert msg.sender in [self.guardian, self.governance]
-    else:
-        assert msg.sender == self.governance
-    self.emergencyExit = active
-    log EmergencyExit(active)
 
 
 
@@ -945,7 +891,7 @@ def deposit(_amount: uint256 = MAX_UINT256, recipient: address = msg.sender) -> 
     @return The issued Vault shares.
     """
 
-    assert not self.emergencyShutdown and  not self.emergencyExit  # Deposits are locked out
+    assert not self.emergencyShutdown  # Deposits are locked out
     assert recipient not in [self, ZERO_ADDRESS]
 
     amount: uint256 = _amount
@@ -1118,8 +1064,6 @@ def withdraw(
     @return The quantity of tokens redeemed for `_shares`.
     """
 
-    assert not  self.emergencyExit  # Withdrawals are locked out
-
     shares: uint256 = maxShares  # May reduce this number below
 
     # Max Loss is <=100%, revert otherwise
@@ -1211,16 +1155,6 @@ def withdraw(
     return value
 
 
-@external
-@nonreentrant("emergencyWithdraw")
-def emergencyWithdraw() -> uint256:
-    assert msg.sender == self.governance
-    assert self.emergencyExit  # emergency exit is activated
-    value: uint256 = self.token.balanceOf(self)
-    self.erc20_safe_transfer(self.token.address, self.safu, value)
-    log EmergencyWithdraw(self.safu, value)
-
-    return value
 
 @view
 @external
@@ -1277,7 +1211,7 @@ def addStrategy(
     assert self.withdrawalQueue[MAXIMUM_STRATEGIES - 1] == ZERO_ADDRESS
 
     # Check calling conditions
-    assert not self.emergencyShutdown and not self.emergencyExit
+    assert not self.emergencyShutdown
     assert msg.sender == self.governance
 
     # Check strategy configuration
@@ -1531,7 +1465,7 @@ def _debtOutstanding(strategy: address) -> uint256:
     )
     strategy_totalDebt: uint256 = self.strategies[strategy].totalDebt
 
-    if self.emergencyShutdown or self.emergencyExit:
+    if self.emergencyShutdown:
         return strategy_totalDebt
     elif strategy_totalDebt <= strategy_debtLimit:
         return 0
@@ -1556,7 +1490,7 @@ def debtOutstanding(strategy: address = msg.sender) -> uint256:
 @internal
 def _creditAvailable(strategy: address) -> uint256:
     # See note on `creditAvailable()`.
-    if self.emergencyShutdown or self.emergencyExit:
+    if self.emergencyShutdown:
         return 0
     vault_totalAssets: uint256 = self._totalAssets()
     vault_debtLimit: uint256 =  self.debtRatio * vault_totalAssets / MAX_BPS
@@ -1766,7 +1700,7 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
     )
 
 
-    if self.strategies[msg.sender].debtRatio == 0 or self.emergencyShutdown or self.emergencyExit:
+    if self.strategies[msg.sender].debtRatio == 0 or self.emergencyShutdown:
         # Take every last penny the Strategy has (Emergency Exit/revokeStrategy)
         # NOTE: This is different than `debt` in order to extract *all* of the returns
         return Strategy(msg.sender).estimatedTotalAssets()
