@@ -134,8 +134,6 @@ interface VaultAPI is IERC20 {
     function guardian() external view returns (address);
 
     function emergencyShutdown() external view returns (bool);
-
-    function emergencyExit() external view returns (bool);
 }
 
 /**
@@ -844,7 +842,7 @@ abstract contract BaseStrategy {
         uint256 debtOutstanding = vault.debtOutstanding();
         uint256 debtPayment = 0;
         if (
-            emergencyExit || vault.emergencyExit() || vault.emergencyShutdown()
+            emergencyExit
         ) {
             // TODO add for emegencyWithdraw + emergencyExit
             // Free up as much capital as possible

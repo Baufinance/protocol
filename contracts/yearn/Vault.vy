@@ -104,10 +104,6 @@ event Withdraw:
     shares: uint256
     amount: uint256
 
-event EmergencyWithdraw:
-    recipient: indexed(address)
-    amount: uint256
-
 event Sweep:
     token: indexed(address)
     amount: uint256

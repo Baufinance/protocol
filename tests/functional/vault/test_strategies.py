@@ -114,13 +114,6 @@ def test_addStrategy(
     chain.undo()
 
 
-    # Can't add a strategy during emergency exit
-    vault.setEmergencyExit(True, {"from": gov})
-    with brownie.reverts():
-        vault.addStrategy(strategy, 100, 10, 20, {"from": gov})
-    chain.undo()
-    chain.undo()
-
     assert vault.strategies(strategy).dict() == {
         "activation": 0,
         "debtRatio": 0,
