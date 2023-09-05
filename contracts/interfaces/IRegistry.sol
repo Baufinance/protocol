@@ -23,7 +23,7 @@ interface IRegistry {
 
     function latestVault(address token) external view returns (address);
 
-    function latestRelease() external view returns (string[28] memory);
+    function latestRelease() external view returns (string memory);
 
     function endorseVault(address _vault, uint256 _releaseDelta) external;
 

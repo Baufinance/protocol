@@ -36,7 +36,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         address lptoken;
         CurveType poolType;
         address deposit;
-        string[28] latestRelease;
+        bytes32 latestRelease;
         bool isLendingPool;
         bool isSUSD;
     }
@@ -352,14 +352,14 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
         Vault memory v = deployedVaults[lptoken];
 
-        string[28] memory latestRelease = IRegistry(registry).latestRelease();
+        bytes32 latestRelease =  keccak256(abi.encode(registry.latestRelease()));
 
         CurveRule memory curveRule = curveRegistry[lptoken];
 
         require(curveRule.poolType != CurveType.NONE, "incorrect pool type");
         require(
-            keccak256(abi.encode(v.latestRelease)) !=
-                keccak256(abi.encode(latestRelease)),
+            v.latestRelease !=
+                latestRelease,
             "vault with this verion already exists"
         );
 
@@ -386,7 +386,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         address _vault,
         CurveType _poolType,
         address _lptoken,
-        string[28] memory _latestRelease
+        bytes32 _latestRelease
     ) internal {
         bool isLendingPool = false;
 

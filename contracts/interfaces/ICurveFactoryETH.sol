@@ -21,6 +21,7 @@ interface ICurveFactory {
         address lptoken;
         CurveType poolType;
         address deposit;
+        bytes32 latestRelease;
         bool isLendingPool;
         bool isSUSD;
     }

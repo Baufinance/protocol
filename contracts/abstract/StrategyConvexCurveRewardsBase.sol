@@ -45,6 +45,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         ICurveFactory.Vault memory v = ICurveFactory(_factory).deployedVaults(
             VaultAPI(_vault).token()
         );
+
         ICurveFactory.StrategyParams memory s = ICurveFactory(_factory)
             .vaultStrategies(_vault);
 
