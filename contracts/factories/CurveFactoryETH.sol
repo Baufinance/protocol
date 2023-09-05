@@ -46,6 +46,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         bool isSUSD;
     }
 
+
     mapping(address => CurveType) public curveRegistry;
     mapping(address => StrategyParams) public vaultStrategies;
 
