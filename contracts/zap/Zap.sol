@@ -21,8 +21,6 @@ contract Zap is Initializable {
     error InvalidTokenAmount(uint256 tokenAmount);
     error InvalidReceiver(address receiver);
 
-    event Log(uint256 test);
-
     function initialize(
         address _owner,
         address _aggregationRouterV5
@@ -83,7 +81,6 @@ contract Zap is Initializable {
             );
 
             if (!supported) {
-
                 if (_srcToken != address(desc.srcToken)) {
                     revert InvalidToken(_srcToken);
                 }
@@ -109,12 +106,16 @@ contract Zap is Initializable {
                     desc.amount
                 );
 
-                uint256 dstTokenBalanceBefore = IERC20(targetCoin).balanceOf(address(this));
+                uint256 dstTokenBalanceBefore = IERC20(targetCoin).balanceOf(
+                    address(this)
+                );
                 (uint256 amountOut, ) = IAggregationRouterV5(
                     aggregationRouterV5
                 ).swap(IAggregationExecutor(caller), desc, new bytes(0), data);
 
-                uint256 dstTokenBalance = IERC20(targetCoin).balanceOf(address(this)) - dstTokenBalanceBefore;
+                uint256 dstTokenBalance = IERC20(targetCoin).balanceOf(
+                    address(this)
+                ) - dstTokenBalanceBefore;
 
                 require(dstTokenBalance > 0, "wrong swap");
 
@@ -127,7 +128,6 @@ contract Zap is Initializable {
                 );
 
                 IERC20(desc.dstToken).approve(factory, 0);
-
             } else {
                 IERC20(_srcToken).approve(factory, _tokenAmount);
                 IFactoryAdapter(factory).deposit(
@@ -147,7 +147,6 @@ contract Zap is Initializable {
         uint256 _shareAmount,
         bytes memory swapData
     ) external {
-
         uint256 dstTokenBefore = IERC20(_dstToken).balanceOf(address(this));
         // Get aggregation executor, swap params and the encoded calls for the executor from 1inch API call
         (
@@ -168,14 +167,16 @@ contract Zap is Initializable {
         ) = _getFactoryAddress(_poolToken, address(_dstToken));
 
         if (factory != address(0x0)) {
-
-            uint256 targetCoinBalance = _withdrawFromVault(vault, _poolToken, factory, targetCoin, _shareAmount);
+            uint256 targetCoinBalance = _withdrawFromVault(
+                vault,
+                _poolToken,
+                factory,
+                targetCoin,
+                _shareAmount
+            );
 
             // transfer lp tokens
             if (!supported) {
-
-                emit Log(IERC20(targetCoin).balanceOf(address(this)));
-
                 if (_dstToken != address(desc.dstToken)) {
                     revert InvalidToken(_dstToken);
                 }
@@ -199,46 +200,57 @@ contract Zap is Initializable {
                 ).swap(IAggregationExecutor(caller), desc, new bytes(0), data);
             }
 
-            require(IERC20(_dstToken).balanceOf(address(this)) - dstTokenBefore > 0, "wrong swap");
+            require(
+                IERC20(_dstToken).balanceOf(address(this)) - dstTokenBefore > 0,
+                "wrong swap"
+            );
 
-            IERC20(_dstToken).safeTransfer(msg.sender, IERC20(_dstToken).balanceOf(address(this)) - dstTokenBefore);
+            IERC20(_dstToken).safeTransfer(
+                msg.sender,
+                IERC20(_dstToken).balanceOf(address(this)) - dstTokenBefore
+            );
         }
     }
 
+    function _withdrawFromVault(
+        address _vault,
+        address _poolToken,
+        address _factory,
+        address _targetCoin,
+        uint256 _shareAmount
+    ) internal returns (uint256 targetCoinBalance) {
+        IERC20(_vault).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _shareAmount
+        );
 
-    function _withdrawFromVault(address _vault, address _poolToken, address _factory, address _targetCoin, uint256 _shareAmount) internal returns(uint256 targetCoinBalance) {
-            IERC20(_vault).safeTransferFrom(
-                msg.sender,
-                address(this),
-                _shareAmount
-            );
+        IERC20(_vault).approve(_factory, _shareAmount);
 
-            IERC20(_vault).approve(_factory, _shareAmount);
+        uint256 targetCoinBalanceBefore = IERC20(_targetCoin).balanceOf(
+            address(this)
+        );
 
-            uint256 targetCoinBalanceBefore = IERC20(_targetCoin).balanceOf(
-                    address(this)
-            );
+        IFactoryAdapter(_factory).withdraw(
+            _poolToken,
+            _shareAmount,
+            address(this)
+        );
 
-            IFactoryAdapter(_factory).withdraw(
-                _poolToken,
-                _shareAmount,
-                address(this)
-            );
+        uint256 targetCoinBalanceAfter = IERC20(_targetCoin).balanceOf(
+            address(this)
+        );
 
-            uint256 targetCoinBalanceAfter = IERC20(_targetCoin).balanceOf(
-                    address(this)
-            );
+        targetCoinBalance = targetCoinBalanceAfter - targetCoinBalanceBefore;
 
-            targetCoinBalance = targetCoinBalanceAfter - targetCoinBalanceBefore;
+        IERC20(_vault).approve(_factory, 0);
 
-            IERC20(_vault).approve(_factory, 0);
+        // refund vault tokens
+        uint256 shareBalanceAfter = IERC20(_vault).balanceOf(address(this));
 
-            // refund vault tokens
-            uint256 shareBalanceAfter = IERC20(_vault).balanceOf(address(this));
-
-            if (shareBalanceAfter  > 0) {
-                IERC20(_vault).safeTransfer(msg.sender, shareBalanceAfter);
-            }
+        if (shareBalanceAfter > 0) {
+            IERC20(_vault).safeTransfer(msg.sender, shareBalanceAfter);
+        }
     }
 
     function _getFactoryAddress(

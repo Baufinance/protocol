@@ -27,7 +27,6 @@ contract AggregationRouterV5Mock is IAggregationRouterV5 {
     function encodeData(
         SwapDescription calldata desc
     ) public view returns (bytes memory data) {
-
         data = abi.encode(msg.sender, desc, "1", "1");
     }
 }

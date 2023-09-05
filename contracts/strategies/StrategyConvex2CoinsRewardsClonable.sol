@@ -6,8 +6,6 @@ import "../abstract/StrategyConvexCurveRewardsBase.sol";
 contract StrategyConvex2CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
     constructor() {}
 
-    event Log(uint256 balance);
-
     function _depositToCurve() internal override {
         uint256 targetBalance = IERC20(targetCoin).balanceOf(address(this));
 

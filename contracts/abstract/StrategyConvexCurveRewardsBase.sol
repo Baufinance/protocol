@@ -28,10 +28,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
     error InvalidNCoins();
 
-    event Log(address t);
-    event LogUint(uint i);
-
-
     constructor() StrategyCurveBase() {}
 
     receive() external payable {}
@@ -46,7 +42,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     ) public {
         _initialize(_vault, _strategist, _rewards, _keeper);
 
-
         ICurveFactory.Vault memory v = ICurveFactory(_factory).deployedVaults(
             VaultAPI(_vault).token()
         );
@@ -55,9 +50,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         _initializeStratBase(s.pid, s.symbol);
 
-
         _initializeStrat(v.deposit, v.isLendingPool, v.isSUSD, _swapPath);
-
     }
 
     function _initializeStrat(
@@ -66,9 +59,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bool _isSUSD,
         bytes memory _swapPath
     ) internal {
-
-        emit Log(_curvePool);
-
         isSUSD = _isSUSD;
         isLendingPool = _isLendingPool;
 
@@ -96,7 +86,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         curve = ICurveFi(_curvePool);
 
-
         _setOptimalCoinIndex(0, _swapPath);
         _setPoolFlags(targetCoin);
     }
@@ -109,7 +98,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         address _keeper,
         address _factory,
         bytes memory _swapPath
-    ) external  returns (address newStrategy) {
+    ) external returns (address newStrategy) {
         require(isOriginal);
         // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactorysol
         bytes20 addressBytes = bytes20(address(this));
@@ -127,7 +116,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             )
             newStrategy := create(0, clone_code, 0x37)
         }
-
 
         StrategyConvexCurveRewardsBase(payable(newStrategy)).initialize(
             _vault,
@@ -150,8 +138,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         override
         returns (uint256 _profit, uint256 _loss, uint256 _debtPayment)
     {
-
-
         // this claims our CRV, CVX, and any extra tokens like SNX or ANKR. no harm leaving this true even if no extra rewards currently.
         rewardsContract.getReward(address(this), true);
 
@@ -172,7 +158,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         _sellCrvAndCvx(crvBalance, convexBalance);
 
         _depositToCurve();
-
 
         // debtOustanding will only be > 0 in the event of revoking or if we need to rebalance from a withdrawal or lowering the debtRatio
         if (_debtOutstanding > 0) {
@@ -212,18 +197,12 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         uint256 _crvAmount,
         uint256 _convexAmount
     ) internal {
-
-
-        //emit LogUint(_convexAmount);
-
         if (_convexAmount > rewardTreshold && !isCVXPool) {
             // don't want to swap dust or we might revert
             cvxeth.exchange(1, 0, _convexAmount, 0, false);
         }
 
         if (_crvAmount > rewardTreshold && !isCRVPool) {
-
-
             // don't want to swap dust or we might revert
             IUniV3(uniswapv3).exactInput(
                 IUniV3.ExactInputParams(
@@ -234,7 +213,6 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
                     uint256(1)
                 )
             );
-
         }
 
         if (!isWETHPool) {
@@ -269,8 +247,10 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         _setPoolFlags(targetCoin);
     }
 
-
-    function _setOptimalCoinIndex(uint256 _targetCoinIndex, bytes memory _swapPath) internal {
+    function _setOptimalCoinIndex(
+        uint256 _targetCoinIndex,
+        bytes memory _swapPath
+    ) internal {
         require(_targetCoinIndex < nCoins(), "invalid index");
 
         if (targetCoin != address(0x0)) {
@@ -289,14 +269,13 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
                 targetCoin = curve.underlying_coins(targetCoinIndex);
             }
         } else {
-
             targetCoin = curve.coins(targetCoinIndex);
 
             if (isETHPool) {
                 if (targetCoin == eth) {
                     //change index
-                    if (targetCoinIndex+1 < nCoins()) {
-                        targetCoinIndex = targetCoinIndex+1;
+                    if (targetCoinIndex + 1 < nCoins()) {
+                        targetCoinIndex = targetCoinIndex + 1;
                     } else {
                         targetCoinIndex = 0;
                     }
@@ -312,21 +291,20 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     }
 
     function _setPoolFlags(address _targetCoin) internal {
-            uint256 _nCoins = nCoins();
+        uint256 _nCoins = nCoins();
 
-            if (_targetCoin == address(crv)) {
-                isCRVPool = true;
-            }
+        if (_targetCoin == address(crv)) {
+            isCRVPool = true;
+        }
 
-            if (_targetCoin == address(convexToken)) {
-                isCVXPool = true;
-            }
+        if (_targetCoin == address(convexToken)) {
+            isCVXPool = true;
+        }
 
-            if (_targetCoin == address(weth)) {
-                isWETHPool = true;
-            }
+        if (_targetCoin == address(weth)) {
+            isWETHPool = true;
+        }
     }
 
     function nCoins() public view virtual returns (uint256) {}
-
 }

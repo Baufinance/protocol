@@ -69,10 +69,10 @@ class ReleaseTest:
 
     def rule_new_experiment(self):
         token = self.create_token()
-        print(f"Registry.newExperimentalVault({token}, {self.latest_version})")
+        print(f"Registry.newFactoryVault({token}, {self.latest_version})")
 
         vault = Vault.at(
-            self.registry.newExperimentalVault(
+            self.registry.newFactoryVault(
                 token,
                 self.gov,
                 self.gov,

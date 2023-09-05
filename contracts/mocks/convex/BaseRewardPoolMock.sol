@@ -41,7 +41,7 @@ contract BaseRewardPoolMock {
 
     // read how much claimable CRV a strategy has
     function earned(address account) public view returns (uint256) {
-        return (2 * block.number * 10**18) / block.timestamp;
+        return (2 * block.number * 10 ** 18) / block.timestamp;
     }
 
     // withdraw to a convex tokenized deposit, probably never need to use this
@@ -71,11 +71,9 @@ contract BaseRewardPoolMock {
         address _account,
         bool _claimExtras
     ) public returns (bool) {
-
         uint256 reward = earned(_account);
 
         if (reward > 0 && rewardToken.balanceOf(address(this)) > 0) {
-
             rewardToken.safeTransfer(_account, reward);
 
             convexToken.safeTransfer(_account, reward);

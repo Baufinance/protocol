@@ -3,9 +3,13 @@ pragma solidity ^0.8.15;
 
 import "../strategies/StrategyConvex2CoinsRewardsClonable.sol";
 
-contract TestStrategyConvex2CoinsRewardsClonable is StrategyConvex2CoinsRewardsClonable {
-
-    function _initializeStratBase(uint256 _pid, string memory _name) internal override {
+contract TestStrategyConvex2CoinsRewardsClonable is
+    StrategyConvex2CoinsRewardsClonable
+{
+    function _initializeStratBase(
+        uint256 _pid,
+        string memory _name
+    ) internal override {
         pid = _pid; // this is the pool ID on convex, we use this to determine what the reweardsContract address is
 
         // set our strategy's name
@@ -13,18 +17,17 @@ contract TestStrategyConvex2CoinsRewardsClonable is StrategyConvex2CoinsRewardsC
     }
 
     function initializeStep2(
-      address _healthCheck,
-      address _baseFeeOracle,
-      address _cvxeth,
-      address _uniswapv3,
-      address _crv,
-      address _convexToken,
-      address _weth,
-      address _sushiswap,
-      address _depositContract,
-      bytes memory _crvethPath
+        address _healthCheck,
+        address _baseFeeOracle,
+        address _cvxeth,
+        address _uniswapv3,
+        address _crv,
+        address _convexToken,
+        address _weth,
+        address _sushiswap,
+        address _depositContract,
+        bytes memory _crvethPath
     ) external {
-
         // You can set these parameters on deployment to whatever you want
         maxReportDelay = 21 days; // 21 days in seconds, if we hit this then harvestTrigger = True
         healthCheck = _healthCheck;

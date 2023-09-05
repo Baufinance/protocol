@@ -16,7 +16,7 @@ interface IVault {
 
     function deposit(uint256 _amount, address _recipient) external;
 
-    function withdrawalQueue(uint256 index) external view returns(address);
+    function withdrawalQueue(uint256 index) external view returns (address);
 
     function withdraw(
         uint256 maxShares,

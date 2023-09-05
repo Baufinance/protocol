@@ -97,11 +97,11 @@ def test_experimental_deployments(
 
     # Anyone can make an experiment
     token = create_token()
-    registry.newExperimentalVault(token, rando, rando, rando, "", "", {"from": rando})
+    registry.newFactoryVault(token, rando, rando, rando, "", "", {"from": rando})
 
     # You can make as many experiments as you want with same api version
     experimental_vault = Vault.at(
-        registry.newExperimentalVault(
+        registry.newFactoryVault(
             token, rando, rando, rando, "", "", {"from": rando}
         ).return_value
     )
@@ -133,7 +133,7 @@ def test_experimental_deployments(
 
     # You can't endorse a vault if it would overwrite a current deployment
     experimental_vault = Vault.at(
-        registry.newExperimentalVault(
+        registry.newFactoryVault(
             token, gov, gov, gov, "", "", {"from": rando}
         ).return_value
     )
@@ -145,7 +145,7 @@ def test_experimental_deployments(
     registry.newRelease(v2_vault, {"from": gov})
 
     experimental_vault = Vault.at(
-        registry.newExperimentalVault(
+        registry.newFactoryVault(
             token, gov, gov, gov, "", "", {"from": rando}
         ).return_value
     )
@@ -155,7 +155,7 @@ def test_experimental_deployments(
     # Can create an experiment and endorse it targeting a previous version
     token = create_token()
     experimental_vault = Vault.at(
-        registry.newExperimentalVault(
+        registry.newFactoryVault(
             token, gov, gov, gov, "", "", 1, {"from": rando}
         ).return_value
     )

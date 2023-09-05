@@ -48,7 +48,7 @@ event NewVault:
     vault: address
     api_version: String[28]
 
-event NewExperimentalVault:
+event NewFactoryVault:
     token: indexed(address)
     deployer: indexed(address)
     vault: address
@@ -235,7 +235,7 @@ def newVault(
 
 
 @external
-def newExperimentalVault(
+def newFactoryVault(
     token: address,
     governance: address,
     guardian: address,
@@ -251,7 +251,7 @@ def newExperimentalVault(
         the new vault to the list of "endorsed" vaults for that token.
     @dev
         Throws if no releases are registered yet.
-        Emits a `NewExperimentalVault` event.
+        Emits a `newFactoryVault` event.
     @param token The token that may be deposited into the new Vault.
     @param governance The address authorized for governance interactions in the new Vault.
     @param guardian The address authorized for guardian interactions in the new Vault.
@@ -267,7 +267,7 @@ def newExperimentalVault(
     vault: address = self._newProxyVault(token, governance, rewards, guardian, name, symbol, releaseTarget)
 
     # NOTE: Not registered, so emit an "experiment" event here instead
-    log NewExperimentalVault(token, msg.sender, vault, Vault(vault).apiVersion())
+    log NewFactoryVault(token, msg.sender, vault, Vault(vault).apiVersion())
 
     return vault
 

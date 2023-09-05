@@ -2,5 +2,5 @@
 pragma solidity ^0.8.15;
 
 interface IBaseRewardMock {
-  function setLptoken(address _lpToken) external;
+    function setLptoken(address _lpToken) external;
 }

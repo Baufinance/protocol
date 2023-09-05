@@ -841,9 +841,7 @@ abstract contract BaseStrategy {
         uint256 loss = 0;
         uint256 debtOutstanding = vault.debtOutstanding();
         uint256 debtPayment = 0;
-        if (
-            emergencyExit
-        ) {
+        if (emergencyExit) {
             // TODO add for emegencyWithdraw + emergencyExit
             // Free up as much capital as possible
             uint256 amountFreed = liquidateAllPositions();

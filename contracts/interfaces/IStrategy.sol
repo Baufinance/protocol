@@ -3,7 +3,7 @@ pragma solidity ^0.8.15;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IStrategy {
-     function clone(
+    function clone(
         address _vault,
         address _strategist,
         address _rewards,
@@ -11,7 +11,6 @@ interface IStrategy {
         address _factory,
         bytes memory _swapPath
     ) external virtual returns (address newStrategy);
-
 
     function setHealthCheck(address) external;
 

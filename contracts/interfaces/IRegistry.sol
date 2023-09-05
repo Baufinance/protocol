@@ -9,7 +9,7 @@ enum VaultType {
 }
 
 interface IRegistry {
-    function newExperimentalVault(
+    function newFactoryVault(
         address _token,
         address _governance,
         address _guardian,
@@ -22,6 +22,8 @@ interface IRegistry {
     function isRegistered(address token) external view returns (bool);
 
     function latestVault(address token) external view returns (address);
+
+    function latestRelease() external view returns (string[28] memory);
 
     function endorseVault(address _vault, uint256 _releaseDelta) external;
 

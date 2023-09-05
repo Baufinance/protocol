@@ -36,6 +36,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         address lptoken;
         CurveType poolType;
         address deposit;
+        string[28] latestRelease;
         bool isLendingPool;
         bool isSUSD;
     }
@@ -46,8 +47,12 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         bool isSUSD;
     }
 
+    struct CurveRule {
+        CurveType poolType;
+        bytes swapPath;
+    }
 
-    mapping(address => CurveType) public curveRegistry;
+    mapping(address => CurveRule) public curveRegistry;
     mapping(address => StrategyParams) public vaultStrategies;
 
     ///////////////////////////////////
@@ -79,9 +84,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
     mapping(address => ICurveFi) public zapContract;
 
-    event Log(address test);
-    event LogUint8(uint8 v);
-    event LogUint(uint256 v);
+    event UpdateCurveRegistry(address lptoken, uint8 _poolType, bytes swappath);
 
     function setOwner(address newOwner) external {
         require(msg.sender == owner);
@@ -177,11 +180,15 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
     function setCurvePoolToRegistry(
         address _lptoken,
-        CurveType _poolType
+        CurveType _poolType,
+        bytes memory _swapPath
     ) external {
         require(msg.sender == owner);
 
-        curveRegistry[_lptoken] = _poolType;
+        curveRegistry[_lptoken].poolType = _poolType;
+        curveRegistry[_lptoken].swapPath = _swapPath;
+
+        emit UpdateCurveRegistry(_lptoken, uint8(_poolType), _swapPath);
     }
 
     ///////////////////////////////////
@@ -296,7 +303,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             false,
             true
         );*/
-
         //GUSD POOL
         /*zapContract[CurveType.METAPOOL3_3CRV] = ICurveFi(
             0xA79828DF1850E8a3A3064576f380D90aECDD3359
@@ -307,50 +313,12 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         */
     }
 
-    /// @notice Public function to check whether, for a given gauge address, its possible to permissionlessly create a vault for corressponding LP token
-    /// @param _gauge The gauge address to find the latest vault for
-    /// @return bool if true, vault can be created permissionlessly
-    function canCreateVaultPermissionlessly(
-        address _gauge
-    ) public view returns (bool) {
-        return latestDefaultOrAutomatedVaultFromGauge(_gauge) == address(0);
-    }
-
-    /// @dev Returns only the latest vault address for any DEFAULT/AUTOMATED type vaults
-    /// @dev If no vault of either DEFAULT or AUTOMATED types exists for this gauge, 0x0 is returned from registry.
-    function latestDefaultOrAutomatedVaultFromGauge(
-        address _gauge
-    ) internal view returns (address) {
-        address lptoken = ICurveGauge(_gauge).lp_token();
-        if (!registry.isRegistered(lptoken)) {
-            return address(0);
-        }
-
-        address latest = latestVault(lptoken);
-
-        return latest;
-    }
-
-    function isVaultExists(address _token) external view returns (bool) {
-        Vault storage v = deployedVaults[_token];
+    function isVaultExists(address _lptoken) external view returns (bool) {
+        Vault storage v = deployedVaults[_lptoken];
 
         if (v.vaultAddress != address(0x0)) {
             return true;
         }
-    }
-
-    function latestVault(address _token) public view returns (address) {
-        bytes memory data = abi.encodeWithSignature(
-            "latestVault(address)",
-            _token
-        );
-        (bool success, bytes memory returnBytes) = address(registry).staticcall(
-            data
-        );
-        if (success) {
-            return abi.decode(returnBytes, (address));
-        }
-        return address(0);
     }
 
     function getPid(address _gauge) public view returns (uint256 pid) {
@@ -372,43 +340,53 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
     // only permissioned users can deploy if there is already one endorsed
     function createNewVaultsAndStrategies(
-        address _gauge,
-        bytes calldata _swapPath
+        address _gauge
     ) external returns (address vault, address convexStrategy) {
-        //require(msg.sender == owner || msg.sender == management);
-
-        return _createNewVaultsAndStrategies(_gauge, _swapPath);
+        return _createNewVaultsAndStrategies(_gauge);
     }
 
     function _createNewVaultsAndStrategies(
-        address _gauge,
-        bytes calldata _swapPath
+        address _gauge
     ) internal returns (address vault, address strategy) {
-
         address lptoken = ICurveGauge(_gauge).lp_token();
 
-        CurveType poolType = curveRegistry[lptoken];
+        Vault memory v = deployedVaults[lptoken];
 
-        require(poolType != CurveType.NONE);
+        string[28] memory latestRelease = IRegistry(registry).latestRelease();
+
+        CurveRule memory curveRule = curveRegistry[lptoken];
+
+        require(curveRule.poolType != CurveType.NONE, "incorrect pool type");
+        require(
+            keccak256(abi.encode(v.latestRelease)) !=
+                keccak256(abi.encode(latestRelease)),
+            "vault with this verion already exists"
+        );
 
         uint256 pid = _getConvexPid(_gauge);
 
         vault = _createVault(lptoken);
 
-        _recordVault(vault, poolType, lptoken);
+        _recordVault(vault, curveRule.poolType, lptoken, latestRelease);
 
-        strategy = _createStrategy(lptoken, pid, _swapPath);
-
+        strategy = _createStrategy(lptoken, pid, curveRule.swapPath);
 
         _addStrategyToVault(vault, strategy);
 
-        emit NewVault(lptoken, _gauge, vault, strategy, uint8(poolType));
+        emit NewVault(
+            lptoken,
+            _gauge,
+            vault,
+            strategy,
+            uint8(curveRule.poolType)
+        );
     }
 
     function _recordVault(
         address _vault,
         CurveType _poolType,
-        address _lptoken
+        address _lptoken,
+        string[28] memory _latestRelease
     ) internal {
         bool isLendingPool = false;
 
@@ -435,6 +413,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             _lptoken,
             _poolType,
             deposit,
+            _latestRelease,
             isLendingPool,
             customPools[_lptoken].isSUSD
         );
@@ -456,7 +435,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
     function _createVault(address _lptoken) internal returns (address vault) {
         //now we create the vault, endorses it from governance after
-        vault = registry.newExperimentalVault(
+        vault = registry.newFactoryVault(
             _lptoken,
             address(this),
             guardian,
@@ -471,7 +450,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         );
 
         IVault v = IVault(vault);
-        emit Log(governance);
+
         v.setManagement(management);
         v.setGovernance(governance);
         v.setDepositLimit(depositLimit);
@@ -497,7 +476,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         vaultStrategies[v.vaultAddress] = params;
 
         strategy = _deployStrategy(_lptoken, _swapPath);
-
     }
 
     function _deployStrategy(
@@ -515,14 +493,13 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             _swapPath
         );
 
-        if (
-            v.poolType == CurveType.METAPOOL3
-        ) {
-            require(address(zapContract[_lptoken]) != address(0x0), "wrong zap");
-
-            IStrategy(strategy).setZapContract(
-                address(zapContract[_lptoken])
+        if (v.poolType == CurveType.METAPOOL3) {
+            require(
+                address(zapContract[_lptoken]) != address(0x0),
+                "wrong zap"
             );
+
+            IStrategy(strategy).setZapContract(address(zapContract[_lptoken]));
         }
     }
 
@@ -530,7 +507,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         IVault v = IVault(_vault);
 
         v.addStrategy(_strategy, 10_000, 0, type(uint256).max);
-        emit Log(_strategy);
     }
 
     ///////////////////////////////////
@@ -582,27 +558,16 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             _targetAmount
         );
 
-
         if (v.poolType == CurveType.METAPOOL3) {
             IERC20(targetToken).approve(
                 address(zapContract[_lptoken]),
                 _targetAmount
             );
         } else {
-            IERC20(targetToken).approve(
-                v.deposit,
-                _targetAmount
-            );
+            IERC20(targetToken).approve(v.deposit, _targetAmount);
         }
-        if (
-            v.poolType == CurveType.METAPOOL3
-        ) {
-            _depositToMETAPOOL3(
-                _lptoken,
-                targetToken,
-                index,
-                _targetAmount
-            );
+        if (v.poolType == CurveType.METAPOOL3) {
+            _depositToMETAPOOL3(_lptoken, targetToken, index, _targetAmount);
         } else if (v.poolType == CurveType.COINS2) {
             _depositTo2Pool(v.deposit, targetToken, index, _targetAmount);
         } else if (v.poolType == CurveType.COINS3) {
@@ -648,7 +613,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             }
         }
 
-
         zapContract[_token].add_liquidity(_token, coins, 0);
     }
 
@@ -667,7 +631,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
                 coins[i] = 0;
             }
         }
-
 
         ICurveFi(_minter).add_liquidity(coins, 0);
     }
@@ -729,7 +692,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             _shareAmount
         );
 
-
         uint256 lptokenAmount = _withdrawFromVault(
             v.vaultAddress,
             _lptoken,
@@ -781,15 +743,8 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
     ) internal {
         Vault memory v = deployedVaults[_token];
 
-        if (
-            v.poolType == CurveType.METAPOOL3
-        ) {
-            _withdrawFromMETAPOOL3(
-                _token,
-                _index,
-                _lptokenAmount,
-                _recipient
-            );
+        if (v.poolType == CurveType.METAPOOL3) {
+            _withdrawFromMETAPOOL3(_token, _index, _lptokenAmount, _recipient);
         } else {
             uint256 targetTokenBalanceBefore = IERC20(_targetCoin).balanceOf(
                 address(this)
@@ -812,12 +767,16 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         uint256 _shareAmount,
         address _recipient
     ) internal {
-
-        (bool success,) = address(zapContract[_token]).call(abi.encodeWithSignature("remove_liquidity_one_coin(address,address,int128, uint256, address)", _token,
+        (bool success, ) = address(zapContract[_token]).call(
+            abi.encodeWithSignature(
+                "remove_liquidity_one_coin(address,address,int128, uint256, address)",
+                _token,
                 _shareAmount,
                 int128(int256(_index)),
                 0,
-                _recipient));
+                _recipient
+            )
+        );
 
         if (!success) {
             zapContract[_token].remove_liquidity_one_coin(
@@ -835,8 +794,14 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         uint256 _index,
         uint256 _shareAmount
     ) internal {
-
-        (bool success,) = _minter.call(abi.encodeWithSignature("remove_liquidity_one_coin(address,int128, uint256)", _shareAmount, int128(int256(_index)), 0));
+        (bool success, ) = _minter.call(
+            abi.encodeWithSignature(
+                "remove_liquidity_one_coin(address,int128, uint256)",
+                _shareAmount,
+                int128(int256(_index)),
+                0
+            )
+        );
 
         if (!success) {
             ICurveFi(_minter).remove_liquidity_one_coin(
@@ -858,10 +823,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         targetAmount = _amount - amountFee;
     }
 
-    function setZapContract(
-        address _lptoken,
-        address _zapContract
-    ) external {
+    function setZapContract(address _lptoken, address _zapContract) external {
         require(msg.sender == owner);
 
         zapContract[_lptoken] = ICurveFi(_zapContract);
@@ -897,10 +859,16 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         return false;
     }
 
-    function changeGovernanceForPending(address _lptoken, address _newGovernance) external {
+    function changeGovernanceForPending(
+        address _lptoken,
+        address _newGovernance
+    ) external {
         require(msg.sender == owner, "not owner");
         Vault storage v = deployedVaults[_lptoken];
-        require(IVault(v.vaultAddress).governance() == msg.sender, "governance already changed");
+        require(
+            IVault(v.vaultAddress).governance() == msg.sender,
+            "governance already changed"
+        );
         IVault(v.vaultAddress).setGovernance(_newGovernance);
     }
 }

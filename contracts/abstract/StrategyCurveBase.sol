@@ -47,7 +47,10 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
 
     event Cloned(address indexed clone);
 
-    function _initializeStratBase(uint256 _pid, string memory _name) internal virtual {
+    function _initializeStratBase(
+        uint256 _pid,
+        string memory _name
+    ) internal virtual {
         // make sure that we haven't initialized this before
         require(address(rewardsContract) == address(0)); // already initialized.
 
@@ -165,7 +168,6 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
             return rewardsExpiry < block.timestamp;
         }
 
-
         if (checkEarmark) {
             // don't harvest if we need to earmark convex rewards
             if (needsEarmarkReward()) {
@@ -203,12 +205,14 @@ abstract contract StrategyCurveBase is StrategyConvexBase {
         }
     }
 
-    function setCheckEarmark(bool _checkEarmark) external onlyVaultManagers()  {
+    function setCheckEarmark(bool _checkEarmark) external onlyVaultManagers {
         // this determines if we should check if we need to earmark rewards before harvesting)
         checkEarmark = _checkEarmark;
     }
 
-    function setRewardTreshold(uint256 _rewardTreshold) external onlyVaultManagers {
+    function setRewardTreshold(
+        uint256 _rewardTreshold
+    ) external onlyVaultManagers {
         rewardTreshold = _rewardTreshold;
     }
 }
