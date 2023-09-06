@@ -40,12 +40,15 @@ contract StrategyConvexMetaPoolRewardsClonable is
         zapContract = _zapContract;
     }
 
-    function setOptimalTargetCoinIndex(
+    function _setOptimalCoinIndex(
         uint256 _targetCoinIndex,
         bytes memory _swapPath
-    ) external virtual override onlyVaultManagers {
-        IERC20(targetCoin).approve(address(zapContract), 0);
+    ) internal override {
 
+
+        if (targetCoin != address(0x0)) {
+            IERC20(targetCoin).approve(address(zapContract), 0);
+        }
         targetCoinIndex = _targetCoinIndex;
 
         //DEV move to factory
@@ -60,5 +63,19 @@ contract StrategyConvexMetaPoolRewardsClonable is
         IERC20(targetCoin).approve(address(zapContract), type(uint256).max);
 
         swapPath = _swapPath;
+    }
+
+
+    function _setPoolFlags(address _targetCoin) internal override {
+
+    }
+
+    function _initializeStrat(
+        address _curvePool,
+        bool _isLendingPool,
+        bool _isSUSD,
+        bytes memory _swapPath
+    ) internal override virtual {
+        curve = ICurveFi(_curvePool);
     }
 }

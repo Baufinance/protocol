@@ -500,6 +500,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             );
 
             IStrategy(strategy).setZapContract(address(zapContract[_lptoken]));
+            IStrategy(strategy).setOptimalTargetCoinIndex(0, _swapPath);
         }
     }
 

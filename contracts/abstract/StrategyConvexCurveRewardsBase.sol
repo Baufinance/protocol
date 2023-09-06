@@ -59,7 +59,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         bool _isLendingPool,
         bool _isSUSD,
         bytes memory _swapPath
-    ) internal {
+    ) internal virtual {
         isSUSD = _isSUSD;
         isLendingPool = _isLendingPool;
 
@@ -251,7 +251,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
     function _setOptimalCoinIndex(
         uint256 _targetCoinIndex,
         bytes memory _swapPath
-    ) internal {
+    ) internal virtual {
         require(_targetCoinIndex < nCoins(), "invalid index");
 
         if (targetCoin != address(0x0)) {
@@ -291,7 +291,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         swapPath = _swapPath;
     }
 
-    function _setPoolFlags(address _targetCoin) internal {
+    function _setPoolFlags(address _targetCoin) internal virtual {
         uint256 _nCoins = nCoins();
 
         if (_targetCoin == address(crv)) {
