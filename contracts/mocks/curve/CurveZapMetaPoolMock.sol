@@ -37,4 +37,25 @@ contract CurveZapMetaPoolMock {
     function addPool(address token, address pool) external {
         pools[token] = pool;
     }
+
+    function remove_liquidity_one_coin(
+        address _pool,
+        uint256 _burn_amount,
+        uint256 i,
+        uint256 min_amount,
+        address _receiver
+    ) external {
+        address targetCoin;
+
+        if (i == 0) {
+            targetCoin = ICurveFi(_pool).coins(i);
+        } else {
+            address pool = ICurveFi(_pool).coins(1);
+
+            targetCoin = ICurveFi(pool).coins(i - 1);
+        }
+
+        IERC20(targetCoin).transfer(_receiver, _burn_amount);
+
+    }
 }

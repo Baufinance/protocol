@@ -1,11 +1,10 @@
-// SPDX-License-Identifier: AGPL-3.0
+// SPDX-License-Identifier: AGPL-4.0
 pragma solidity ^0.8.15;
 
 import "../abstract/StrategyConvexCurveRewardsBase.sol";
 
 contract StrategyConvex4CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
     constructor() {}
-
     function _depositToCurve() internal override {
         uint256 targetBalance = IERC20(targetCoin).balanceOf(address(this));
 
@@ -24,14 +23,12 @@ contract StrategyConvex4CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
             }
         }
 
-        if (isLendingPool) {
+        coins[targetCoinIndex] = targetBalance;
+
+        if (isLendingPool && !isSUSD) {
             curve.add_liquidity(coins, 0, true);
         } else {
-            if (isETHPool) {
-                curve.add_liquidity{value: targetBalance}(coins, 0);
-            } else {
-                curve.add_liquidity(coins, 0);
-            }
+            curve.add_liquidity(coins, 0);
         }
     }
 

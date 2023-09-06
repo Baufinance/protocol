@@ -24,14 +24,12 @@ contract StrategyConvex3CoinsRewardsClonable is StrategyConvexCurveRewardsBase {
             }
         }
 
-        if (isLendingPool) {
+        coins[targetCoinIndex] = targetBalance;
+
+        if (isLendingPool && !isSUSD) {
             curve.add_liquidity(coins, 0, true);
         } else {
-            if (isETHPool) {
-                curve.add_liquidity{value: targetBalance}(coins, 0);
-            } else {
-                curve.add_liquidity(coins, 0);
-            }
+            curve.add_liquidity(coins, 0);
         }
     }
 

@@ -11,6 +11,7 @@ contract Curve3PoolMock {
     address[3] public coins;
     address public token;
     address[3] public underlying;
+
     uint256 public rate = 1 ether;
 
     function setRate(uint256 _rate) external {
@@ -23,6 +24,8 @@ contract Curve3PoolMock {
         token = _token;
     }
 
+    receive() external payable {}
+
     function add_liquidity(
         uint256[3] calldata amounts,
         uint256 min_mint_amount
@@ -31,6 +34,7 @@ contract Curve3PoolMock {
         for (uint256 i = 0; i < 3; i++) {
             if (amounts[i] > 0) {
                 amount = amounts[i];
+
                 if (coins[i] != eth) {
                     IERC20(coins[i]).transferFrom(
                         msg.sender,
@@ -41,6 +45,7 @@ contract Curve3PoolMock {
                 break;
             }
         }
+
         IToken(token).mint(amount, msg.sender);
     }
 
@@ -48,7 +53,7 @@ contract Curve3PoolMock {
         uint256[3] calldata amounts,
         uint256 min_mint_amount,
         bool _use_underlying
-    ) external payable {
+    ) external payable returns (uint256) {
         uint256 amount;
         for (uint256 i = 0; i < 3; i++) {
             if (amounts[i] > 0) {
@@ -62,6 +67,16 @@ contract Curve3PoolMock {
             }
         }
         IToken(token).mint(amount, msg.sender);
+
+        return amount;
+    }
+
+    function remove_liquidity_one_coin(
+        uint256 _token_amount,
+        uint256 i,
+        uint256 min_amount
+    ) external {
+        IERC20(underlying[i]).transfer(msg.sender, _token_amount);
     }
 
     function underlying_coins(uint256 i) external view returns (address) {
@@ -78,7 +93,7 @@ contract Curve3PoolMock {
         uint256 _from_amount,
         uint256 _min_to_amount,
         bool use_eth
-    ) external {
+    ) external payable {
         IERC20(coins[from]).transferFrom(
             msg.sender,
             address(this),
