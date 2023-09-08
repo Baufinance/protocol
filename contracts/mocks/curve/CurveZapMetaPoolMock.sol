@@ -7,6 +7,7 @@ import "../../interfaces/ICurve.sol";
 
 contract CurveZapMetaPoolMock {
     mapping(address => address) public pools;
+    address public constant eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     constructor() {}
 
@@ -45,6 +46,8 @@ contract CurveZapMetaPoolMock {
         uint256 min_amount,
         address _receiver
     ) external {
+
+        IERC20(_pool).transferFrom(msg.sender,eth, _burn_amount);
         address targetCoin;
 
         if (i == 0) {

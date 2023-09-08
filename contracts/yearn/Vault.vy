@@ -35,7 +35,7 @@
     https://github.com/iearn-finance/yearn-vaults/blob/main/SPECIFICATION.md
 """
 
-API_VERSION: constant(String[28]) = "0.4.7"
+API_VERSION: constant(String[28]) = "0.4.8"
 
 from vyper.interfaces import ERC20
 
@@ -842,7 +842,7 @@ def _issueSharesForAmount(to: address, amount: uint256) -> uint256:
     depositFee: uint256 = (shares * self.depositFee) / MAX_BPS
     # to rewards address
     self.balanceOf[self.rewards] += depositFee
-    log Transfer(ZERO_ADDRESS, self.rewards, shares)
+    log Transfer(ZERO_ADDRESS, self.rewards, depositFee)
 
     # mint shares to user
     shares -= depositFee

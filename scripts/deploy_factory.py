@@ -6,41 +6,27 @@ def main():
 
   load_dotenv(find_dotenv())
 
-  acct = accounts.load("yield2")
-
-  vault_template = os.getenv("VAULT_TEMPLATE")
-  token_template = os.getenv("TOKEN_TEMPLATE")
-  curve_pool_template = os.getenv("CURVE_POOL_TEMPLATE")
-  pid_template = os.getenv("PID_TEMPLATE")
-
-  keeper = os.getenv("KEEPER")
-  owner = acct #os.getenv("OWNER")
-  registry = os.getenv("REGISTRY")
-
-  proxy_admin = os.getenv("PROXY_ADMIN")
-
-  gauge_template = os.getenv("CURVE_GAUGE_TEMPLATE")
+  acct = accounts.load("bau")
 
 
-  print("--Strategy--")
-  strategy_template = StrategyConvex3CrvRewardsClonable.deploy(vault_template, pid_template, curve_pool_template, "Convex Pool", {"from": acct}, publish_source=True)
+  keeper = "0xc9f6Ce3D6C995E2a2040DD0cF49677C03E8bc512"
+  registry = "0xD71FDBf189083Bdab8595BBFd57941483F66fCc4"
 
-  print("strategy", strategy_template)
+  pool_manager = "0x2abE2Af50B8876C77FBFAC16FE307689e3af17F8"
 
-  factory_impl = Factory.deploy({"from": acct}, publish_source=True)
+  booster = "0x3088982b8535cDC266048ae13a375B4C8B2701d6"
+
+  proxy_admin = UtilProxyAdmin.deploy({"from":acct}, publish_source=True)
+
+  factory_impl = CurveFactoryETH.deploy({"from": acct}, publish_source=True)
 
   proxy = UtilProxy.deploy(factory_impl, proxy_admin, {"from": acct}, publish_source=True)
 
   print("--Factory--")
-  factory = Contract.from_abi(Factory._name, proxy.address, Factory.abi)
+  factory = Contract.from_abi(CurveFactoryETH._name, proxy.address, CurveFactoryETH.abi)
 
   print("factory", factory)
 
-  tx = factory.initialize(registry, strategy_template, keeper, owner, {"from": acct})
+  tx = factory.initialize(registry, keeper, acct, pool_manager, booster, {"from": acct})
 
   tx.wait(1)
-
-  print("--Create Vault--")
-  tx1 = factory.createNewVaultsAndStrategies(gauge_template, False, {"from": acct})
-
-  tx1.wait(1)

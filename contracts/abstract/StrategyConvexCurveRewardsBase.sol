@@ -32,6 +32,8 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
     receive() external payable {}
 
+    event Log(address a);
+
     function initialize(
         address _vault,
         address _strategist,
@@ -46,12 +48,21 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
             VaultAPI(_vault).token()
         );
 
-        ICurveFactory.StrategyParams memory s = ICurveFactory(_factory)
-            .vaultStrategies(_vault);
+        uint256 pid = ICurveFactory(_factory).getVaultPoolPid(_vault);
 
-        _initializeStratBase(s.pid, s.symbol);
+        string memory name = ICurveFactory(_factory). getVaultSymbol(_vault);
+
+
+        _initializeStratBase(pid, name);
 
         _initializeStrat(v.deposit, v.isLendingPool, v.isSUSD, _swapPath);
+
+        _initializeInternal();
+    }
+
+
+    function _initializeInternal() internal virtual {
+
     }
 
     function _initializeStrat(

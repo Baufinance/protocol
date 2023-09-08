@@ -1,9 +1,50 @@
-# Convex Strategy Template
+# BAU
 
-## Getting started
+## Goerli Testnet addresses
 
-- If you're unfamiliar with yearn vaults or strategies, check out our [explainer](https://medium.com/iearn/yearn-finance-explained-what-are-vaults-and-strategies-96970560432), [docs](https://docs.bau.finance/getting-started/products/yvaults/overview), the [vaults repo](https://github.com/yearn/yearn-vaults), or our [brownie strategy mix](https://github.com/yearn/brownie-strategy-mix).
+### Mocks
 
-- This repo contains multiple iterations of Yearn's strategy for Convex Finance. These strategies deposit Curve LP tokens, harvest CRV, CVX, and other token yield, and compound the gains into more of the underlying Curve LP.
+Crv  0x6912C5FA16c9e9278a20234C00F3DEFbF21D77f6
+Cvx  0x402745D08AcF0cC79F457dA2D41276FA109a45A0
+Ldo  0x204BC4c4A33DCeE4E52f0bC27F652Ee7466d5aEa
+weth  0xb8D3DbecA88a5Aa37979999de6F921F521E53E9E
 
-- The `main` branch features the most current implementation for 3crv factory pools. Check out other branches to see slight tweaks made for different pools. If you have any questions, feel free to reach out.
+Booster  0x3088982b8535cDC266048ae13a375B4C8B2701d6
+
+Rewards Factory  0x74505Fb95D0636ddDf2545AECc8e8F4e2fC004D4
+
+Pool Manager  0x2abE2Af50B8876C77FBFAC16FE307689e3af17F8
+
+UniV2  0x6FF1B80DB7b5c1b535db09A1b8a87248E64C7727
+
+UniV3  0x4eEeb3f6AbD9365E550F8dd82ac51C20adB3De4b
+
+registry 0xD71FDBf189083Bdab8595BBFd57941483F66fCc4
+
+cvxeth 0xB77A62019418F2D1411fC96adbfbc82792b580a3
+
+Mockbuilder 0xB0184d2b2826585716C68c618cB107a504E48362
+
+1inch router 0x5A7486e4fBfd2d956708A6627BaeA2C1Cb7068f2
+
+### System
+
+Health Check  0xF939E44d0C9FF5da316D1Caca163BBc56b88445b
+
+Keeper Wrapper  0xc9f6Ce3D6C995E2a2040DD0cF49677C03E8bc512
+
+Base Fee Oracle  0x1323Fa099cB2c54EDa59fD4A8BB8DC8c0913B050
+
+Strategy 2 template  0x5256def4b52DC7c28736D5Eb085a573e36490F09
+
+Strategy 3 template 0xcb4886DC9FEA4e3f7B4B466261431502d98C060D
+
+Strategy 4 temlate 0x64ee77a0093143104105A92edeF7B0923f681bdb
+
+Strategy Meta template 0xd7B79C79f8766510acf9cFD3E0d5171b680106eF
+
+Proxy Admin 0xC3BDf65C61B93f451de9c26a80590E7046a8b5D0
+
+Factory
+0x16Ce28A9a09872ca307A4cd5Dd787D6761C7aCb9
+Zap 0x566f0FB28aB444F153e67E01708648f53749d937

@@ -165,6 +165,107 @@ def test_create_2_coins_strategy(chain, common_health_check, base_fee_oracle,  c
   assert lp_token_balance_after > lp_token_balance_before
 
 
+
+def test_create_2_twice(chain, common_health_check, base_fee_oracle,  cvx, crv, factory, curve_mock_builder, gov, weth, univ3_mock, univ2_mock, rewards_factory, booster, registry, vault_template):
+  # try to build 2 pool with erc 20 tokens with plain and lending liquidity
+  curve_mock_builder.build(2, False)
+
+  pool_address = curve_mock_builder.mocks(curve_mock_builder.length()-1)
+
+  pool = Curve2PoolMock.at(pool_address)
+
+  token1 = Token.at(pool.coins(0))
+  token2 = Token.at(pool.coins(1))
+
+  lp_token = LPToken.at(pool.token())
+
+  lp_token.setMinter(pool_address, {"from":gov})
+  gauge = gov.deploy(GaugeMock, lp_token)
+
+  token1.mint(1000*10**18, univ3_mock, {"from": gov})
+  weth.mint(1000*10**18, univ3_mock, {"from": gov})
+
+  strategy2coins = gov.deploy(TestStrategyConvex2CoinsRewardsClonable)
+
+  factory.setConvexStratImplementation(2, strategy2coins, {"from": gov})
+
+  booster.setRewardFactory(rewards_factory)
+
+  registry.newRelease(vault_template)
+
+  swap_path = univ3_mock.setPath(weth, token1)
+
+  factory.setCurvePoolToRegistry(lp_token, 2, swap_path, {"from": gov})
+
+  factory.createNewVaultsAndStrategies(gauge)
+
+  crvethpath = univ3_mock.setPath(crv, weth)
+
+  cvx_token = gov.deploy(LPToken, 18)
+
+  cvxweth = gov.deploy(Curve2PoolMock, [weth, cvx], cvx_token)
+
+  weth.mint(10_000*10**18, {"from":gov})
+  cvx.mint(10_000*10**18, {"from":gov})
+
+  weth.approve(cvxweth, 10_000*10**18, {"from":gov})
+  cvx.approve(cvxweth, 10_000*10**18, {"from":gov})
+
+  cvxweth.add_liquidity([1_000*10**18, 1_000*10**18], 0, {"from": gov})
+
+  weth.mint(10_000*10**18, univ3_mock, {"from":gov})
+  cvx.mint(10_000*10**18, univ3_mock, {"from":gov})
+
+  v = factory.deployedVaults(lp_token)
+
+  vault_address = v[0]
+
+  vault = Vault.at(vault_address)
+
+  strategy_address = vault.withdrawalQueue(0)
+
+  strategy = TestStrategyConvex2CoinsRewardsClonable.at(strategy_address)
+
+  strategy.initializeStep2(
+    common_health_check,
+    base_fee_oracle,
+    cvxweth,
+    univ3_mock,
+    crv,
+    cvx,
+    weth,
+    univ2_mock,
+    booster,
+    crvethpath,
+    {"from":gov}
+  )
+
+  strategy.setRewardTreshold(10**2, {"from": gov})
+
+
+  curve_mock_builder.build(2, False)
+
+  pool_address_2 = curve_mock_builder.mocks(curve_mock_builder.length()-1)
+
+  pool_2 = Curve2PoolMock.at(pool_address_2)
+
+  token1_2 = Token.at(pool_2.coins(0))
+  token2_2 = Token.at(pool_2.coins(1))
+
+  lp_token_2 = LPToken.at(pool_2.token())
+
+  lp_token_2.setMinter(pool_address, {"from":gov})
+  gauge_2 = gov.deploy(GaugeMock, lp_token_2)
+
+  token1_2.mint(1000*10**18, univ3_mock, {"from": gov})
+  weth.mint(1000*10**18, univ3_mock, {"from": gov})
+
+  factory.setCurvePoolToRegistry(lp_token_2, 2, swap_path, {"from": gov})
+
+  factory.createNewVaultsAndStrategies(gauge_2)
+
+
+
 def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin(chain, treasury, common_health_check, base_fee_oracle,  cvx, crv, factory, curve_mock_builder, gov, weth, univ3_mock, univ2_mock, rewards_factory, booster, registry, vault_template):
   # try to build 2 pool with erc 20 tokens with plain and lending liquidity
   curve_mock_builder.build(2, False)
@@ -206,7 +307,7 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin(chain, tre
   cvxweth = gov.deploy(Curve2PoolMock, [weth, cvx], cvx_token)
 
   weth.mint(10_000*10**18, {"from":gov})
-  cvx.mint(10_000*10**18, {"from":gov})
+  crv.mint(10_000*10**18, {"from":gov})
 
   weth.approve(cvxweth, 10_000*10**18, {"from":gov})
   cvx.approve(cvxweth, 10_000*10**18, {"from":gov})

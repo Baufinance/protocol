@@ -7,57 +7,28 @@ def main():
     print("account", acct)
 
 
-    # deploy common contracts
-    print(" -- Health Check --")
-    healthCheck = CommonHealthCheck.deploy({"from": acct})
+    cvx = "0x402745D08AcF0cC79F457dA2D41276FA109a45A0"
+    weth = "0xb8D3DbecA88a5Aa37979999de6F921F521E53E9E"
 
-    print("Health Check ", healthCheck.address)
+    mockBuilder = CurveMockBuilder.deploy(weth, {"from":acct}, publish_source=True)
 
-    print(" -- Keeper Wrapper --")
-    keeperWrapper = KeeperWrapper.deploy({"from": acct})
-    print("Keeper Wrapper ", keeperWrapper.address)
+    cvx_token = LPToken.deploy(18, {"from":acct}, publish_source=True)
+    cvxweth = Curve2PoolMock.deploy([weth, cvx], cvx_token, {"from":acct}, publish_source=True)
 
-    print(" -- Base Fee Oracle --")
+    print("cvxweth", cvxweth)
 
-    baseFeeOracle = BaseFeeOracle.deploy({"from": acct})
+    print("mockbuilder ", mockBuilder)
 
+    tx1 = mockBuilder.build(1, False, {"from":acct})
 
-    tx1 = baseFeeOracle.setBaseFeeProvider("0xf8d0Ec04e94296773cE20eFbeeA82e76220cD549", {"from": acct})
     tx1.wait(1)
 
-    tx2 = baseFeeOracle.setMaxAcceptableBaseFee(25000000000, {"from": acct})
+    tx2 = mockBuilder.build(2, False, {"from":acct})
+
     tx2.wait(1)
-    print("Base Fee Oracle ", baseFeeOracle.address)
 
-    # deploy crv, cvx, ldo
-    print(" -- tokens --")
-    crv = Token.deploy(18, {"from": acct})
-    cvx = Token.deploy(18, {"from": acct})
-    ldo = Token.deploy(18, {"from": acct})
-    weth = Token.deploy(18, {"from": acct})
+    tx3 =mockBuilder.build(3, False, {"from":acct})
+    tx3.wait(1)
 
-    print("Crv ", crv)
-    print("Cvx ", cvx)
-    print("Ldo ", ldo)
-    print("weth ", weth)
-
-    print("--- mocks ---")
-    booster = BoosterMock.deploy(crv, {"from": acct})
-    print("Booster ", booster)
-    rewards_factory = RewardFactoryMock.deploy(crv, cvx, booster, {"from":acct})
-    print("Rewards Factory ", rewards_factory)
-
-    booster.setRewardFactory(rewards_factory)
-
-
-    pool_manager = ConvexPoolManagerMock.deploy(booster, {"from":acct})
-    print("Pool Manager ", pool_manager)
-
-    inch = AggregationRouterV5Mock.deploy({"from":acct})
-    print("Inch ", inch)
-
-    univ2 = UniswapV2Mock.deploy({"from":acct})
-    print("UniV2 ", univ2)
-
-    univ3 = UniswapV3Mock.deploy({"from":acct})
-    print("UniV3 ", univ3)
+    tx4 = mockBuilder.build(4, False, {"from":acct})
+    tx4.wait(1)

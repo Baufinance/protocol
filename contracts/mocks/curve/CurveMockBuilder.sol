@@ -7,6 +7,11 @@ import "./Curve4PoolMock.sol";
 import "./CurveMetaPoolMock.sol";
 import "../LPToken.sol";
 
+
+interface ILPToken {
+    function mint(uint256 _amount, address _recipient) external;
+}
+
 contract CurveMockBuilder {
     address public constant eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -47,15 +52,31 @@ contract CurveMockBuilder {
                 new Curve3PoolMock([token1, token2, token3], lpToken)
             );
 
+            if (!_isETH) {
+                ILPToken(token1).mint(1_000_000 ether, crv3);
+            }
+
+            ILPToken(token2).mint(1_000_000 ether, crv3);
+            ILPToken(token3).mint(1_000_000 ether, crv3);
+
             address token4 = address(new LPToken(18));
 
             mock = address(new CurveMetaPoolMock([token4, crv3]));
+
+            ILPToken(token4).mint(1_000_000 ether, mock);
+            ILPToken(lpToken).mint(1_000_000 ether, mock);
         }
 
         if (_curveType == CurveType.COINS2) {
             address token2 = address(new LPToken(18));
 
             mock = address(new Curve2PoolMock([token1, token2], lpToken));
+
+            if (!_isETH) {
+                ILPToken(token1).mint(1_000_000 ether, mock);
+            }
+
+            ILPToken(token2).mint(1_000_000 ether, mock);
         }
 
         if (_curveType == CurveType.COINS3) {
@@ -65,6 +86,13 @@ contract CurveMockBuilder {
             mock = address(
                 new Curve3PoolMock([token1, token2, token3], lpToken)
             );
+
+            if (!_isETH) {
+                ILPToken(token1).mint(1_000_000 ether, mock);
+            }
+
+            ILPToken(token2).mint(1_000_000 ether, mock);
+            ILPToken(token3).mint(1_000_000 ether, mock);
         }
 
         if (_curveType == CurveType.COINS4) {
@@ -75,6 +103,14 @@ contract CurveMockBuilder {
             mock = address(
                 new Curve4PoolMock([token1, token2, token3, token4], lpToken)
             );
+
+            if (!_isETH) {
+                ILPToken(token1).mint(1_000_000 ether, mock);
+            }
+
+            ILPToken(token2).mint(1_000_000 ether, mock);
+            ILPToken(token3).mint(1_000_000 ether, mock);
+            ILPToken(token4).mint(1_000_000 ether, mock);
         }
 
         LPToken(lpToken).setMinter(mock);
@@ -82,55 +118,6 @@ contract CurveMockBuilder {
         mocks.push(mock);
     }
 
-    function buildWETH(CurveType _curveType) public returns (address mock) {
-        address lpToken = address(new LPToken(18));
-
-        if (_curveType == CurveType.METAPOOL) {
-            address token1 = weth;
-            address token2 = address(new LPToken(18));
-            address token3 = address(new LPToken(18));
-
-            address crv3 = address(
-                new Curve3PoolMock([token1, token2, token3], lpToken)
-            );
-
-            address token4 = address(new LPToken(18));
-
-            mock = address(new CurveMetaPoolMock([token4, crv3]));
-        }
-
-        if (_curveType == CurveType.COINS2) {
-            address token1 = weth;
-            address token2 = address(new LPToken(18));
-
-            mock = address(new Curve2PoolMock([token1, token2], lpToken));
-        }
-
-        if (_curveType == CurveType.COINS3) {
-            address token1 = weth;
-            address token2 = address(new LPToken(18));
-            address token3 = address(new LPToken(18));
-
-            mock = address(
-                new Curve3PoolMock([token1, token2, token3], lpToken)
-            );
-        }
-
-        if (_curveType == CurveType.COINS4) {
-            address token1 = weth;
-            address token2 = address(new LPToken(18));
-            address token3 = address(new LPToken(18));
-            address token4 = address(new LPToken(18));
-
-            mock = address(
-                new Curve4PoolMock([token1, token2, token3, token4], lpToken)
-            );
-        }
-
-        LPToken(lpToken).setMinter(mock);
-
-        mocks.push(mock);
-    }
 
     function length() external view returns (uint256) {
         return mocks.length;

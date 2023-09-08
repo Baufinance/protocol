@@ -16,6 +16,7 @@ import {ICurveGauge, ICurveFi} from "../interfaces/ICurve.sol";
 contract CurveFactoryETH is Initializable, IFactoryAdapter {
     using SafeERC20 for IERC20;
 
+
     uint256 internal constant MAX_BPS = 10_000; //100%
 
     enum CurveType {
@@ -51,6 +52,8 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         CurveType poolType;
         bytes swapPath;
     }
+
+    event Log(uint256 u);
 
     mapping(address => CurveRule) public curveRegistry;
     mapping(address => StrategyParams) public vaultStrategies;
@@ -365,6 +368,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
         uint256 pid = _getConvexPid(_gauge);
 
+
         vault = _createVault(lptoken);
 
         _recordVault(vault, curveRule.poolType, lptoken, latestRelease);
@@ -421,7 +425,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
     function _getConvexPid(address _gauge) internal returns (uint256 pid) {
         //get convex pid. if no pid create one
-        uint256 pid = getPid(_gauge);
+        pid = getPid(_gauge);
         if (pid == type(uint256).max) {
             //when we add the new pool it will be added to the end of the pools in convexDeposit.
             pid = booster.poolLength();
@@ -474,6 +478,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         });
 
         vaultStrategies[v.vaultAddress] = params;
+
 
         strategy = _deployStrategy(_lptoken, _swapPath);
     }
@@ -742,6 +747,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         uint256 _lptokenAmount,
         address _recipient
     ) internal {
+
         Vault memory v = deployedVaults[_token];
 
         if (v.poolType == CurveType.METAPOOL3) {
@@ -750,7 +756,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             uint256 targetTokenBalanceBefore = IERC20(_targetCoin).balanceOf(
                 address(this)
             );
-            _withdrawFromPool(v.deposit, _index, _lptokenAmount);
+            _withdrawFromPool(_token, v.deposit, _index, _lptokenAmount);
             uint256 targetTokenBalanceAfter = IERC20(_targetCoin).balanceOf(
                 address(this)
             );
@@ -768,6 +774,8 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         uint256 _shareAmount,
         address _recipient
     ) internal {
+
+        IERC20(_token).approve(address(zapContract[_token]), _shareAmount);
         (bool success, ) = address(zapContract[_token]).call(
             abi.encodeWithSignature(
                 "remove_liquidity_one_coin(address,address,int128, uint256, address)",
@@ -791,10 +799,14 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
     }
 
     function _withdrawFromPool(
+        address _token,
         address _minter,
         uint256 _index,
         uint256 _shareAmount
     ) internal {
+
+        IERC20(_token).approve(_minter, _shareAmount);
+
         (bool success, ) = _minter.call(
             abi.encodeWithSignature(
                 "remove_liquidity_one_coin(address,int128, uint256)",
@@ -836,6 +848,7 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         bool _isLendingPool,
         bool _isSUSD
     ) external {
+        require(msg.sender == owner);
         // CustomPools Map
         customPools[_lptoken] = CustomPool(_deposit, _isLendingPool, _isSUSD);
     }
@@ -871,5 +884,14 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
             "governance already changed"
         );
         IVault(v.vaultAddress).setGovernance(_newGovernance);
+    }
+
+
+    function getVaultPoolPid(address _vault) external view returns (uint256 pid) {
+        return vaultStrategies[_vault].pid;
+    }
+
+    function getVaultSymbol(address _vault) external view returns (string memory) {
+        return vaultStrategies[_vault].symbol;
     }
 }

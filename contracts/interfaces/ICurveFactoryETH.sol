@@ -11,11 +11,6 @@ interface ICurveFactory {
         METAPOOL_SBTC
     }
 
-    struct StrategyParams {
-        uint256 pid;
-        string symbol;
-    }
-
     struct Vault {
         address vaultAddress;
         address lptoken;
@@ -30,7 +25,8 @@ interface ICurveFactory {
         address _vault
     ) external view returns (Vault memory);
 
-    function vaultStrategies(
-        address _vault
-    ) external view returns (StrategyParams memory);
+
+    function getVaultPoolPid(address _vault) external view returns(uint256);
+
+    function getVaultSymbol(address _vault) external view returns (string memory);
 }
