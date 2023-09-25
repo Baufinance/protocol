@@ -53,8 +53,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         bytes swapPath;
     }
 
-    event Log(uint256 u);
-
     mapping(address => CurveRule) public curveRegistry;
     mapping(address => StrategyParams) public vaultStrategies;
 

@@ -7,10 +7,10 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../yearn/BaseStrategy.sol";
-import "../interfaces/velodrome/IVelodromeRouter.sol";
-import "../interfaces/velodrome/IVelodromeGauge.sol";
-import "../interfaces/velodrome/IVelodromePool.sol";
-import "../interfaces/velodrome/IDetails.sol";
+import "../interfaces/Velodrome/IVelodromeRouter.sol";
+import "../interfaces/Velodrome/IVelodromeGauge.sol";
+import "../interfaces/Velodrome/IVelodromePool.sol";
+import "../interfaces/Velodrome/IDetails.sol";
 
 
 
