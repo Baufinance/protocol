@@ -4,19 +4,30 @@ pragma solidity ^0.8.15;
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../interfaces/IDetails.sol";
+import "../interfaces/IVault.sol";
 import "../interfaces/IFactoryAdapter.sol";
 import "../interfaces/IRegistry.sol";
 import "../interfaces/Velodrome/IVelodromeRouter.sol";
 import "../interfaces/Velodrome/IVelodromePool.sol";
+import "../interfaces/Velodrome/IVelodromeGauge.sol";
+import "../interfaces/Velodrome/IStrategy.sol";
+
 
 contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
+
+  struct Vault {
+      address vaultAddress;
+      address lptoken;
+      bytes32 latestRelease;
+  }
 
   mapping(address => IVelodromeRouter.Routes[]) public veloRegistryForToken0;
   mapping(address => IVelodromeRouter.Routes[]) public veloRegistryForToken1;
 
 
   /// @notice This is a list of all vaults deployed by this factory.
-  address[] public deployedVaults;
+  mapping(address => Vault) public deployedVaults; //for ZAP V1
 
 
   address public velodromeStratImplementation;
@@ -108,7 +119,87 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
   }
 
   function _createNewVaultsAndStrategies(address _gauge) internal returns(address vault, address strategy) {
+        address lptoken = IVelodromeGauge(_gauge).stakingToken();
 
+        Vault memory v = deployedVaults[lptoken];
+
+        bytes32 latestRelease =  keccak256(abi.encode(registry.latestRelease()));
+
+        require(
+            v.latestRelease !=
+                latestRelease,
+            "vault with this verion already exists"
+        );
+
+        vault = _createVault(lptoken);
+
+        _recordVault(vault, lptoken, latestRelease);
+
+        strategy = _createStrategy(vault, _gauge, lptoken);
+
+        emit NewVault(
+            lptoken,
+            _gauge,
+            vault,
+            strategy
+      );
+  }
+
+
+  function _createVault(address _lptoken) internal returns (address vault) {
+        //now we create the vault, endorses it from governance after
+        vault = registry.newFactoryVault(
+            _lptoken,
+            address(this),
+            guardian,
+            treasury,
+            string.concat(
+                "Curve ",
+                IDetails(address(_lptoken)).symbol(),
+                " bauVault"
+            ),
+            string.concat("bauVelo", IDetails(address(_lptoken)).symbol()),
+            0
+        );
+
+        IVault v = IVault(vault);
+
+        v.setManagement(management);
+        v.setGovernance(governance);
+        v.setDepositLimit(depositLimit);
+        v.setDepositFee(depositFee);
+  }
+
+  function _createStrategy(address _vault, address _gauge, address _lptoken) internal returns (address strategy) {
+        strategy = IStrategy(velodromeStratImplementation).clone(
+                _vault,
+                management,
+                treasury,
+                keeper,
+                _gauge,
+                veloRegistryForToken0[_lptoken],
+                veloRegistryForToken1[_lptoken]
+      );
+  }
+
+
+  function _recordVault(
+        address _vault,
+        address _lptoken,
+        bytes32 _latestRelease
+    ) internal {
+        deployedVaults[_lptoken] = Vault(
+            _vault,
+            _lptoken,
+            _latestRelease
+        );
+  }
+
+
+  function _addStrategyToVault(address _vault, address _strategy) internal {
+        IVault v = IVault(_vault);
+
+        v.addStrategy(_strategy, 10_000, 0, type(uint256).max);
   }
 
   // add liquidity for targetAmount

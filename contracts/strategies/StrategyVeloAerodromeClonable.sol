@@ -92,7 +92,7 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
     /// @param _veloSwapRouteForToken0 Array of structs containing our swap route to go from VELO to token0.
     /// @param _veloSwapRouteForToken1 Array of structs containing our swap route to go from VELO to token1.
     /// @return newStrategy Address of our new cloned strategy.
-    function cloneStrategyVelodrome(
+    function clone(
         address _vault,
         address _strategist,
         address _rewards,
