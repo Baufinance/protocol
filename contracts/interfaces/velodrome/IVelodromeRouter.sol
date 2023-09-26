@@ -34,4 +34,15 @@ interface IVelodromeRouter {
         address token1,
         address factory
     ) external view returns (uint256 ratio);
+
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        bool stable,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB);
 }

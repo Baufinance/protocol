@@ -213,7 +213,7 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
             _targetAmount
         );
 
-        _deposit(_lptoken, targetToken, _targetAmount, _recipient);
+        _depositToProtocol(_lptoken, targetToken, _targetAmount, _recipient);
 
         uint256 tokenBalanceAfter = IERC20(_lptoken).balanceOf(address(this));
 
@@ -236,7 +236,42 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
         IERC20(vault).safeTransfer(_recipient, vaultBalance);
     }
 
-    function _deposit(
+    function withdraw(
+        address _lptoken,
+        uint256 _shareAmount,
+        address _recipient
+    ) external {
+        Vault memory v = deployedVaults[_lptoken];
+
+        (address targetToken, uint256 index) = targetCoin(_lptoken);
+
+        IERC20(v.vaultAddress).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _shareAmount
+        );
+
+        uint256 lptokenAmount = _withdrawFromVault(
+            v.vaultAddress,
+            _lptoken,
+            _shareAmount
+        );
+
+        _withdrawFromProtocol(_lptoken, targetToken, lptokenAmount, _recipient);
+    }
+
+    function _takeZapFee(
+        address _token,
+        uint256 _amount
+    ) internal returns (uint256 targetAmount) {
+        uint256 amountFee = (_amount * zapFee) / MAX_BPS;
+
+        IERC20(_token).safeTransfer(treasury, amountFee);
+
+        targetAmount = _amount - amountFee;
+    }
+
+    function _depositToProtocol(
         address _lptoken,
         address _targetCoin,
         uint256 _targetAmount,
@@ -344,23 +379,109 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
         }
     }
 
-    function withdraw(
+    function _withdrawFromVault(
+        address _vault,
         address _token,
-        uint256 _shareAmount,
-        address _recipient
-    ) external {}
+        uint256 _shareAmount
+    ) internal returns (uint256 lptokenAmount) {
 
-    function _takeZapFee(
-        address _token,
-        uint256 _amount
-    ) internal returns (uint256 targetAmount) {
-        uint256 amountFee = (_amount * zapFee) / MAX_BPS;
+        IERC20(_token).approve(_vault, _shareAmount);
 
-        IERC20(_token).safeTransfer(treasury, amountFee);
+        uint256 vaultTokenBalanceBefore = IERC20(_vault).balanceOf(
+            address(this)
+        );
 
-        targetAmount = _amount - amountFee;
+        uint256 lpTokenBalanceBefore = IERC20(_token).balanceOf(address(this));
+
+        IVault(_vault).withdraw(_shareAmount, address(this), 1);
+
+        uint256 vaultTokenBalanceAfter = IERC20(_vault).balanceOf(
+            address(this)
+        );
+        uint256 lpTokenBalanceAfter = IERC20(_token).balanceOf(address(this));
+
+        if (vaultTokenBalanceAfter > 0) {
+            IERC20(_vault).safeTransfer(msg.sender, vaultTokenBalanceAfter);
+        }
+
+        lptokenAmount = lpTokenBalanceAfter - lpTokenBalanceBefore;
     }
 
+    function _withdrawFromProtocol(
+        address _lptoken,
+        address _targetCoin,
+        uint256 _lptokenAmount,
+        address _recipient
+    ) internal {
+
+        IVelodromePool pool = IVelodromePool(address(_lptoken));
+
+        IERC20(_lptoken).approve(address(router), _lptokenAmount);
+
+        bool isStablePool = pool.stable();
+        bool isToken0Target;
+
+        address factory = pool.factory();
+
+        address poolToken0 = pool.token0();
+        address poolToken1 = pool.token1();
+        if (poolToken0 == _targetCoin) {
+            isToken0Target = true;
+        }
+
+        uint256 balanceToken0 = IERC20(poolToken0).balanceOf(address(this));
+        uint256 balanceToken1 = IERC20(poolToken0).balanceOf(address(this));
+
+        router.removeLiquidity(
+            poolToken0,
+            poolToken1,
+            isStablePool,
+            _lptokenAmount,
+            0,
+            0,
+            address(this),
+            block.timestamp
+        );
+
+        balanceToken0 = IERC20(poolToken0).balanceOf(address(this)) - balanceToken0;
+        balanceToken1 = IERC20(poolToken0).balanceOf(address(this)) - balanceToken1;
+
+        IVelodromeRouter.Routes memory route;
+
+        //build route
+        route = IVelodromeRouter.Routes({
+            from: isToken0Target ? poolToken1 : poolToken0,
+            to: _targetCoin,
+            stable: isStablePool,
+            factory: factory
+        });
+
+        uint256 amountToSwapTargetCoin = isToken0Target ? balanceToken1 : balanceToken0;
+
+
+        IERC20(poolToken0).approve(address(router), balanceToken0);
+        IERC20(poolToken1).approve(address(router), balanceToken1);
+
+        IVelodromeRouter.Routes[] memory routes = new IVelodromeRouter.Routes[](
+            1
+        );
+
+        router.swapExactTokensForTokens(
+            amountToSwapTargetCoin,
+            0,
+            routes,
+            address(this),
+            block.timestamp
+        );
+
+        uint256 balanceOfTarget = isToken0Target? IERC20(poolToken0).balanceOf(address(this)) - balanceToken0: IERC20(poolToken1).balanceOf(address(this)) - balanceToken1;
+
+        _sendTargetCoin(_targetCoin, balanceOfTarget, _recipient);
+    }
+
+    function _sendTargetCoin(address _targetCoin, uint256 _amount, address _recipient) internal {
+        IERC20(_targetCoin).safeTransfer(_recipient, _amount);
+    }
     function setOwner(address newOwner) external {
         require(msg.sender == owner);
         pendingOwner = newOwner;
@@ -401,9 +522,9 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
         keeper = _keeper;
     }
 
-    function setDepositLimit(uint256 _depositLimit) external {
+    function setDepositLimit(uint256 _depositToProtocolLimit) external {
         require(msg.sender == owner || msg.sender == management);
-        depositLimit = _depositLimit;
+        depositLimit = _depositToProtocolLimit;
     }
 
     function setVelodromeStratImplementation(
@@ -413,10 +534,10 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
         velodromeStratImplementation = _velodromeStratImplementation;
     }
 
-    function setDepositFee(uint256 _depositFee) external {
+    function setDepositFee(uint256 _depositToProtocolFee) external {
         require(msg.sender == owner);
-        require(_depositFee <= 10_000);
-        depositFee = _depositFee;
+        require(_depositToProtocolFee <= 10_000);
+        depositFee = _depositToProtocolFee;
     }
 
     function setZapFee(uint256 _zapFee) external {
