@@ -44,8 +44,6 @@ contract StrategyConvexMetaPoolRewardsClonable is
         uint256 _targetCoinIndex,
         bytes memory _swapPath
     ) internal override {
-
-
         if (targetCoin != address(0x0)) {
             IERC20(targetCoin).approve(address(zapContract), 0);
         }
@@ -65,17 +63,14 @@ contract StrategyConvexMetaPoolRewardsClonable is
         swapPath = _swapPath;
     }
 
-
-    function _setPoolFlags(address _targetCoin) internal override {
-
-    }
+    function _setPoolFlags(address _targetCoin) internal override {}
 
     function _initializeStrat(
         address _curvePool,
         bool _isLendingPool,
         bool _isSUSD,
         bytes memory _swapPath
-    ) internal override virtual {
+    ) internal virtual override {
         curve = ICurveFi(_curvePool);
     }
 }

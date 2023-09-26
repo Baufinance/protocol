@@ -50,8 +50,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
 
         uint256 pid = ICurveFactory(_factory).getVaultPoolPid(_vault);
 
-        string memory name = ICurveFactory(_factory). getVaultSymbol(_vault);
-
+        string memory name = ICurveFactory(_factory).getVaultSymbol(_vault);
 
         _initializeStratBase(pid, name);
 
@@ -60,10 +59,7 @@ abstract contract StrategyConvexCurveRewardsBase is StrategyCurveBase {
         _initializeInternal();
     }
 
-
-    function _initializeInternal() internal virtual {
-
-    }
+    function _initializeInternal() internal virtual {}
 
     function _initializeStrat(
         address _curvePool,

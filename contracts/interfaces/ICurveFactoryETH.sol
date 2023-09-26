@@ -25,8 +25,9 @@ interface ICurveFactory {
         address _vault
     ) external view returns (Vault memory);
 
+    function getVaultPoolPid(address _vault) external view returns (uint256);
 
-    function getVaultPoolPid(address _vault) external view returns(uint256);
-
-    function getVaultSymbol(address _vault) external view returns (string memory);
+    function getVaultSymbol(
+        address _vault
+    ) external view returns (string memory);
 }

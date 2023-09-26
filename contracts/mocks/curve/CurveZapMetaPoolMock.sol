@@ -46,8 +46,7 @@ contract CurveZapMetaPoolMock {
         uint256 min_amount,
         address _receiver
     ) external {
-
-        IERC20(_pool).transferFrom(msg.sender,eth, _burn_amount);
+        IERC20(_pool).transferFrom(msg.sender, eth, _burn_amount);
         address targetCoin;
 
         if (i == 0) {
@@ -59,6 +58,5 @@ contract CurveZapMetaPoolMock {
         }
 
         IERC20(targetCoin).transfer(_receiver, _burn_amount);
-
     }
 }

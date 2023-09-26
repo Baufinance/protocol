@@ -16,14 +16,12 @@ contract GoerliStrategyConvex2CoinsRewardsClonable is
         stratName = _name;
     }
 
-    function _initializeInternal() override internal {
-                // You can set these parameters on deployment to whatever you want
+    function _initializeInternal() internal override {
+        // You can set these parameters on deployment to whatever you want
         maxReportDelay = 21 days; // 21 days in seconds, if we hit this then harvestTrigger = True
         healthCheck = 0xF939E44d0C9FF5da316D1Caca163BBc56b88445b;
         baseFeeOracle = 0x1323Fa099cB2c54EDa59fD4A8BB8DC8c0913B050;
         creditThreshold = 1e6 * 1e18;
-
-
 
         cvxeth = ICurveFi(0xB77A62019418F2D1411fC96adbfbc82792b580a3); // use curve's new CVX-ETH crypto pool to sell our CVX
 
@@ -34,9 +32,8 @@ contract GoerliStrategyConvex2CoinsRewardsClonable is
         crv = IERC20(0x6912C5FA16c9e9278a20234C00F3DEFbF21D77f6);
         convexToken = IERC20(0x402745D08AcF0cC79F457dA2D41276FA109a45A0);
         weth = IERC20(0xb8D3DbecA88a5Aa37979999de6F921F521E53E9E);
-        sushiswap =  0x6FF1B80DB7b5c1b535db09A1b8a87248E64C7727;
+        sushiswap = 0x6FF1B80DB7b5c1b535db09A1b8a87248E64C7727;
         depositContract = 0x3088982b8535cDC266048ae13a375B4C8B2701d6;
-
 
         crvethPath = bytes.concat(
             bytes20(address(crv)),

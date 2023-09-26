@@ -77,7 +77,7 @@ contract Curve2PoolMock {
         uint256 i,
         uint256 min_amount
     ) external {
-        IERC20(token).transferFrom(msg.sender,eth, _token_amount);
+        IERC20(token).transferFrom(msg.sender, eth, _token_amount);
         IERC20(underlying[i]).transfer(msg.sender, _token_amount);
     }
 

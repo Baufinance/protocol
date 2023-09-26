@@ -12,8 +12,6 @@ import "../interfaces/Velodrome/IVelodromeGauge.sol";
 import "../interfaces/Velodrome/IVelodromePool.sol";
 import "../interfaces/Velodrome/IDetails.sol";
 
-
-
 contract StrategyVeloAerodromeClonable is BaseStrategy {
     using SafeERC20 for IERC20;
 
@@ -74,7 +72,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
     string internal stratName;
 
     /* ========== CONSTRUCTOR ========== */
-
 
     constructor() {}
 

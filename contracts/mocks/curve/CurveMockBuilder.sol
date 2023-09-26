@@ -7,7 +7,6 @@ import "./Curve4PoolMock.sol";
 import "./CurveMetaPoolMock.sol";
 import "../LPToken.sol";
 
-
 interface ILPToken {
     function mint(uint256 _amount, address _recipient) external;
 }
@@ -117,7 +116,6 @@ contract CurveMockBuilder {
 
         mocks.push(mock);
     }
-
 
     function length() external view returns (uint256) {
         return mocks.length;

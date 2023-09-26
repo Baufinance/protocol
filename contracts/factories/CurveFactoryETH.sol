@@ -16,7 +16,6 @@ import {ICurveGauge, ICurveFi} from "../interfaces/ICurve.sol";
 contract CurveFactoryETH is Initializable, IFactoryAdapter {
     using SafeERC20 for IERC20;
 
-
     uint256 internal constant MAX_BPS = 10_000; //100%
 
     enum CurveType {
@@ -353,19 +352,17 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
 
         Vault memory v = deployedVaults[lptoken];
 
-        bytes32 latestRelease =  keccak256(abi.encode(registry.latestRelease()));
+        bytes32 latestRelease = keccak256(abi.encode(registry.latestRelease()));
 
         CurveRule memory curveRule = curveRegistry[lptoken];
 
         require(curveRule.poolType != CurveType.NONE, "incorrect pool type");
         require(
-            v.latestRelease !=
-                latestRelease,
+            v.latestRelease != latestRelease,
             "vault with this verion already exists"
         );
 
         uint256 pid = _getConvexPid(_gauge);
-
 
         vault = _createVault(lptoken);
 
@@ -476,7 +473,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         });
 
         vaultStrategies[v.vaultAddress] = params;
-
 
         strategy = _deployStrategy(_lptoken, _swapPath);
     }
@@ -745,7 +741,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         uint256 _lptokenAmount,
         address _recipient
     ) internal {
-
         Vault memory v = deployedVaults[_token];
 
         if (v.poolType == CurveType.METAPOOL3) {
@@ -772,7 +767,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         uint256 _shareAmount,
         address _recipient
     ) internal {
-
         IERC20(_token).approve(address(zapContract[_token]), _shareAmount);
         (bool success, ) = address(zapContract[_token]).call(
             abi.encodeWithSignature(
@@ -802,7 +796,6 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         uint256 _index,
         uint256 _shareAmount
     ) internal {
-
         IERC20(_token).approve(_minter, _shareAmount);
 
         (bool success, ) = _minter.call(
@@ -884,12 +877,15 @@ contract CurveFactoryETH is Initializable, IFactoryAdapter {
         IVault(v.vaultAddress).setGovernance(_newGovernance);
     }
 
-
-    function getVaultPoolPid(address _vault) external view returns (uint256 pid) {
+    function getVaultPoolPid(
+        address _vault
+    ) external view returns (uint256 pid) {
         return vaultStrategies[_vault].pid;
     }
 
-    function getVaultSymbol(address _vault) external view returns (string memory) {
+    function getVaultSymbol(
+        address _vault
+    ) external view returns (string memory) {
         return vaultStrategies[_vault].symbol;
     }
 }
