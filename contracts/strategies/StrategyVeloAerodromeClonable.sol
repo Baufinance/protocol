@@ -24,12 +24,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
     IVelodromeRouter public constant router =
         IVelodromeRouter(0xa062aE8A9c5e11aaA026fc2670B0D65cCc8B2858);
 
-    /// @notice The percentage of VELO from each harvest that we send to our voter (out of 10,000).
-    uint256 public localKeepVELO;
-
-    /// @notice The address of our Velodrome voter. This is where we send any keepVELO.
-    address public veloVoter;
-
     // this means all of our fee values are in basis points
     uint256 internal constant FEE_DENOMINATOR = 10000;
 
@@ -56,14 +50,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
     /// @notice Array of structs containing our swap route to go from VELO to token1.
     /// @dev Struct is from token, to token, and true/false for stable/volatile.
     IVelodromeRouter.Routes[] public swapRouteForToken1;
-
-    /// @notice Minimum profit size in USDC that we want to harvest.
-    /// @dev Only used in harvestTrigger.
-    uint256 public harvestProfitMinInUsdc;
-
-    /// @notice Maximum profit size in USDC that we want to harvest (ignore gas price once we get here).
-    /// @dev Only used in harvestTrigger.
-    uint256 public harvestProfitMaxInUsdc;
 
     /// @notice Will only be true on the original deployed contract and not on clones; we don't want to clone a clone.
     bool public isOriginal = true;
@@ -218,8 +204,7 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
         // set up our baseStrategy vars
         maxReportDelay = 30 days;
         creditThreshold = 50_000e18;
-        harvestProfitMinInUsdc = 1_000e6;
-        harvestProfitMaxInUsdc = 100_000e6;
+
 
         // want = Velodrome LP/pool
         want.approve(_gauge, type(uint256).max);
@@ -304,19 +289,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
         gauge.getReward(address(this));
         uint256 veloBalance = velo.balanceOf(address(this));
 
-        // by default this is zero, but if we want any for our voter this will be used
-        uint256 _localKeepVELO = localKeepVELO;
-        address _veloVoter = veloVoter;
-        if (_localKeepVELO > 0 && _veloVoter != address(0)) {
-            uint256 sendToVoter;
-            unchecked {
-                sendToVoter = (veloBalance * _localKeepVELO) / FEE_DENOMINATOR;
-            }
-            if (sendToVoter > 0) {
-                velo.safeTransfer(_veloVoter, sendToVoter);
-            }
-            veloBalance = velo.balanceOf(address(this));
-        }
 
         // don't bother if we don't get at least 10 VELO
         if (veloBalance > 10e18) {
@@ -505,12 +477,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
             return false;
         }
 
-        // harvest if we have a profit to claim at our upper limit without considering gas price
-        uint256 claimableProfit = claimableProfitInUsdc();
-        if (claimableProfit > harvestProfitMaxInUsdc) {
-            return true;
-        }
-
         // check if the base fee gas price is higher than we allow. if it is, block harvests.
         if (!isBaseFeeAcceptable()) {
             return false;
@@ -518,11 +484,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
 
         // trigger if we want to manually harvest, but only if our gas price is acceptable
         if (forceHarvestTriggerOnce) {
-            return true;
-        }
-
-        // harvest if we have a sufficient profit to claim, but only if our gas price is acceptable
-        if (claimableProfit > harvestProfitMinInUsdc) {
             return true;
         }
 
@@ -541,18 +502,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
         return false;
     }
 
-    /// @notice Calculates the profit if all claimable VELO were sold for USDC (6 decimals).
-    /// @dev Calls Velodrome's VELO-USDC pool directly.
-    /// @return Total return in USDC from selling claimable VELO.
-    function claimableProfitInUsdc() public view returns (uint256) {
-        // check price on our VELOv2/USDC pool
-        uint256 veloPrice = IVelodromePool(
-            0x8134A2fDC127549480865fB8E5A9E8A8a95a54c5
-        ).getAmountOut(1e18, address(velo));
-
-        // Pool returns amount as 6 decimals, so multiply by claimable VELO and divide by VELO decimals (1e18)
-        return (veloPrice * claimableRewards()) / 1e18;
-    }
 
     /// @notice Convert our keeper's eth cost into want
     /// @dev We don't use this since we don't factor call cost into our harvestTrigger.
@@ -564,22 +513,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
 
     /* ========== SETTERS ========== */
     // These functions are useful for setting parameters of the strategy that may need to be adjusted.
-
-    /**
-     * @notice
-     *  Here we set various parameters to optimize our harvestTrigger.
-     * @param _harvestProfitMinInUsdc The amount of profit (in USDC, 6 decimals)
-     *  that will trigger a harvest if gas price is acceptable.
-     * @param _harvestProfitMaxInUsdc The amount of profit in USDC that
-     *  will trigger a harvest regardless of gas price.
-     */
-    function setHarvestTriggerParams(
-        uint256 _harvestProfitMinInUsdc,
-        uint256 _harvestProfitMaxInUsdc
-    ) external onlyVaultManagers {
-        harvestProfitMinInUsdc = _harvestProfitMinInUsdc;
-        harvestProfitMaxInUsdc = _harvestProfitMaxInUsdc;
-    }
 
     /// @notice Here we can override the swap routes set on deployment.
     /// @dev Must be called by gov or management.
@@ -616,26 +549,5 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
         ) {
             revert("token1 route error");
         }
-    }
-
-    /// @notice Use this to set or update our keep amounts for this strategy.
-    /// @dev Must be less than 10,000. Set in basis points. Only governance can set this.
-    /// @param _keepVelo Percent of each VELO harvest to send to our voter.
-    function setLocalKeepVelo(uint256 _keepVelo) external onlyGovernance {
-        if (_keepVelo > 10_000) {
-            revert();
-        }
-        if (_keepVelo > 0 && veloVoter == address(0)) {
-            revert();
-        }
-        localKeepVELO = _keepVelo;
-    }
-
-    /// @notice Use this to set or update our voter contracts.
-    /// @dev For Velo strategies, this is where we send our keepVELO.
-    ///  Only governance can set this.
-    /// @param _veloVoter Address of our velodrome voter.
-    function setVoter(address _veloVoter) external onlyGovernance {
-        veloVoter = _veloVoter;
     }
 }
