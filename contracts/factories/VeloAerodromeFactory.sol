@@ -384,7 +384,6 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
         address _token,
         uint256 _shareAmount
     ) internal returns (uint256 lptokenAmount) {
-
         IERC20(_token).approve(_vault, _shareAmount);
 
         uint256 vaultTokenBalanceBefore = IERC20(_vault).balanceOf(
@@ -413,7 +412,6 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
         uint256 _lptokenAmount,
         address _recipient
     ) internal {
-
         IVelodromePool pool = IVelodromePool(address(_lptoken));
 
         IERC20(_lptoken).approve(address(router), _lptokenAmount);
@@ -443,8 +441,12 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
             block.timestamp
         );
 
-        balanceToken0 = IERC20(poolToken0).balanceOf(address(this)) - balanceToken0;
-        balanceToken1 = IERC20(poolToken0).balanceOf(address(this)) - balanceToken1;
+        balanceToken0 =
+            IERC20(poolToken0).balanceOf(address(this)) -
+            balanceToken0;
+        balanceToken1 =
+            IERC20(poolToken0).balanceOf(address(this)) -
+            balanceToken1;
 
         IVelodromeRouter.Routes memory route;
 
@@ -456,8 +458,9 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
             factory: factory
         });
 
-        uint256 amountToSwapTargetCoin = isToken0Target ? balanceToken1 : balanceToken0;
-
+        uint256 amountToSwapTargetCoin = isToken0Target
+            ? balanceToken1
+            : balanceToken0;
 
         IERC20(poolToken0).approve(address(router), balanceToken0);
         IERC20(poolToken1).approve(address(router), balanceToken1);
@@ -474,14 +477,21 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
             block.timestamp
         );
 
-        uint256 balanceOfTarget = isToken0Target? IERC20(poolToken0).balanceOf(address(this)) - balanceToken0: IERC20(poolToken1).balanceOf(address(this)) - balanceToken1;
+        uint256 balanceOfTarget = isToken0Target
+            ? IERC20(poolToken0).balanceOf(address(this)) - balanceToken0
+            : IERC20(poolToken1).balanceOf(address(this)) - balanceToken1;
 
         _sendTargetCoin(_targetCoin, balanceOfTarget, _recipient);
     }
 
-    function _sendTargetCoin(address _targetCoin, uint256 _amount, address _recipient) internal {
+    function _sendTargetCoin(
+        address _targetCoin,
+        uint256 _amount,
+        address _recipient
+    ) internal {
         IERC20(_targetCoin).safeTransfer(_recipient, _amount);
     }
+
     function setOwner(address newOwner) external {
         require(msg.sender == owner);
         pendingOwner = newOwner;

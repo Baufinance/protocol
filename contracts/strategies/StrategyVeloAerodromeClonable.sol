@@ -205,7 +205,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
         maxReportDelay = 30 days;
         creditThreshold = 50_000e18;
 
-
         // want = Velodrome LP/pool
         want.approve(_gauge, type(uint256).max);
         poolToken0.safeApprove(address(router), type(uint256).max);
@@ -288,7 +287,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
         // harvest no matter what
         gauge.getReward(address(this));
         uint256 veloBalance = velo.balanceOf(address(this));
-
 
         // don't bother if we don't get at least 10 VELO
         if (veloBalance > 10e18) {
@@ -501,7 +499,6 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
         // otherwise, we don't harvest
         return false;
     }
-
 
     /// @notice Convert our keeper's eth cost into want
     /// @dev We don't use this since we don't factor call cost into our harvestTrigger.
