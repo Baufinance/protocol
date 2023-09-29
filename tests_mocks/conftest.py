@@ -1,5 +1,5 @@
 import pytest
-from brownie import BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder, AggregationRouterV5Mock,UniswapV2Mock, UniswapV3Mock
+from brownie import BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder, AggregationRouterV5Mock,UniswapV2Mock, UniswapV3Mock, VelodromeRouterMock
 
 
 
@@ -101,3 +101,9 @@ def univ2_mock(gov):
 def univ3_mock(gov):
     univ3 = gov.deploy(UniswapV3Mock)
     yield univ3
+
+
+@pytest.fixture
+def velodrome_router(gov):
+    velodrome = gov.deploy(VelodromeRouterMock)
+    yield velodrome

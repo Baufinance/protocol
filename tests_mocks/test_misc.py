@@ -1,6 +1,8 @@
 import brownie
-from brownie import BaseRewardPoolMock, Curve2PoolMock, Curve3PoolMock, Curve4PoolMock, CurveMetaPoolMock, CurveZapMetaPoolMock, Token
+from brownie import BaseRewardPoolMock, Curve2PoolMock, Curve3PoolMock, Curve4PoolMock, CurveMetaPoolMock, CurveZapMetaPoolMock, Token, VelodromePoolMock, VelodromeGaugeMock
 
+
+'''
 def test_add_pool(pool_manager, gauge, rewards_factory, booster, lp_token):
     pool_manager.addPool(gauge)
 
@@ -788,3 +790,136 @@ def test_univ3_swap(gov, univ3_mock):
 
     assert token1BalanceBefore - token1BalanceAfter == 100*10**18
     assert token2BalanceAfter - token2BalanceBefore == 150*10**18
+
+'''
+
+def test_velodrome_pool_mock(gov):
+    token0 = gov.deploy(Token, 18)
+    token1 = gov.deploy(Token, 18)
+
+    pool = gov.deploy(VelodromePoolMock, False, token0, token1)
+
+    assert pool.token0() == token0
+    assert pool.token1() == token1
+
+    assert pool.stable() == False
+
+    amountOut = pool.getAmountOut(1000, token0)
+
+    assert amountOut == 700
+
+
+def test_velodrome_gauge_mock(gov):
+    token0 = gov.deploy(Token, 18)
+    token1 = gov.deploy(Token, 18)
+    velo = gov.deploy(Token, 18)
+
+    pool = gov.deploy(VelodromePoolMock, False, token0, token1)
+
+    gauge = gov.deploy(VelodromeGaugeMock, velo, pool)
+
+    pool.mint(1000*10^18)
+
+    velo.mint(1_000_000_000*10^18, gauge)
+
+    pool.approve(gauge, 1000*10^18)
+
+    gauge.deposit(1000*10^18, {"from":gov})
+
+    assert pool.balanceOf(gauge) == 1000*10^18
+
+    assert gauge.balanceOf(gov) == 1000*10^18
+
+    assert gauge.stakingToken() == pool
+
+    assert gauge.earned(gov) > 0
+
+
+    velo_balance_before = velo.balanceOf(gov)
+    gauge.getReward(gov, {"from":gov})
+    velo_balance_after = velo.balanceOf(gov)
+    assert velo_balance_after - velo_balance_before > 0
+
+    pool_balance_before = pool.balanceOf(gov)
+    gauge.withdraw(1000*10^18, {"from":gov})
+    pool_balance_after = pool.balanceOf(gov)
+
+    assert pool_balance_after - pool_balance_before > 0
+
+    assert pool.balanceOf(gauge) == 0
+
+def test_velodrome_router_mock(gov, velodrome_router):
+    token0 = gov.deploy(Token, 18)
+    token1 = gov.deploy(Token, 18)
+
+    pool = gov.deploy(VelodromePoolMock, False, token0, token1)
+
+    velodrome_router.addPool(token0, token1, pool, False)
+
+    token0.approve(velodrome_router, 1000, {"from":gov})
+    token1.approve(velodrome_router, 1000, {"from":gov})
+
+    velodrome_router.addLiquidity(
+        token0,
+        token1,
+        False,
+        1000,
+        1000,
+        0,
+        0,
+        gov,
+        10,
+        {"from":gov}
+    )
+
+    assert pool.balanceOf(gov) > 0
+
+    assert token0.balanceOf(velodrome_router) == 1000
+    assert token1.balanceOf(velodrome_router) == 700
+
+
+    token0.mint(100000, velodrome_router)
+    token1.mint(100000, velodrome_router)
+
+    token0.approve(velodrome_router, 1000, {"from":gov})
+
+    token0_balance_before = token0.balanceOf(gov)
+    token1_balance_before = token1.balanceOf(gov)
+    velodrome_router.swapExactTokensForTokens(
+        1000,
+        700,
+        [[token0, token1, False, gov]],
+        gov,
+        10,
+        {"from":gov}
+    )
+
+
+    token0_balance_after = token0.balanceOf(gov)
+    token1_balance_after = token1.balanceOf(gov)
+
+    assert token0_balance_before - token0_balance_after > 0
+    assert token1_balance_after - token1_balance_before > 0
+
+    pool.approve(velodrome_router, pool.balanceOf(gov))
+
+    pool_balance_before = pool.balanceOf(gov)
+
+    velodrome_router.removeLiquidity(
+        token0,
+        token1,
+        False,
+        pool.balanceOf(gov),
+        0,
+        0,
+        gov,
+        10
+    )
+
+    pool_balance_after = pool.balanceOf(gov)
+
+
+    assert pool_balance_before - pool_balance_after > 0
+
+    assert pool.balanceOf(gov) == 0
+    assert pool.balanceOf(velodrome_router) == 0

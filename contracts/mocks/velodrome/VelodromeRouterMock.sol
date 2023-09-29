@@ -9,6 +9,8 @@ interface IMint {
 }
 
 contract VelodromeRouterMock {
+
+   address public constant DEAD = 0x000000000000000000000000000000000000dEaD;
     mapping(address => mapping(address => address)) public pools;
 
     mapping(address => bool) public isStablePool;
@@ -40,7 +42,7 @@ contract VelodromeRouterMock {
             ratio = 7 * 10 ** 17;
         }
 
-        balanceToken1 = ((balanceToken0 * ratio) / 10) * 18;
+        balanceToken1 = ((balanceToken0 * ratio) / 10** 18);
 
         IERC20(token0).transferFrom(msg.sender, address(this), balanceToken0);
         IERC20(token1).transferFrom(msg.sender, address(this), balanceToken1);
@@ -108,7 +110,7 @@ contract VelodromeRouterMock {
         IERC20(tokenA).transfer(to, amountA);
         IERC20(tokenA).transfer(to, amountB);
 
-        IERC20(pool).transferFrom(msg.sender, address(0x0), liquidity);
+        IERC20(pool).transferFrom(msg.sender, DEAD, liquidity);
     }
 
     function addPool(

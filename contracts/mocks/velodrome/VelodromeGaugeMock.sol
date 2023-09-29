@@ -31,12 +31,12 @@ contract VelodromeGaugeMock {
 
     function getReward(address account) external {
         uint256 earned = earned(account);
-        IERC20(velo).transfer(msg.sender, earned);
+        IERC20(velo).transfer(account, earned);
     }
 
     function earned(address account) public view returns (uint256 rewards) {
         uint256 balance = balanceOf(account);
-        uint256 rewards = (balance * block.number * 10 ** 18) / block.timestamp;
+        rewards = (balance / block.number * 7) / 10;
     }
 
     function stakingToken() external view returns (address) {
