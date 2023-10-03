@@ -1,5 +1,5 @@
 import pytest
-from brownie import Vault, AggregationRouterV5Mock, Zap, Vault, CurveFactoryETH, BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder, AggregationRouterV5Mock,UniswapV2Mock, UniswapV3Mock
+from brownie import Vault, AggregationRouterV5Mock, Zap, Vault, CurveFactoryETH, BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder, AggregationRouterV5Mock,UniswapV2Mock, UniswapV3Mock, VelodromeRouterMock, VeloAerodromeFactory, TestStrategyVeloAerdromeClonable
 
 
 
@@ -35,6 +35,12 @@ def create_token(gov):
 def crv(gov):
     token = gov.deploy(Token, 18)
     yield token
+
+@pytest.fixture
+def velo(gov):
+    token = gov.deploy(Token, 18)
+    yield token
+
 
 @pytest.fixture
 def cvx(gov):
@@ -127,3 +133,24 @@ def zap(gov, aggregationRouter):
     zap = gov.deploy(Zap)
     zap.initialize(gov, aggregationRouter)
     yield zap
+
+@pytest.fixture
+def velodrome_router(gov):
+    velodrome = gov.deploy(VelodromeRouterMock)
+    yield velodrome
+
+
+@pytest.fixture
+def velodrome_factory(VeloAerodromeFactory, TestStrategyVeloAerdromeClonable, gov, registry, velo, velodrome_router):
+    strategy = gov.deploy(TestStrategyVeloAerdromeClonable)
+    factory = gov.deploy(VeloAerodromeFactory)
+
+    factory.initialize(
+        registry,
+        strategy,
+        gov,
+        gov,
+        velo,
+        velodrome_router
+    )
+    yield factory

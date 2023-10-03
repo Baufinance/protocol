@@ -21,15 +21,15 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
     IVelodromeGauge public gauge;
 
     /// @notice Velodrome v2 router contract
-    IVelodromeRouter public constant router =
-        IVelodromeRouter(0xa062aE8A9c5e11aaA026fc2670B0D65cCc8B2858);
+    IVelodromeRouter public router;
 
     // this means all of our fee values are in basis points
     uint256 internal constant FEE_DENOMINATOR = 10000;
 
     /// @notice The address of our base token (VELO v2)
-    IERC20 public constant velo =
-        IERC20(0x9560e827aF36c94D2Ac33a39bCE1Fe78631088Db);
+    IERC20 public velo;
+    //=
+    //    IERC20(0x9560e827aF36c94D2Ac33a39bCE1Fe78631088Db);
 
     /// @notice Token0 in our pool.
     IERC20 public poolToken0;
@@ -138,6 +138,7 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
         IVelodromeRouter.Routes[] memory _veloSwapRouteForToken1
     ) public {
         _initialize(_vault, _strategist, _rewards, _keeper);
+        _initializeInternal();
         _initializeStrat(
             _gauge,
             _veloSwapRouteForToken0,
@@ -218,6 +219,12 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
                 IDetails(address(want)).symbol()
             )
         );
+    }
+
+
+    function  _initializeInternal() internal virtual {
+        router = IVelodromeRouter(0xa062aE8A9c5e11aaA026fc2670B0D65cCc8B2858);
+        velo = IERC20(0x9560e827aF36c94D2Ac33a39bCE1Fe78631088Db);
     }
 
     /* ========== VIEWS ========== */
