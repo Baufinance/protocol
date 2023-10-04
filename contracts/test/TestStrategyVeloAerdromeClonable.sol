@@ -10,12 +10,11 @@ contract TestStrategyVeloAerdromeClonable is
 {
     function _initializeInternal() internal override {}
 
-    function setInternal(address _healthCheck,
-        address _baseFeeOracle,
-        IVelodromeRouter _router, IERC20 _velo) external {
+    function setInternal(
+        address _healthCheck,
+        address _baseFeeOracle
+    ) external {
         healthCheck = _healthCheck;
         baseFeeOracle = _baseFeeOracle;
-        router = _router;
-        velo = _velo;
     }
 }

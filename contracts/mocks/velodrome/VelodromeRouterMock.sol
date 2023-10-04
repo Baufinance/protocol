@@ -42,12 +42,12 @@ contract VelodromeRouterMock {
             ratio = 7 * 10 ** 17;
         }
 
-        balanceToken1 = ((balanceToken0 * ratio) / 10** 18);
+        balanceToken1 = ((balanceToken0 * ratio) / 10**18);
 
         IERC20(token0).transferFrom(msg.sender, address(this), balanceToken0);
         IERC20(token1).transferFrom(msg.sender, address(this), balanceToken1);
 
-        IMint(pool).mint(balanceToken1, recipient);
+        IMint(pool).mint(balanceToken0, recipient);
     }
 
     function swapExactTokensForTokens(

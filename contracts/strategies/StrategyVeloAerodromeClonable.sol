@@ -57,6 +57,7 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
     // we use this to be able to adjust our strategy's name
     string internal stratName;
 
+
     /* ========== CONSTRUCTOR ========== */
 
     constructor() {}
@@ -82,7 +83,9 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
         address _keeper,
         address _gauge,
         IVelodromeRouter.Routes[] memory _veloSwapRouteForToken0,
-        IVelodromeRouter.Routes[] memory _veloSwapRouteForToken1
+        IVelodromeRouter.Routes[] memory _veloSwapRouteForToken1,
+        IVelodromeRouter _router,
+        IERC20 _velo
     ) external returns (address newStrategy) {
         // don't clone a clone
         if (!isOriginal) {
@@ -113,7 +116,9 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
             _keeper,
             _gauge,
             _veloSwapRouteForToken0,
-            _veloSwapRouteForToken1
+            _veloSwapRouteForToken1,
+            _router,
+            _velo
         );
 
         emit Cloned(newStrategy);
@@ -135,14 +140,18 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
         address _keeper,
         address _gauge,
         IVelodromeRouter.Routes[] memory _veloSwapRouteForToken0,
-        IVelodromeRouter.Routes[] memory _veloSwapRouteForToken1
+        IVelodromeRouter.Routes[] memory _veloSwapRouteForToken1,
+        IVelodromeRouter _router,
+        IERC20 _velo
     ) public {
         _initialize(_vault, _strategist, _rewards, _keeper);
         _initializeInternal();
         _initializeStrat(
             _gauge,
             _veloSwapRouteForToken0,
-            _veloSwapRouteForToken1
+            _veloSwapRouteForToken1,
+            _router,
+            _velo
         );
     }
 
@@ -150,8 +159,13 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
     function _initializeStrat(
         address _gauge,
         IVelodromeRouter.Routes[] memory _veloSwapRouteForToken0,
-        IVelodromeRouter.Routes[] memory _veloSwapRouteForToken1
+        IVelodromeRouter.Routes[] memory _veloSwapRouteForToken1,
+        IVelodromeRouter _router,
+        IERC20 _velo
     ) internal {
+
+        router = _router;
+        velo = _velo;
         // make sure that we haven't initialized this before
         if (address(gauge) != address(0)) {
             revert("already initialized");
@@ -188,7 +202,9 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
                 address(poolToken0) !=
                 swapRouteForToken0[_veloSwapRouteForToken0.length - 1].to
             ) {
-                revert("token0 route error");
+
+
+                revert("token0  1 route error");
             }
         }
 
@@ -222,10 +238,7 @@ contract StrategyVeloAerodromeClonable is BaseStrategy {
     }
 
 
-    function  _initializeInternal() internal virtual {
-        router = IVelodromeRouter(0xa062aE8A9c5e11aaA026fc2670B0D65cCc8B2858);
-        velo = IERC20(0x9560e827aF36c94D2Ac33a39bCE1Fe78631088Db);
-    }
+    function  _initializeInternal() internal virtual {}
 
     /* ========== VIEWS ========== */
 

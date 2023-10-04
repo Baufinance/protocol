@@ -869,6 +869,7 @@ abstract contract BaseStrategy {
         // Check if free returns are left, and re-invest them
         adjustPosition(debtOutstanding);
 
+
         // call healthCheck contract
         if (doHealthCheck && healthCheck != address(0)) {
             require(

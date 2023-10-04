@@ -36,7 +36,7 @@ contract VelodromeGaugeMock {
 
     function earned(address account) public view returns (uint256 rewards) {
         uint256 balance = balanceOf(account);
-        rewards = (balance / block.number * 7) / 10;
+        rewards = balance / 30;
     }
 
     function stakingToken() external view returns (address) {

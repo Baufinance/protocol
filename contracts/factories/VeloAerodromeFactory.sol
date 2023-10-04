@@ -136,6 +136,8 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
 
         strategy = _createStrategy(vault, _gauge, lptoken);
 
+
+        _addStrategyToVault(vault, strategy);
         emit NewVault(lptoken, _gauge, vault, strategy);
     }
 
@@ -175,7 +177,9 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
             keeper,
             _gauge,
             veloRegistryForToken0[_lptoken],
-            veloRegistryForToken1[_lptoken]
+            veloRegistryForToken1[_lptoken],
+            IVelodromeRouter(router),
+            IERC20(velo)
         );
     }
 
