@@ -44,6 +44,10 @@ contract VelodromeRouterMock {
 
         balanceToken1 = ((balanceToken0 * ratio) / 10**18);
 
+        amountA = balanceToken0;
+        amountB = balanceToken1;
+        liquidity = amountA;
+
         IERC20(token0).transferFrom(msg.sender, address(this), balanceToken0);
         IERC20(token1).transferFrom(msg.sender, address(this), balanceToken1);
 
@@ -63,7 +67,9 @@ contract VelodromeRouterMock {
       address token0 = route0.from;
       address token1 = route1.to;
 
+
       IERC20(token0).transferFrom(msg.sender, address(this), amountIn);
+
 
       uint256 ratio = 7 * 10 ** 17;
 
@@ -108,7 +114,7 @@ contract VelodromeRouterMock {
         amountB = (amountA * 10 ** 18) / ratio;
 
         IERC20(tokenA).transfer(to, amountA);
-        IERC20(tokenA).transfer(to, amountB);
+        IERC20(tokenB).transfer(to, amountB);
 
         IERC20(pool).transferFrom(msg.sender, DEAD, liquidity);
     }
