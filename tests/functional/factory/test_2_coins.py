@@ -870,7 +870,6 @@ def test_create_2_coins_strategy_with_deposit_withdraw_in_target_coin_and_vault_
 
   zap.addFactory(factory, {"from":gov})
 
-
   token1.approve(zap, 1_000*10**18, {"from":gov})
 
   data = aggregationRouter.encodeData([token1, token2, gov, zap, 500*10**18, 1000*10**18, 1])

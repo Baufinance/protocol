@@ -102,7 +102,13 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
         router = IVelodromeRouter(_router);
     }
 
-    function isVaultExists(address _token) external view returns (bool) {}
+    function isVaultExists(address _lptoken) external view returns (bool) {
+        Vault storage v = deployedVaults[_lptoken];
+
+        if (v.vaultAddress != address(0x0)) {
+            return true;
+        }
+    }
 
     function targetCoin(
         address _lptoken
@@ -112,7 +118,10 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
         return (pool.token0(), 0);
     }
 
-    function vaultAddress(address lptoken) external view returns (address) {}
+    function vaultAddress(address _lptoken) external view returns (address vault) {
+        Vault storage v = deployedVaults[_lptoken];
+        vault = v.vaultAddress;
+    }
 
     function createNewVaultsAndStrategies(
         address _gauge
@@ -153,7 +162,7 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
             guardian,
             treasury,
             string.concat(
-                "Curve ",
+                "Velodrome ",
                 IDetails(address(_lptoken)).symbol(),
                 " bauVault"
             ),
@@ -223,6 +232,7 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
 
         _depositToProtocol(_lptoken, targetToken, _targetAmount, _recipient);
 
+
         uint256 tokenBalanceAfter = IERC20(_lptoken).balanceOf(address(this));
 
         uint256 tokenBalance = tokenBalanceAfter - tokenBalanceBefore;
@@ -242,7 +252,6 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
         vaultBalance = _takeZapFee(vault, vaultBalance);
 
         IERC20(vault).safeTransfer(_recipient, vaultBalance);
-
     }
 
     function withdraw(
@@ -355,7 +364,7 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
             ? _targetAmount - amountToSwapTargetCoin
             : IERC20(poolToken0).balanceOf(address(this)) - balanceToken0Before;
         uint256 balanceToken1 = isToken0Target
-            ? IERC20(poolToken0).balanceOf(address(this)) - balanceToken1Before
+            ? IERC20(poolToken1).balanceOf(address(this)) - balanceToken1Before
             : _targetAmount - amountToSwapTargetCoin;
 
         IERC20(poolToken0).approve(address(router), balanceToken0);

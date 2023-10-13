@@ -80,7 +80,9 @@ contract Zap is Initializable {
                 _tokenAmount
             );
 
+
             if (!supported) {
+
                 if (_srcToken != address(desc.srcToken)) {
                     revert InvalidToken(_srcToken);
                 }
@@ -128,6 +130,7 @@ contract Zap is Initializable {
                 );
 
                 IERC20(desc.dstToken).approve(factory, 0);
+
             } else {
                 IERC20(_srcToken).approve(factory, _tokenAmount);
                 IFactoryAdapter(factory).deposit(
@@ -167,6 +170,7 @@ contract Zap is Initializable {
         ) = _getFactoryAddress(_poolToken, address(_dstToken));
 
         if (factory != address(0x0)) {
+
             uint256 targetCoinBalance = _withdrawFromVault(
                 vault,
                 _poolToken,
@@ -219,6 +223,7 @@ contract Zap is Initializable {
         address _targetCoin,
         uint256 _shareAmount
     ) internal returns (uint256 targetCoinBalance) {
+
         IERC20(_vault).safeTransferFrom(
             msg.sender,
             address(this),
@@ -268,10 +273,12 @@ contract Zap is Initializable {
     {
         supported = true;
 
+        bool isExist = false;
         for (uint256 i = 0; i < _factories.length(); i++) {
             factory = _factories.at(i);
 
             if (IFactoryAdapter(factory).isVaultExists(_poolToken)) {
+                isExist = true;
                 vault = IFactoryAdapter(factory).vaultAddress(_poolToken);
 
                 // if pool doesnt exist it will be reverted
@@ -279,12 +286,16 @@ contract Zap is Initializable {
                     _poolToken
                 );
 
+                require(targetCoin != address(0x0), "pool doesnt exist");
+
                 if (_srcToken != targetCoin) {
                     supported = false;
                 }
                 break;
             }
         }
+
+        require(isExist == true);
     }
 
     function sweepTokens(address _token, address _receiver) external {
