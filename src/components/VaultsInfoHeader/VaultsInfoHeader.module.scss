@@ -1,0 +1,104 @@
+.VaultsInfoHeader{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: url(../../images//bg-ring.svg) no-repeat 48% 50%;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    .arrowBack{
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        padding: 16px 24px 16px 16px;
+        .arrowTitle{
+            margin-left: 12px;
+            color: var(--text-main, #E5E8DF);
+            font-family: Unbounded;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 300;
+            line-height: 20px;
+        }
+    }
+    .VaultData{
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+        padding-left: 9%;
+        .logoCoin{
+            width: 42px;
+            height: 42px;
+        }
+        .coinName{
+            color: var(--text-main, #E5E8DF);
+            font-family: Unbounded;
+            font-size: 58px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 72px; 
+        }
+        .coinLink{
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            margin-top: 17px;
+            .coinLinkValue{
+                color: var(--text-main, #E5E8DF);
+                font-family: Unbounded;
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 20px;
+            }
+        }
+    }
+    .vaultDescr{
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        .vaultTVL{
+            display: flex;
+            .vaultTVLTitle{
+                color: var(--text-secondary, #737373);
+                font-family: Unbounded;
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 300;
+                line-height: 24px;
+                margin-right: 16px;
+            }
+            .vaultTValue{
+                color: var(--accent-main, #8EC300);
+                text-align: right;
+                font-family: Unbounded;
+                font-size: 20px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 28px;
+            }
+        }
+        .vaultHarvest{
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+            .vaultHarvestTitle{
+                color: var(--text-secondary, #737373);
+                font-family: Unbounded;
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 300;
+                line-height: 24px;
+                margin-right: 16px;
+            }
+            .vaultHarvestValue{
+                color: var(--text-main, #E5E8DF);
+                font-family: Unbounded;
+                font-size: 20px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 28px;
+            }
+        }
+    }
+}

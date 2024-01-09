@@ -1,0 +1,92 @@
+.VaultsTableItem{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 16px;
+    background: #272726;
+    padding: 42px 40px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    top: 0;
+    left: 0;
+    .nameVault{
+        display: flex;
+        align-items: center;
+        .vaultStatus{
+            margin-right: 16px;
+            &:hover {
+                cursor: pointer;
+            }
+        }
+        .vaultName{
+            color: var(--text-main, #E5E8DF);
+            font-family: Unbounded;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 300;
+            line-height: 24px;
+            margin-left: 16px;
+        }
+    }
+    .APUYalue{
+        color: var(--text-main, #E5E8DF);
+        font-family: Unbounded;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 24px;
+    }
+    .APYWeek{
+        color: var(--text-main, #E5E8DF);
+        font-family: Unbounded;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 24px;
+        padding-left: 4%;
+    }
+    .DepositedValue{
+        color: var(--text-main, #E5E8DF);
+        font-family: Unbounded;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 24px;
+        padding-left: 9%;
+    }
+    .TVLValue{
+        color: var(--text-main, #E5E8DF);
+        font-family: Unbounded;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 24px;
+    }
+    &:hover{
+        background: var(--cards-hover, #31312F);
+    }
+}
+.hover__block {
+    background: rgba(39, 39, 38, 1);
+    border: 1px solid rgba(115, 115, 115, 1);
+    border-radius: 8px;
+    color: rgba(229, 232, 223, 1);
+    font-size: 14px;
+    font-weight: 300;
+    padding: 24px 16px;
+    position: absolute;
+    bottom: -60px;
+    left: 27px;
+    z-index: 2;
+    span {
+        color: rgba(142, 195, 0, 1);
+    }
+    .arrow__figure {
+        position: absolute;
+        top: -30px;
+        left: -3px;
+        z-index: 2;
+    }
+}

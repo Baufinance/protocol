@@ -1,0 +1,24 @@
+.not__found_block {
+    border: none;
+    border-radius: 12px;
+    background: rgba(39, 39, 38, 1);
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
+    font-weight: 400;
+    align-items: center;
+    padding: 32px 0;
+    margin: 0 auto;
+    margin-top: 72px;
+    width: 550px;
+    .not__found_title {
+        color: rgba(229, 232, 223, 1);
+        font-size: 28px;
+
+    }
+.not__found_text {
+    color: rgba(115, 115, 115, 1);
+    font-size: 16px;
+    font-weight: 300;
+}
+}

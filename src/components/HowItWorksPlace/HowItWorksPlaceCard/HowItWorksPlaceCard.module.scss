@@ -1,0 +1,42 @@
+.toggleSlide {
+  margin: 20px 0px;
+  border: 1px solid #8DC22D;
+  border-radius: 100px;
+  position: relative;
+  transition: all 400ms;
+  padding: 5px;
+  width: 100px;
+  height: 54px;
+}
+
+.HowItWorksPlaceCard{
+  width: 44%;
+  overflow: hidden;
+  text-align: left;
+  padding: 32px 32px 42px;
+  border-radius: 16px;
+  margin-right: 16px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  .CardTitle{
+    color: var(--text-main, #E5E8DF);
+    font-size: 28px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 36px;
+    margin-bottom: 12px;
+  }
+.CardDescr {
+    color: var(--text-secondary, #737373);
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 24px;
+  }
+}
+
+@media (max-width: 1440px) {
+  .HowItWorksPlaceCard {
+    width: 41%;
+  }
+}

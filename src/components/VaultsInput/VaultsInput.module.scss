@@ -1,0 +1,83 @@
+.VaultsInput{
+    .VaultsTitle{
+        color: var(--text-main, #E5E8DF);
+        font-family: Unbounded;
+        font-size: 58px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 72px;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 60px;
+    }
+    .VaultsForm{
+        background-color: transparent;
+            border: 1px solid rgba(115, 115, 115, 1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            position: relative;
+            &:hover {
+                border: 1px solid rgba(229, 232, 223, 1);
+                transition: all ease-in 0.3s;
+            }
+        input{
+            background-color: transparent;
+            color: rgba(229, 232, 223, 1);
+            font-size: 16px;
+            font-weight: 300;
+            line-height: 100%;
+            padding-left: 64px;
+            height: 90px;
+            width: 100%;
+            &:focus-visible::placeholder {
+                opacity: 0;
+            }
+            &:focus {
+                outline: none;
+            }
+            &::placeholder {
+                color: rgba(115, 115, 115, 1);
+            }
+        }
+    }
+    .ButtonPlace{
+        display: flex;
+        gap: 24px;
+        margin-top: 24px;
+        .button__active{
+            border-radius: 8px;
+            background: var(--accent-main, #8EC300);
+            padding: 16px;
+            color: var(--text-main, #E5E8DF);
+            text-align: center;
+            font-family: Unbounded;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 300;
+            line-height: 24px; /* 150% */
+            transition: all 0.3s;
+            &:hover {
+                background: var(--buttons-hover, #6DC300);
+            }
+        }
+        .button{
+            border-radius: 8px;
+            border: 1px solid var(--text-secondary, #737373);
+            color: var(--text-main, #E5E8DF);
+            text-align: center;
+            font-family: Unbounded;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 300;
+            line-height: 24px;
+            padding: 16px;
+            background: #211E1E;
+            transition: all 0.3s;
+            &:hover {
+                background: var(--buttons-hover, #31312F);
+            }
+        }
+    }
+}

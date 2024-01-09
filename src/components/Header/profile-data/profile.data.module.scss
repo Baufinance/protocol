@@ -1,0 +1,114 @@
+.profile__data {
+    background: linear-gradient( 45deg,#353A36 ,#292A2C);
+    border-radius: 16px;
+    border: none;
+    height: auto;
+    padding: 32px;
+    position: absolute;
+    top: 130px;
+    right: 10px;
+    width: 380px;
+    z-index: 1;
+}
+.profile__top_title {
+    color: rgba(115, 115, 115, 1);
+    font-size: 16px;
+    font-weight: 300;
+}
+.profile__top_username_wrap {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+.profile__top_username {
+    color: rgba(229, 232, 223, 1);
+    font-size: 16px;
+    font-weight: 300;
+}
+.profile__currency {
+    display: grid;
+    grid-template-columns: repeat(2,50%);
+    gap: 40px;
+    margin-top: 24px;
+
+    .profile__deposit {
+        .deposit__title {
+            color: rgba(115, 115, 115, 1);
+    font-size: 16px;
+    font-weight: 300;
+        }
+        .deposit__data {
+            color: rgba(229, 232, 223, 1);
+    font-size: 16px;
+    font-weight: 400;
+    margin-top: 5px;
+        }
+    }
+    .profile__earny {
+        .earny__title {
+            color: rgba(115, 115, 115, 1);
+    font-size: 16px;
+    font-weight: 300;
+        }
+        .earny__data {
+            color: rgba(142, 195, 0, 1);
+    font-size: 16px;
+    font-weight: 400;
+    margin-top: 5px;
+        }
+    }
+}
+.disconnect {
+    color: rgba(225, 14, 26, 1);
+    font-size: 12px;
+    font-weight: 300;
+    width: auto;
+    margin-top: 24px;
+}
+.profile__trans {
+    margin-top: 24px;
+}
+.trans__title {
+    color: rgba(115, 115, 115, 1);
+    font-size: 16px;
+    font-weight: 300;
+}
+.profile__trans_list {
+    display: flex;
+    flex-direction: column;
+}
+.trans__list_item {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+}
+.list__item_name {
+    color: rgba(229, 232, 223, 1);
+    font-size: 16px;
+    font-weight: 300;
+    text-transform: uppercase;
+}
+.list__item_status {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.item__status_success {
+    color: rgba(142, 195, 0, 1);
+    font-size: 16px;
+    font-weight: 300;
+    text-transform: capitalize;
+}
+.item__status_pending {
+    color: rgba(229, 232, 223, 1);
+    font-size: 16px;
+    font-weight: 300;
+    text-transform: capitalize;
+}
+.item__status_error {
+    color: rgba(225, 14, 26, 1);
+    font-size: 16px;
+    font-weight: 300;
+    text-transform: capitalize;
+}

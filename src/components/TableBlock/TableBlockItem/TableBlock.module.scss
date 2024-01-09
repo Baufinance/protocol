@@ -1,0 +1,60 @@
+.TableBlockItem{
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 38px;
+    border-radius: 16px;
+    background: var(--cards-main, #272726);
+    .coinPic{
+        display: flex;
+        align-items: center;
+        width: 280px;
+        .coinName{
+            margin-left: 20px;
+            color: var(--text-main, #E5E8DF);
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 300;
+            line-height: 24px;
+        }
+    }
+    .bauApyValue{
+        color: var(--accent-main, #8EC300);
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 24px;
+        width: 280px;
+        text-align: left;
+    }
+    .apyFeeValue{
+        color: var(--text-main, #E5E8DF);
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 24px;
+        width: 336px;
+        text-align: left;
+        padding-left: 29px;
+    }
+    .baufeesValue{
+        color: var(--accent-main, #8EC300);
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 24px;
+        width: 325px;
+        text-align: left;
+        padding-left: 15px;
+    }
+    .feesValue{
+        color: var(--text-main, #E5E8DF);
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 24px;
+        width: 82px;
+        text-align: left;
+    }
+}

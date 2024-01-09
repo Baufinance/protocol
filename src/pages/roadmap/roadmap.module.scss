@@ -1,0 +1,24 @@
+@import "../../styles-scss/vars.scss";
+
+.roadmap__wrapper {
+    width: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.roadmap__title {
+    color: $lightGreyText;
+    font-size: 60px;
+    font-weight: 700;
+    line-height: 100%;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: 100px;
+}
+.roadmap__text {
+    color: $darkGreyText;
+    font-size: 16px;
+    font-weight: 300;
+    text-align: center;
+    margin-top: 8px;
+}

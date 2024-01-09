@@ -1,0 +1,18 @@
+.Button {
+    color: var(--text-secondary, #737373);
+    text-align: center;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 24px;
+    border-radius: 16px;
+    border: 1px solid var(--text-secondary, #737373);
+    padding: 24px 40px;
+    background: transparent;
+    width: 175px;
+    font-family: Unbounded;
+    cursor: pointer;
+    &:hover{
+        transform: scale(.98);
+    }
+}

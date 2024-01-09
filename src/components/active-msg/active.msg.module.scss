@@ -1,0 +1,12 @@
+.vault__active {
+    color: rgba(142, 195, 0, 1);
+    display: flex;
+    justify-content: center;
+    border: 1px solid rgba(142, 195, 0, 1);
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 32px;
+    opacity: 1;
+    transition: all ease-in-out 0.3s;
+}

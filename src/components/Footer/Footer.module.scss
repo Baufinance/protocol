@@ -1,0 +1,82 @@
+.Footer{
+    padding-top: 72px;
+    padding-bottom: 80px;
+    .FooterUp{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        .LogoLink{
+            margin-left: 72px;
+            margin-right: 72px;
+        }
+        a{
+            color: var(--text-secondary, #737373);
+            text-align: center;
+            font-size: 24px;
+            font-style: normal;
+            font-weight: 300;
+            line-height: 32px;
+            text-decoration: none;
+            cursor: pointer;
+            &:hover {
+                color: #E5E8DF;
+                transition: all 0.3s;
+            }
+        }
+    }
+    .FooterEmail{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--accent-main, #8EC300);
+        font-size: 24px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 32px;
+        margin-top: 25px;
+        text-decoration: none;
+        &:hover {
+            color: #56C300;
+            transition: all 0.3s;
+        }
+    }
+    .FooterLinks{
+        display: flex;
+        justify-content: space-between;
+        margin-top: 69px;
+        a{
+            display: inline-block;
+            color: var(--text-main, #E5E8DF);
+            font-size: 42px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 52px;
+            text-decoration: none;
+            &:hover{
+                -webkit-background-clip: text;
+                background-clip: text;
+                background-image: url(../../images//hover-bg.svg);
+                color: transparent;
+                transition: all 0.3s;
+            }
+        }
+    }
+    .footerCopyWrite{
+        color: var(--text-main, #E5E8DF);
+        text-align: center;
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: normal;
+        margin-top: 72px;
+    }
+}
+
+@media (max-width: 1440px) {
+    .Footer{
+        .FooterLinks{
+            margin-left: 30px;
+            margin-right: 30px;
+        }
+    }
+}

@@ -1,0 +1,136 @@
+@mixin button {
+    padding: 32px 52px;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 32px;
+    color: var(--text-main, #E5E8DF);
+    text-align: center;
+    border-radius: 24px;
+}
+
+.mainPageDescr{
+    .descrPlace{
+        border-radius: 8px;
+        border: 1px solid var(--bg-main-gr, #353A36);
+        padding-top: 12px;
+        padding-bottom: 12px;
+        display: flex;
+        align-items: center;
+        padding-right: 24px;
+        justify-content: right;
+        transition: all ease-in 0.3s;
+        .descrPlaceText{
+            margin: 0 auto;
+            .descrPlaceTextTitle{
+                color: var(--accent-main, #8EC300);
+                text-align: center;
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 300;
+                line-height: 24px;
+            }
+            .descrPlaceTextBody{
+                color: var(--text-secondary, #737373);
+                text-align: center;
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 300;
+                line-height: 20px;
+                margin-top: 8px;
+                span{
+                    a{
+                        text-decoration: none;
+                        color: var(--accent-main, #8EC300);
+                    }
+                }
+            }
+        }
+        .descrPlaceButton{
+            border-radius: 8px;
+            border: 1px solid rgba(142, 195, 0, 1);
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            &:hover {
+                border: 1px solid rgba(109, 195, 0, 1);
+                background: #000;
+                transition: all ease-in 0.3s;
+            }
+        }
+    }
+    .DescrPlaceBottom{
+        .MainPageDescrTitle{
+            color: var(--text-main, #E5E8DF);
+            text-align: center;
+            font-size: 42px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 52px;
+            margin-top: 42px;
+            width: 100%;
+        }
+        .MainPageDescrButton{
+            margin-top: 42px;
+            display: flex;
+            justify-content: center;
+            .GetStartedButton{
+                @include button;
+                width: 22%;
+                margin-left: 10px;
+                cursor: pointer;
+                font-family: Unbounded;
+                border: none;
+                font-weight: 300;
+                background: var(--accent-main, #8EC300);
+                cursor: pointer;
+                transition: all 0.3s;
+                &:hover {
+                    background: var(--buttons-hover, #6DC300);
+                }
+    
+            }
+            .LearnMoreButton{
+                @include button;
+                border: 1px solid var(--accent-main, #8EC300);
+                background: rgba(33, 30, 30, 0.01);
+                backdrop-filter: blur(10px);
+                width: 22%;
+                font-weight: 300;
+                margin-left: 10px;
+                cursor: pointer;
+                font-family: Unbounded;
+                transition: all 0.3s;
+                &:hover{
+                    border: 1px solid var(--buttons-hover, #6DC300);
+                    background: rgba(255, 255, 255, 0.04);
+                    backdrop-filter: blur(10px);
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 1440px) {
+    .mainPageDescr{
+        .DescrPlaceBottom{
+            .MainPageDescrTitle{
+                font-size: 31px;
+            }
+            .MainPageDescrButton{
+                .GetStartedButton{
+                    padding: 32px 32px;
+                }
+                .LearnMoreButton{
+                    padding: 32px 32px;
+                }
+            }
+        }
+        .descrPlace{
+            margin-left: 40px;
+            margin-right: 40px;
+        }
+
+    }
+}

@@ -1,0 +1,241 @@
+.roadmap__slider {
+    height: 400px;
+    width: 100%;
+    margin-top: 40px;
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+.slider__navigation {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin: 0 auto;
+}
+
+.navigation__right {
+    background-color: rgba(109, 195, 0, 1);
+    border: 1px solid #737373;
+    border-radius: 8px;
+    height: 48px;
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 48px;
+
+    svg {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    &:disabled {
+        background: transparent;
+    }
+}
+
+.navigation__left {
+    background: rgba(109, 195, 0, 1);
+    border: 1px solid #737373;
+    border-radius: 8px;
+    height: 48px;
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 48px;
+
+    svg {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    &:disabled {
+        background: transparent;
+    }
+}
+
+.slider__wrapper {
+    height: 292px;
+    width: 100%;
+    margin-top: 80px;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.slider__body {
+    gap: 16px;
+    height: 100%;
+    display: flex;
+}
+
+.slider__item_filled {
+    background-color: #8EC300;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px;
+    padding-top: 28px;
+    position: relative;
+    top: 0;
+    left: 0;
+    height: 292px;
+    width: 362px;
+
+    .item__text {
+        color: #272726;
+        font-size: 24px;
+        font-weight: 600;
+        position: relative;
+        top: 0;
+        left: 0;
+        z-index: 3;
+        width: 27rem;
+    }
+
+    .item__date {
+        color: #272726;
+        font-size: 16px;
+        font-weight: 300;
+        position: relative;
+        top: 0;
+        left: 0;
+        z-index: 3;
+    }
+}
+
+.slider__item_filled>div {
+    display: contents;
+}
+
+.slider__item_party {
+    background: #31312F;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px;
+    padding-top: 28px;
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 392px;
+
+    .item__date {
+        color: #272726;
+        font-size: 12;
+        font-weight: 300;
+        position: relative;
+        top: 0;
+        left: 0;
+    }
+
+    .item__text {
+        background-image: linear-gradient(90deg, #272726 53%, #E5E8DF 0%);
+        background-clip: text;
+        font-size: 24px;
+        font-weight: 300;
+        position: relative;
+        top: 0;
+        left: 0;
+        z-index: 3;
+        width: 206px;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    &::after {
+        content: '';
+        background: #8EC300;
+        border-radius: 18px;
+        display: flex;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 142px;
+        z-index: 1;
+    }
+
+}
+
+.slider__item_party>div {
+    display: contents;
+}
+
+.slider__item_transparent {
+    background: #31312F;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px;
+    padding-top: 28px;
+    width: 392px;
+
+    .item__text {
+        color: #E5E8DF;
+        font-size: 24px;
+        font-weight: 300;
+        position: relative;
+        top: 0;
+        left: 0;
+        width: 206px;
+        z-index: 3;
+    }
+
+    .item__date {
+        color: #737373;
+        font-size: 24px;
+        font-weight: 300;
+        position: relative;
+        top: 0;
+        left: 0;
+        z-index: 3;
+    }
+}
+
+.slider__item_transparent>div {
+    display: contents;
+}
+
+.item__year {
+    color: #E5E8DF;
+    font-size: 12px;
+    font-weight: 300;
+    position: absolute;
+    bottom: -40px;
+    z-index: 3;
+}
+
+.swiper-slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.swiper {
+    height: 400px;
+    margin: 20px auto;
+    width: 100%;
+
+    overflow: visible !important;
+
+    &>div>div {
+        height: 292px;
+        width: 362px;
+    }
+
+    &:hover {
+        cursor: grab;
+    }
+}
+
+.swiper>div {
+    height: 350px;
+    width: 100%;
+}

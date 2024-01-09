@@ -1,0 +1,42 @@
+.OpenAuthWalletOverview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba($color: #000000, $alpha: 0);
+}
+.OpenAuthWallet {
+    background: #000;
+    border-radius: 24px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    height: 436px;
+    width: 786px;
+    opacity: 1;
+    transition: all 3s;
+    &:hover {
+        cursor: pointer;
+    }
+}
+.closeBtn {
+    color: #fff;
+    font-size: 18px;
+    position: absolute;
+    top: 1.7%;
+    right: 1.6%;
+    z-index: 6;
+}
+.wallet__image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-image: url('../../images/wallet-bg.png');
+    background-position: center;
+    background-size: cover;
+}

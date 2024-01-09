@@ -1,0 +1,40 @@
+.DescriptionItemPlace{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+    .DescriptionItem{
+        width: 22%;
+        .DescriptionItemTitle{
+            padding: 24px 0;
+            color: var(--text-main, #E5E8DF);
+            font-size: 21px;
+            font-style: normal;
+            font-weight: 200;
+            line-height: 24px;
+            border-radius: 24px;
+            border: 1px solid var(--borders-main, #42423F);
+            background: var(--bg-main-gr, linear-gradient(127deg, #353A36 0%, #292A2C 100%));
+            box-shadow: 0px 12px 22px -14px rgba(0, 0, 0, 0.19);
+            margin-top: 20px;
+
+        }
+    }
+}
+.DescriptionItemPercent {
+    @apply flex justify-center;
+}
+
+@media (max-width: 1440px) {
+    .DescriptionItemPlace {
+        margin-left: 40px;
+        margin-right: 40px;
+        .DescriptionItem{
+            .DescriptionItemTitle{
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+    }
+}

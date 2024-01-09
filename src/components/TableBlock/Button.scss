@@ -1,0 +1,40 @@
+.Button {
+    color: var(--text-secondary, #737373);
+    text-align: center;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 24px;
+    border-radius: 16px;
+    border: 1px solid var(--text-secondary, #737373);
+    padding: 24px 40px;
+    background: transparent;
+    width: 175px;
+    font-family: Unbounded;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.Button:hover {
+    transform: scale(.98);
+}
+.Button-active:hover {
+    transform: scale(.98);
+}
+
+.Button-active {
+    color: rgba(229, 232, 223, 1);
+    border: 1px solid #8EC300;
+    text-align: center;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 24px;
+    border-radius: 16px;
+    padding: 24px 40px;
+    background: transparent;
+    font-family: Unbounded;
+    transition: all 0.3s;
+    border-radius: 16px;
+    width: 175px;
+}

@@ -1,0 +1,17 @@
+.approve__btn {
+    display: flex;
+    justify-content: center;
+    background: #8ec300;
+    color: #e5e8df;
+    font-size: 16px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+    margin-top: 12px;
+    border-radius: 16px;
+    text-transform: capitalize;
+    width: 100%;
+    transition: all 0.3s;
+    &:hover {
+        background: var(--buttons-hover, #6DC300);
+    }
+}

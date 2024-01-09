@@ -1,0 +1,65 @@
+@import "../../styles-scss/vars.scss";
+
+.constraction {
+  padding-left: 20px;
+  padding-right: 20px;
+  width: 100%;
+  margin: 0 auto;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+.constraction__wrapper {
+  display: flex;
+  flex-direction: column;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 6;
+
+  a {
+    border-radius: 8px;
+    border: 1px solid rgba(142, 195, 0, 1);
+    color: var(--text-main, #e5e8df);
+    text-align: center;
+    font-family: Unbounded;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 24px;
+    margin: 42px auto;
+    padding: 16px;
+    margin-top: 42px;
+    background: #211e1e;
+    transition: all 0.3s;
+    width: 355px;
+
+    &:hover {
+      background: var(--buttons-hover, #31312f);
+    }
+  }
+}
+
+.constraction__title {
+  color: $lightGreyText;
+  font-size: 58px;
+  font-weight: 800;
+  line-height: 100%;
+  margin-top: 261px;
+  text-align: center;
+}
+
+.construction__text {
+  text-align: center;
+  color: #737373;
+  font-weight: 400;
+  font-style: 16px;
+  margin-top: 12px;
+}

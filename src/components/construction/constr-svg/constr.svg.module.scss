@@ -1,0 +1,20 @@
+.figures__wrapper {
+    position: relative;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    height: 250px;
+    width: 100%;
+}
+.figure {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    z-index: 5;
+}
+.figure2 {
+    position: absolute;
+    top: 140px;
+    left: 0;
+    z-index: 4;
+}
