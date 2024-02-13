@@ -1,8 +1,7 @@
 import brownie
-from brownie import BaseRewardPoolMock, Curve2PoolMock, Curve3PoolMock, Curve4PoolMock, CurveMetaPoolMock, CurveZapMetaPoolMock, Token, VelodromePoolMock, VelodromeGaugeMock
+from brownie import BaseRewardPoolMock, Curve2PoolMock, Curve3PoolMock, Curve4PoolMock, CurveMetaPoolMock, CurveZapMetaPoolMock, Token, VelodromePoolMock, VelodromeGaugeMock, VelodromeBuilderMock
 
 
-'''
 def test_add_pool(pool_manager, gauge, rewards_factory, booster, lp_token):
     pool_manager.addPool(gauge)
 
@@ -460,118 +459,6 @@ def test_curve_builder_can_build_2_pool_with_eth(curve_mock_builder, gov):
 
 
 
-def test_curve_builder_can_build_3_pool(curve_mock_builder, gov, weth):
-
-    # try to build 3 pool with erc 20 tokens with plain and lending liquidity
-    curve_mock_builder.buildWETH(3)
-
-    pool_address = curve_mock_builder.mocks(curve_mock_builder.length()-1)
-
-    pool = Curve3PoolMock.at(pool_address)
-
-    token1 = Token.at(pool.coins(0))
-    token3 = Token.at(pool.coins(2))
-
-    assert token1 == weth
-
-    with brownie.reverts():
-        pool.coins(3)
-
-    token1.mint(3_000*10**18, {"from": gov})
-    token3.mint(3_000*10**18, {"from": gov})
-
-    token = Token.at(pool.token())
-
-    token_balance_before = token.balanceOf(gov)
-    token1_balance_before = token1.balanceOf(gov)
-
-    token1.approve(pool, 3_000*10**18, {"from": gov})
-
-    pool.add_liquidity([1_000*10**18, 0, 0], 0, {"from": gov})
-
-    token_balance_after = token.balanceOf(gov)
-    token1_balance_after = token1.balanceOf(gov)
-
-    assert token_balance_after - token_balance_before == 1_000*10**18
-    assert token1_balance_before - token1_balance_after  ==  1_000*10**18
-
-
-    #lending liquidity
-
-    pool.add_liquidity([1_000*10**18, 0, 0], 0, True, {"from": gov})
-
-
-    underlying_token1 = Token.at(pool.underlying_coins['int128'](0))
-    underlying_token3 = Token.at(pool.underlying_coins['int128'](2))
-
-
-    with brownie.reverts():
-        pool.underlying_coins['int128'](3)
-
-    underlying_token1.mint(3_000*10**18, {"from": gov})
-    underlying_token3.mint(3_000*10**18, {"from": gov})
-
-    token = Token.at(pool.token())
-
-    token_balance_before = token.balanceOf(gov)
-    underlying_token1_balance_before = token1.balanceOf(gov)
-
-    underlying_token1.approve(pool, 3_000*10**18, {"from": gov})
-
-    pool.add_liquidity([1_000*10**18, 0, 0], 0, {"from": gov})
-
-    token_balance_after = token.balanceOf(gov)
-    underlying_token1_balance_after = underlying_token1.balanceOf(gov)
-
-    assert token_balance_after - token_balance_before == 1_000*10**18
-    assert underlying_token1_balance_before - underlying_token1_balance_after  ==  1_000*10**18
-
-    #exchange
-
-    token1.mint(3_000*10**18, pool,  {"from": gov})
-    token3.mint(3_000*10**18, pool, {"from": gov})
-
-    token1_balance_before = token1.balanceOf(gov)
-    token3_balance_before = token3.balanceOf(gov)
-
-    pool.exchange(0,
-        2,
-        1_000*10**18,
-        0,
-        False,
-        {"from": gov}
-    )
-
-    token1_balance_after = token1.balanceOf(gov)
-    token3_balance_after = token3.balanceOf(gov)
-
-    assert token1_balance_before - token1_balance_after == 1_000*10**18
-    assert token3_balance_after - token3_balance_before == 1_000*10**18
-
-    pool.setRate(2*10**18, {"from": gov})
-    token1.mint(3_000*10**18, pool,  {"from": gov})
-    token3.mint(3_000*10**18, pool, {"from": gov})
-    token3.approve(pool, 3_000*10**18, {"from": gov})
-
-    token1_balance_before = token1.balanceOf(gov)
-    token3_balance_before = token3.balanceOf(gov)
-
-    pool.exchange(2,
-        0,
-        1_000*10**18,
-        0,
-        False,
-        {"from": gov}
-    )
-
-    token1_balance_after = token1.balanceOf(gov)
-    token3_balance_after = token3.balanceOf(gov)
-
-    assert token3_balance_before - token3_balance_after == 1_000*10**18
-    assert token1_balance_after - token1_balance_before == 2_000*10**18
-
-
-
 def test_curve_builder_can_build_4_pool(curve_mock_builder, gov):
 
     # try to build 3 pool with erc 20 tokens with plain and lending liquidity
@@ -791,8 +678,6 @@ def test_univ3_swap(gov, univ3_mock):
     assert token1BalanceBefore - token1BalanceAfter == 100*10**18
     assert token2BalanceAfter - token2BalanceBefore == 150*10**18
 
-'''
-
 def test_velodrome_pool_mock(gov):
     token0 = gov.deploy(Token, 18)
     token1 = gov.deploy(Token, 18)
@@ -923,3 +808,44 @@ def test_velodrome_router_mock(gov, velodrome_router):
 
     assert pool.balanceOf(gov) == 0
     assert pool.balanceOf(velodrome_router) == 0
+
+
+
+def test_velodrome_builder_mock_create_token(gov, velodrome_router):
+
+    velo = gov.deploy(Token, 18)
+
+    builder = gov.deploy(VelodromeBuilderMock, velodrome_router, velo)
+
+    assert builder.router() == velodrome_router
+    assert builder.velo() == velo
+
+    tx1 = builder.createToken("USDT")
+
+    data1 = tx1.events["NewToken"]
+
+    token0 = data1["token"]
+
+    tx2 = builder.createToken("USDT")
+
+    data2 = tx2.events["NewToken"]
+
+    token1 = data2["token"]
+
+    tx3 = builder.build(token0, token1, False)
+
+    poolEvent = tx3.events["NewPool"]
+
+    pool = poolEvent["pool"]
+
+    gaugeEvent = tx3.events["NewGauge"]
+
+    gauge = gaugeEvent["gauge"]
+
+    assert velo.balanceOf(gauge) == 1000000000000000000000000
+
+    token0C = Token.at(token0)
+    token1C = Token.at(token1)
+
+    assert token0C.balanceOf(velodrome_router) == 100000000000000000000000
+    assert token1C.balanceOf(velodrome_router) == 70000000000000000000000

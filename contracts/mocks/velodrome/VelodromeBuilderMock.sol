@@ -6,7 +6,7 @@ import "./VelodromePoolMock.sol";
 import "./VelodromeRouterMock.sol";
 import "../Token2.sol";
 
-contract VelodromMockBuilder {
+contract VelodromeBuilderMock {
   VelodromeRouterMock public router;
   Token2 public velo;
 
@@ -20,7 +20,7 @@ contract VelodromMockBuilder {
   event NewPool(address pool);
   event PoolCreated(address indexed token0, address indexed token1, bool indexed stable, address pool, uint256);
 
-  function build (address _token0, address _token1, bool _stable) external {
+  function build(address _token0, address _token1, bool _stable) external {
     address pool = address(new VelodromePoolMock(_stable, _token0, _token1));
     emit NewPool(pool);
 

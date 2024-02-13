@@ -1,5 +1,5 @@
 import pytest
-from brownie import BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder, AggregationRouterV5Mock,UniswapV2Mock, UniswapV3Mock, VelodromeRouterMock
+from brownie import BoosterMock, RewardsMock, RewardFactoryMock, Token, ConvexPoolManagerMock, GaugeMock,  RewardsMock, CurveMockBuilder, AggregationRouterV5Mock,UniswapV2Mock, UniswapV3Mock, VelodromeRouterMock, VelodromeBuilderMock
 
 
 
