@@ -1,7 +1,7 @@
 import React from 'react'
 import classes from './VaultsInfoHeader.module.scss'
 import { Link } from 'react-router-dom'
-import logoCoin from '../../images/coinLogoHeader.png'
+import Curve from '../../images/coinLogoHeader.png'
 import menuArrow from '../../images/menu-arrow.svg'
 import greenArrow from '../../images/greenArrow.svg'
 
@@ -13,7 +13,7 @@ const VaultsInfoHeader = () => {
         <div className={classes.arrowTitle}>Back</div>
       </Link>
       <div className={classes.VaultData}>
-        <img src={logoCoin} className={classes.logoCoin} alt="" />
+        <img src={Curve} className={classes.Curve} alt="" />
         <div className={classes.coinName}>DYDX-ETH</div>
         <Link href='#' className={classes.coinLink}>
             <div className={classes.coinLinkValue}>Curve COILFRAX-f</div>

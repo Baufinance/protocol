@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainPage from "./pages/MainPage/MainPage";
 import Vaults from "./pages/Vaults/Vaults";
@@ -10,55 +10,20 @@ import Layout from "./components/layout";
 import ErrorPage from "./pages/error";
 import SubmitedInfo from "./components/submited-info";
 import Cookie from "./components/cookie";
+import useVaults from "./hooks/useVaults";
 
 
 export const StatesContext = React.createContext();
 
 function App() {
 
+  const {vaults} = useVaults(1, 10)
 
-  const tableItems = [
-    {
-      id: 1,
-      vaultName: "YFE-ETH",
-      vaultByAPI: "6.53",
-      vaultByAPIDays: "5.21",
-      vaultByDeposited: "100 LP Tokens",
-      vaultByTVL: "231.23",
-    },
-    {
-      id: 2,
-      vaultName: "DYDX-ETH",
-      vaultByAPI: "3.21",
-      vaultByAPIDays: "2.21",
-      vaultByDeposited: "100 LP Tokens",
-      vaultByTVL: "361.22",
-    },
-    {
-      id: 3,
-      vaultName: "TYDX-ETH",
-      vaultByAPI: "5.39",
-      vaultByAPIDays: "3.21",
-      vaultByDeposited: "100 LP Tokens",
-      vaultByTVL: "431.22",
-    },
-    {
-      id: 4,
-      vaultName: "DYDX-ETH",
-      vaultByAPI: "4.31",
-      vaultByAPIDays: "1.21",
-      vaultByDeposited: "500 LP Tokens",
-      vaultByTVL: "395.22",
-    },
-    {
-      id: 5,
-      vaultName: "DYDX-ETH",
-      vaultByAPI: "6.73",
-      vaultByAPIDays: "4.21",
-      vaultByDeposited: "100 LP Tokens",
-      vaultByTVL: "126.22",
-    },
-  ];
+
+
+  const tableItems = vaults
+
+  console.log(tableItems)
   const myTableItems = [
     { id: 1, vaultName: "YFE-ETH" },
     { id: 2, vaultName: "DYDX-ETH" },
@@ -80,6 +45,8 @@ function App() {
   ];
 
   const [isAllVaults, setisAllVaults] = React.useState([...tableItems]);
+
+
   const [isAllMyVaults, setisAllMyVaults] = React.useState([...myTableItems]);
 
   const [isAuth, setIsAuth] = React.useState(true);
@@ -200,11 +167,19 @@ function App() {
     setIsNotFound(false);
   };
 
+
+  useEffect(() => {
+    setisAllVaults(vaults)
+    setIsSortArray(vaults)
+  }, [vaults])
+
    React.useEffect(() => {
      if (isSortArray.length < 1 || isSortMyArray.length < 1)
        setIsNotFound(true);
      else setIsNotFound(false);
    }, [isSortArray, isSortMyArray]);
+
+
 
   const value = React.useMemo(
     () => ({
@@ -280,7 +255,7 @@ function App() {
       isVaultsToggle,
       tableItems,
       vaultsBtns,
-      isAllVaults,
+        ,
       setisAllVaults,
       isAllMyVaults,
       setisAllMyVaults,
@@ -322,6 +297,10 @@ function App() {
       handlerCloseOutsideDepositInfo,
     ]
   );
+
+  console.log('data')
+  console.log(isAllVaults)
+  console.log(isNotFound)
 
   return (
     <div

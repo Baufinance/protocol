@@ -125,13 +125,6 @@ const VaultsInfoPlace = () => {
           {states.isDepositItemActive && (
             <div className={classes.vaults__info_place__shadow}></div>
           )}
-          <div className={classes.StrategyWidgetHeader}>
-            <div className={classes.WidgetHeaderTitle}>Strategy</div>
-            <div className={classes.StrategyLinks}>
-              <Link href="#">Strategy</Link>
-              <Link href="#">Volts</Link>
-            </div>
-          </div>
           <img src={strategy} alt="" />
         </div>
       </div>

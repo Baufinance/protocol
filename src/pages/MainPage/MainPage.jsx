@@ -1,6 +1,7 @@
 import React from "react";
 import TopPlace from "../../components/TopPlace/TopPlace";
 import TableBlock from "../../components/TableBlock/TableBlock";
+import VaultsTable from "../Vaults/VaultsTable/VaultsTable";
 import HowItWorksPlace from "../../components/HowItWorksPlace/HowItWorksPlace";
 import classes from "../../App.module.scss";
 import { motion } from "framer-motion";
@@ -20,14 +21,15 @@ const MainPage = ({ handlerAuthed }) => {
         animate={{ opacity: 1, transition: { duration: 1 } }}
       >
         <div className={classes.appContainer}>
-          <TopPlace 
-          handlerOpenAuthWallet={states.handlerOpenAuthWallet} 
+          <TopPlace
+          handlerOpenAuthWallet={states.handlerOpenAuthWallet}
           handlerIsMessageClose={handlerIsMessageClose}
           isMessage={isMessage}
           />
-          <TableBlock />
+          <VaultsTable/>
           <HowItWorksPlace />
         </div>
+
       </motion.div>
     </>
   );

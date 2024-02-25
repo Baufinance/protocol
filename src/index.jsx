@@ -5,11 +5,12 @@ import App from "./App.jsx";
 
 import '@rainbow-me/rainbowkit/styles.css';
 import merge from 'lodash.merge';
-
+import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client';
 import {
   getDefaultWallets,
   RainbowKitProvider,
-  darkTheme
+  darkTheme,
+  midnightTheme
 } from '@rainbow-me/rainbowkit';
 import { configureChains, createConfig, WagmiConfig } from 'wagmi';
 import {
@@ -54,9 +55,9 @@ const wagmiConfig = createConfig({
 })
 
 
-const myTheme = merge(darkTheme(), {
+const myTheme = merge(midnightTheme(), {
   colors: {
-    accentColor: '#07296d',
+    accentColor: 'rgb(142, 195, 0)',
     connectButtonBackground: 'transparent',
   },
   fonts: {
@@ -67,12 +68,19 @@ const myTheme = merge(darkTheme(), {
   },
 });
 
+const client = new ApolloClient({
+  uri: import.meta.env.VITE_GRAPHQL_URL,
+  cache: new InMemoryCache()
+});
+
 root.render(
   <React.StrictMode>
-    <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider chains={chains} locale="en-US"   theme={myTheme}>
-     <App />
-    </RainbowKitProvider>
-    </WagmiConfig>
+    <ApolloProvider client={client}>
+      <WagmiConfig config={wagmiConfig}>
+        <RainbowKitProvider chains={chains} locale="en-US"   theme={myTheme}>
+      <App />
+      </RainbowKitProvider>
+      </WagmiConfig>
+    </ApolloProvider>
   </React.StrictMode>
 );

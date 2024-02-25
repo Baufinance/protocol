@@ -50,13 +50,6 @@ const MainPageDescr = ({
           profits. Zap from any token.
         </div>
         <div className={classes.MainPageDescrButton}>
-          <a
-          href={'#header'}
-            className={classes.GetStartedButton}
-            onClick={() => handlerOpenAuthWallet()}
-          >
-            Get started
-          </a>
           <a href={"#TableHeaderButtons"} className={classes.LearnMoreButton}>
             Learn More
           </a>

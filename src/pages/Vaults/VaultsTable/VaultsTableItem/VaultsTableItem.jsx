@@ -1,7 +1,8 @@
 import React from "react";
 import classes from "./VaultsTableItem.module.scss";
 import activevaulst from "../../../../images/activevaults.svg";
-import logoCoin from "../../../../images/logo-coin.svg";
+import Curve from "../../../../images/logo-coin.svg";
+import Velo from "../../../../images/velo-coin.svg";
 import { motion } from "framer-motion";
 
 function VaultsTableItem({item}) {
@@ -18,12 +19,12 @@ function VaultsTableItem({item}) {
           alt=""
           whileHover={() => setIsCheckboxHover(true)}
         />
-        <img className={classes.vaultsLogo} src={logoCoin} alt="" />
+        <img className={classes.vaultsLogo} src={item.vaultPoolType == 'Curve'? Curve : Velo} alt="" />
         <p className={classes.vaultName}>{item.vaultName}</p>
       </div>
       <div className={classes.APUYalue}>{item.vaultByAPI}%</div>
       <div className={classes.APYWeek}>{item.vaultByAPIDays}%</div>
-      <div className={classes.DepositedValue}>{item.vaultByDeposited}</div>
+      <div className={classes.DepositedValue}>{item.vaultByDeposited} {item.symbol}</div>
       <div className={classes.TVLValue}>$ {item.vaultByTVL}</div>
       {isCheckboxHover && (
         <motion.div className={classes.hover__block}>

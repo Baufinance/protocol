@@ -10,7 +10,7 @@ const VaultsTable = () => {
     // myTableItems,
     tableItems,
     // isAllVaults,
-    isAllMyVaults, 
+    isAllMyVaults,
     // setisAllMyVaults,
     isSortMyArray,
     setIsSortArray,
@@ -106,6 +106,7 @@ const VaultsTable = () => {
           >
             Name
           </div>
+
           <svg
             width="24"
             height="24"
@@ -122,6 +123,8 @@ const VaultsTable = () => {
               fill={isSortByName ? "#ffffff" : "#737373"}
             />
           </svg>
+
+
         </button>
         <button
           type="button"
