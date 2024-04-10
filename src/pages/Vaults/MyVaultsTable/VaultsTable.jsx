@@ -4,6 +4,7 @@ import VaultsTableItem from "./VaultsTableItem/VaultsTableItem";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { StatesContext } from "../../../App";
+import { tab } from "@testing-library/user-event/dist/tab";
 
 const VaultsTable = () => {
   const {
@@ -25,6 +26,8 @@ const VaultsTable = () => {
     // isSortTVL,
     // setIsSortTVL,
   } = React.useContext(StatesContext);
+
+  console.log(tableItems)
 
   const sortedArrey = () => {
     const strAscending = [...isAllMyVaults].sort((a, b) =>

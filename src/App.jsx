@@ -11,6 +11,7 @@ import ErrorPage from "./pages/error";
 import SubmitedInfo from "./components/submited-info";
 import Cookie from "./components/cookie";
 import useVaults from "./hooks/useVaults";
+import useUserVaults from "./hooks/useUserVaults";
 
 
 export const StatesContext = React.createContext();
@@ -19,16 +20,16 @@ function App() {
 
   const {vaults} = useVaults(1, 10)
 
-
+  const {userVaults} = useUserVaults("0xf28558271c0b85e5ef433f4a2a10323edb9eec9f", 1, 10)
 
   const tableItems = vaults
 
+  const myTableItems = userVaults
+
+
   console.log(tableItems)
-  const myTableItems = [
-    { id: 1, vaultName: "YFE-ETH" },
-    { id: 2, vaultName: "DYDX-ETH" },
-    { id: 3, vaultName: "TRYX-ETH" },
-  ];
+  console.log(myTableItems)
+
   const vaultsBtns = [
     {
       id: "001",
@@ -171,7 +172,11 @@ function App() {
   useEffect(() => {
     setisAllVaults(vaults)
     setIsSortArray(vaults)
-  }, [vaults])
+
+    setisAllMyVaults(userVaults)
+    setIsSortMyArray(userVaults)
+
+  }, [vaults, userVaults])
 
    React.useEffect(() => {
      if (isSortArray.length < 1 || isSortMyArray.length < 1)
@@ -300,6 +305,8 @@ function App() {
 
   console.log('data')
   console.log(isAllVaults)
+  console.log(isAllMyVaults)
+
   console.log(isNotFound)
 
   return (

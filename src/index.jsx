@@ -12,7 +12,7 @@ import {
   darkTheme,
   midnightTheme
 } from '@rainbow-me/rainbowkit';
-import { configureChains, createConfig, WagmiConfig } from 'wagmi';
+import { configureChains, createConfig, sepolia, WagmiConfig } from 'wagmi';
 import {
   arbitrum,
   base,
@@ -30,6 +30,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 const { chains, publicClient } = configureChains(
 
   [ goerli,
+    sepolia,
     arbitrum,
     base,
     mainnet,

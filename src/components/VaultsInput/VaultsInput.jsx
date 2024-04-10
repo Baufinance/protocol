@@ -3,6 +3,7 @@ import classes from "./VaultsInput.module.scss";
 import InputSearchIcon from "./svg/input-search";
 import ClearInput from "./svg/clear-icon";
 import { StatesContext } from "../../App";
+import { useAccount } from "wagmi";
 
 const VaultsInput = () => {
   const {
@@ -16,6 +17,8 @@ const VaultsInput = () => {
     setIsBtnActive,
     vaultsBtns,
   } = React.useContext(StatesContext);
+
+  const {isConnected} = useAccount()
 
   return (
     <div className={classes.VaultsInput}>
@@ -46,7 +49,7 @@ const VaultsInput = () => {
         </form>
 
       <div className={classes.ButtonPlace}>
-        {vaultsBtns.map((vb) => (
+        {isConnected && vaultsBtns.map((vb) => (
           <button
             key={vb.id}
             className={
