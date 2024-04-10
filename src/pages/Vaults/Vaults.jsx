@@ -8,7 +8,7 @@ import NotFound from "../../components/not-found";
 import { StatesContext } from "../../App";
 
 const Vaults = () => {
-  const { isNotFound, setIsVaultsToggle, isBtnActive } =
+  const { isNotFound, setIsVaultsToggle, isBtnActive, isSortArray, isSortMyArray} =
     React.useContext(StatesContext);
 
 
@@ -42,9 +42,23 @@ const Vaults = () => {
     >
 
       <VaultsInput handlerVaultToggler={handlerVaultToggler} />
-      {isBtnActive === "001" && !isNotFound && <VaultsTable />}
-      {isBtnActive === "002" && !isNotFound && <MyVaultsTable />}
-      {isNotFound && <NotFound />}
+
+      {isBtnActive === "001" && (!isNotFound || isSortArray.length > 0) && (
+        <VaultsTable />
+      )}
+
+      {isBtnActive === "001" && (isNotFound && isSortArray.length < 1) && (
+        <NotFound />
+      )}
+
+      {isBtnActive === "002" && (!isNotFound || isSortMyArray.length > 0) && (
+        <MyVaultsTable />
+      )}
+
+      {isBtnActive === "002" && (isNotFound && isSortMyArray.length < 1) && (
+         <NotFound />
+      )}
+
     </motion.div>
   );
 };

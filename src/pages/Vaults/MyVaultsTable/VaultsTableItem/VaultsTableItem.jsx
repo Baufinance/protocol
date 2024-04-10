@@ -5,7 +5,7 @@ import Curve from "../../../../images/logo-coin.svg";
 import Velo from "../../../../images/velo-coin.svg";
 import { motion } from "framer-motion";
 
-function VaultsTableItem({vaultName}) {
+function VaultsTableItem({item}) {
   const [isCheckboxHover, setIsCheckboxHover] = React.useState(false);
   return (
     <motion.div
@@ -19,13 +19,13 @@ function VaultsTableItem({vaultName}) {
           alt=""
           whileHover={() => setIsCheckboxHover(true)}
         />
-        <img className={classes.vaultsLogo} src={Velo} alt="" />
-        <p className={classes.vaultName}>{vaultName}</p>
+        <img className={classes.vaultsLogo} src={item.vaultPoolType == 'Curve'? Curve : Velo} alt="" />
+        <p className={classes.vaultName}>{item.vaultName}</p>
       </div>
-      <div className={classes.APUYalue}>6.53%</div>
-      <div className={classes.APYWeek}>6.53%</div>
-      <div className={classes.DepositedValue}>100 LP Tokens</div>
-      <div className={classes.TVLValue}>$ 420, 441</div>
+      <div className={classes.APUYalue}>{item.vaultByAPI}%</div>
+      <div className={classes.APYWeek}>{item.vaultByAPIDays}%</div>
+      <div className={classes.DepositedValue}>{item.vaultByDeposited} {item.symbol}</div>
+      <div className={classes.TVLValue}>$ {item.vaultByTVL}</div>
       {isCheckboxHover && (
         <motion.div className={classes.hover__block}>
           <svg

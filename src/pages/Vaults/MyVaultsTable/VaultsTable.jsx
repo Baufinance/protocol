@@ -27,8 +27,6 @@ const VaultsTable = () => {
     // setIsSortTVL,
   } = React.useContext(StatesContext);
 
-  console.log(tableItems)
-
   const sortedArrey = () => {
     const strAscending = [...isAllMyVaults].sort((a, b) =>
       a.vaultName > b.vaultName ? 1 : -1
@@ -276,7 +274,7 @@ const VaultsTable = () => {
       >
         {isSortMyArray.map((item) => (
           <Link to="/vaultsinfo" key={item.id}>
-            <VaultsTableItem vaultName={item.vaultName} />
+            <VaultsTableItem item={item}/>
           </Link>
         ))}
       </motion.div>

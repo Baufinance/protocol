@@ -12,15 +12,18 @@ import SubmitedInfo from "./components/submited-info";
 import Cookie from "./components/cookie";
 import useVaults from "./hooks/useVaults";
 import useUserVaults from "./hooks/useUserVaults";
-
+import { useAccount } from "wagmi";
 
 export const StatesContext = React.createContext();
 
 function App() {
 
+  const {isConnected, address} = useAccount()
+
   const {vaults} = useVaults(1, 10)
 
-  const {userVaults} = useUserVaults("0xf28558271c0b85e5ef433f4a2a10323edb9eec9f", 1, 10)
+  console.log(address)
+  const {userVaults} = useUserVaults(isConnected ? address.toLowerCase(): "", 1, 10)
 
   const tableItems = vaults
 
