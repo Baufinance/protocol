@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { StatesContext } from "../../../App";
 
+
 const VaultsTable = () => {
   const {
     tableItems,
@@ -23,6 +24,8 @@ const VaultsTable = () => {
     isSortTVL,
     setIsSortTVL,
   } = React.useContext(StatesContext);
+
+
 
   const sortedArrey = () => {
     const strAscending = [...isAllVaults].sort((a, b) =>
@@ -308,7 +311,7 @@ const VaultsTable = () => {
         }}
       >
         {isSortArray.map((item) => (
-          <Link to={"/vaultsinfo"} key={item.id}>
+          <Link to={"/vaultsinfo"} key={item.id} state={JSON.stringify(item)}>
             <VaultsTableItem item={item} />
           </Link>
         ))}

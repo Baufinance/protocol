@@ -4,7 +4,7 @@ import VaultsTableItem from "./VaultsTableItem/VaultsTableItem";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { StatesContext } from "../../../App";
-import { tab } from "@testing-library/user-event/dist/tab";
+
 
 const VaultsTable = () => {
   const {
@@ -273,7 +273,7 @@ const VaultsTable = () => {
         }}
       >
         {isSortMyArray.map((item) => (
-          <Link to="/vaultsinfo" key={item.id}>
+          <Link to="/vaultsinfo" key={item.id} state={JSON.stringify(item)}>
             <VaultsTableItem item={item}/>
           </Link>
         ))}

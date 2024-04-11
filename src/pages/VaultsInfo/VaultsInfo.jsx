@@ -6,9 +6,15 @@ import { motion } from "framer-motion";
 import { StatesContext } from "../../App";
 import NoActiveMsg from "../../components/noactive-msg";
 import ActiveMsg from "../../components/active-msg";
+import {useLocation} from 'react-router-dom';
 
 const VaultsInfo = () => {
   const states = React.useContext(StatesContext);
+
+  const location = useLocation()
+
+
+  let item = JSON.parse(location.state)
 
   React.useEffect(() => {
     const vaultsinfoId = document.getElementById("vaultsinfo");
@@ -28,7 +34,7 @@ const VaultsInfo = () => {
       onClick={() => states.handlerCloseOutsideDepositInfo()}
       id="vaultsinfo"
     >
-      <VaultsInfoHeader />
+      <VaultsInfoHeader  item={item}/>
       {states.isDepositActiveteMSG && <NoActiveMsg />}
       {states.isDepositActiveteSuccessMSG && <ActiveMsg />}
 

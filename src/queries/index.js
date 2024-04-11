@@ -18,6 +18,8 @@ export const GET_PAST_VAULTS = gql`
          symbol
          vaultInfo {
           totalAssets
+          lastHarvest
+          pricePerOneShare
          }
       }
     }
@@ -44,6 +46,8 @@ export const GET_USER_VAULTS = gql`
             symbol
             vaultInfo {
               totalAssets
+              lastHarvest
+              pricePerOneShare
             }
           }
         }

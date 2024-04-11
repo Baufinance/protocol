@@ -48,7 +48,9 @@ const useUserVaults = (account, initialPage, rowsPerPage) => {
           vaultByDeposited: vault != null ? formatNumber(formatUnits(vault['vaultInfo']['totalAssets'], lpToken['decimals']))  : '0',
           vaultIsExist: lpToken['vaultIsExist'],
           vaultPoolType: lpToken['poolType'],
-          symbol: lpToken['symbol']
+          symbol: lpToken['symbol'],
+          lastHarvest: vault != null ? vault['vaultInfo']['lastHarvest'] : 0,
+          pricePerOneShare: vault != null ? vault['vaultInfo']['pricePerOneShare'] :0
         }
       })
       setUserVaults(objects)
