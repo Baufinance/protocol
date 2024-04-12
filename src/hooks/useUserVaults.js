@@ -42,6 +42,7 @@ const useUserVaults = (account, initialPage, rowsPerPage) => {
         return {
           id: index,
           vaultName: vault != null ? vault['name'] : lpToken['name'],
+          vaultAddress: vault != null ?vault['vaultAddress'] : '',
           vaultByAPI: "0",
           vaultByAPIDays: "0",
           vaultByTVL: "0",

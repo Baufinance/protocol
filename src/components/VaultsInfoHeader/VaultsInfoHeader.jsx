@@ -9,6 +9,7 @@ import moment from 'moment';
 
 const VaultsInfoHeader = ({item}) => {
 
+  console.log(item)
   return (
     <div className={classes.VaultsInfoHeader}>
       <Link to='/vaults' className={classes.arrowBack}>
@@ -23,18 +24,21 @@ const VaultsInfoHeader = ({item}) => {
             <img src={menuArrow} alt="" />
         </Link>
       </div>
+
       <div className={classes.vaultDescr}>
           <div className={classes.vaultTVL}>
             <div className={classes.vaultTVLTitle}>Total Deposited</div>
-            <div className={classes.vaultTValue}>{item.vaultByDeposited.props.children}</div>
+            <div className={classes.vaultTValue}>{item.vaultIsExist ? item.vaultByDeposited.props.children: '0'}</div>
           </div>
+          {item.vaultIsExist &&
           <div className={classes.vaultHarvest}>
             <div className={classes.vaultHarvestTitle}>Last harvest:</div>
             { item.lastHarvest &&
               <div className={classes.vaultHarvestValue}>{moment.unix(item.lastHarvest).fromNow()}</div>
             }
           </div>
-        </div>
+          }
+      </div>
     </div>
   )
 }

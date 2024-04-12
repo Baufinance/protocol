@@ -1,33 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
-import {GET_PAST_VAULTS} from '../queries/index.js'
+import {GET_VAULT_BY_ID} from '../queries/index.js'
 import { formatUnits } from 'viem'
 import { formatNumber } from '../utils/formattingUtils.jsx';
 
-const useVaults = (initialPage, rowsPerPage) => {
-  const [vaults, setVaults] = useState([]);
+const useVault = (vaultAddress) => {
+  const [vault, setVault] = useState([]);
 
-  const [page, setPage] = useState(initialPage);
   const [isFetching, setIsFetching] = useState(false);
 
-  const { data } = useQuery(GET_PAST_VAULTS, {
+  const { data } = useQuery(GET_VAULT_BY_ID, {
     variables: {
-      perPage: rowsPerPage,
-      skip: (page-1) * rowsPerPage,
+      vaultAddress: vaultAddress
     },
     pollInterval: 3000
   });
 
-  const fetchData = ({
-    page,
-    count
-  }) => {
+
+  const fetchData = () => {
     setIsFetching(true);
-    setVaults(null)
-    setPage(page)
+    setVault(null)
   }
 
   useEffect(() => {
+
     if (data) {
 
       const objects = data.lpbreakdownSources.map(function(data, index) {
@@ -49,15 +45,16 @@ const useVaults = (initialPage, rowsPerPage) => {
           pricePerOneShare: vault != null ? vault['vaultInfo']['pricePerOneShare'] : '0'
         }
       })
-      setVaults(objects)
+
+      setVault(objects)
 
     } else {
       setIsFetching(true);
     }
   }, [data, setIsFetching])
 
-  return { vaults, isFetching, page, fetchData,rowsPerPage };
+  return { vault, isFetching, fetchData };
 }
 
 
-export default useVaults
+export default useVault

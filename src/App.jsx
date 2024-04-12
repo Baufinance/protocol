@@ -22,7 +22,7 @@ function App() {
 
   const {vaults} = useVaults(1, 10)
 
-  console.log(address)
+
   const {userVaults} = useUserVaults(isConnected ? address.toLowerCase(): "", 1, 10)
 
   const tableItems = vaults
@@ -30,8 +30,6 @@ function App() {
   const myTableItems = userVaults
 
 
-  console.log(tableItems)
-  console.log(myTableItems)
 
   const vaultsBtns = [
     {

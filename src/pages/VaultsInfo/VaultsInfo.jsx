@@ -7,14 +7,17 @@ import { StatesContext } from "../../App";
 import NoActiveMsg from "../../components/noactive-msg";
 import ActiveMsg from "../../components/active-msg";
 import {useLocation} from 'react-router-dom';
+import useVault from "../../hooks/useVault";
+import {Helmet} from "react-helmet";
 
 const VaultsInfo = () => {
   const states = React.useContext(StatesContext);
 
   const location = useLocation()
 
-
   let item = JSON.parse(location.state)
+
+  let {vault} = useVault(item['vaultAddress'])
 
   React.useEffect(() => {
     const vaultsinfoId = document.getElementById("vaultsinfo");
@@ -27,6 +30,10 @@ const VaultsInfo = () => {
   }, []);
 
   return (
+    <>
+        <Helmet>
+        <title> {item['vaultName']} | BAU</title>
+    </Helmet>
     <motion.div
       className={classes.VaultsInfo}
       initial={{ opacity: 0 }}
@@ -34,12 +41,13 @@ const VaultsInfo = () => {
       onClick={() => states.handlerCloseOutsideDepositInfo()}
       id="vaultsinfo"
     >
-      <VaultsInfoHeader  item={item}/>
+      <VaultsInfoHeader  item={vault.length > 0 ? vault[0] : item}/>
       {states.isDepositActiveteMSG && <NoActiveMsg />}
       {states.isDepositActiveteSuccessMSG && <ActiveMsg />}
 
       <VaultsInfoPlace />
     </motion.div>
+    </>
   );
 };
 

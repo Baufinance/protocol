@@ -6,6 +6,7 @@ import MyVaultsTable from "./MyVaultsTable/VaultsTable";
 import { motion } from "framer-motion";
 import NotFound from "../../components/not-found";
 import { StatesContext } from "../../App";
+import {Helmet} from "react-helmet";
 
 const Vaults = () => {
   const { isNotFound, setIsVaultsToggle, isBtnActive, isSortArray, isSortMyArray} =
@@ -33,6 +34,10 @@ const Vaults = () => {
   }, []);
 
   return (
+    <>
+    <Helmet>
+        <title>{isBtnActive === "002" ? "My" : "All"} vaults | BAU</title>
+    </Helmet>
     <motion.div
       className={classes.Vaults}
       initial={{ opacity: 0 }}
@@ -60,6 +65,7 @@ const Vaults = () => {
       )}
 
     </motion.div>
+    </>
   );
 };
 

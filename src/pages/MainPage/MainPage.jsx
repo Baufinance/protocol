@@ -6,6 +6,7 @@ import HowItWorksPlace from "../../components/HowItWorksPlace/HowItWorksPlace";
 import classes from "../../App.module.scss";
 import { motion } from "framer-motion";
 import { StatesContext } from "../../App";
+import { Helmet } from "react-helmet";
 
 const MainPage = ({ handlerAuthed }) => {
   const states = React.useContext(StatesContext);
@@ -15,6 +16,9 @@ const MainPage = ({ handlerAuthed }) => {
   };
   return (
     <>
+      <Helmet>
+        <title>Main | BAU</title>
+      </Helmet>
       <motion.div
         className={classes.App}
         initial={{ opacity: 0 }}

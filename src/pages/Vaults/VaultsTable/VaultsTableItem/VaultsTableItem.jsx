@@ -6,6 +6,8 @@ import Velo from "../../../../images/velo-coin.svg";
 import { motion } from "framer-motion";
 
 function VaultsTableItem({item}) {
+
+  console.log(item)
   const [isCheckboxHover, setIsCheckboxHover] = React.useState(false);
   return (
     <motion.div
@@ -13,12 +15,13 @@ function VaultsTableItem({item}) {
       onMouseLeave={() => setIsCheckboxHover(false)}
     >
       <div className={classes.nameVault}>
+      {item.vaultIsExist == true  && (
         <motion.img
           className={classes.vaultStatus}
           src={activevaulst}
           alt=""
           whileHover={() => setIsCheckboxHover(true)}
-        />
+        />)}
         <img className={classes.vaultsLogo} src={item.vaultPoolType == 'Curve'? Curve : Velo} alt="" />
         <p className={classes.vaultName}>{item.vaultName}</p>
       </div>
