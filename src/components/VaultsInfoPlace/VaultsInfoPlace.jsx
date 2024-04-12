@@ -9,9 +9,12 @@ import ActivateButton from "../../components/vaults-activate-button";
 import ActivateAproveButton from "../../components/vaults-activate-aprove-button";
 import AproveButton from "../../components/vaults-aprove-button";
 import VaultsDepositList from "./vaults-deposit-list";
+import { useAccount } from "wagmi";
 
 const VaultsInfoPlace = () => {
   const states = React.useContext(StatesContext);
+
+  const {isConnected, address} = useAccount()
 
   const [isActiveBtn, setIaActiveBtn] = React.useState(1);
   const [isRouteInfo, setIsRouteInfo] = React.useState(false);
@@ -59,6 +62,9 @@ const VaultsInfoPlace = () => {
             </div>
           </div>
         </div>
+
+        {isConnected &&
+          <>
         <div className={classes.PositionWidget}>
           {states.isDepositItemActive && (
             <div className={classes.vaults__info_place__shadow}></div>
@@ -98,6 +104,8 @@ const VaultsInfoPlace = () => {
             </div>
           </div>
         </div>
+        </>
+        }
         <div className={classes.widgetBreakDown}>
           {states.isDepositItemActive && (
             <div className={classes.vaults__info_place__shadow}></div>
@@ -128,6 +136,7 @@ const VaultsInfoPlace = () => {
           <img src={strategy} alt="" />
         </div>
       </div>
+
 
       <div className={classes.InfoPlaceRight}>
         {states.isDepositItemActive && (

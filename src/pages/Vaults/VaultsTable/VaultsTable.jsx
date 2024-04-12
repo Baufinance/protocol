@@ -311,7 +311,7 @@ const VaultsTable = () => {
         }}
       >
         {isSortArray.map((item) => (
-          <Link to={"/vaultsinfo"} key={item.id} state={JSON.stringify(item)}>
+          <Link to={"/vaultsinfo/"+item.vaultAddress}  key={item.id}>
             <VaultsTableItem item={item} />
           </Link>
         ))}

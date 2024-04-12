@@ -9,7 +9,6 @@ import moment from 'moment';
 
 const VaultsInfoHeader = ({item}) => {
 
-  console.log(item)
   return (
     <div className={classes.VaultsInfoHeader}>
       <Link to='/vaults' className={classes.arrowBack}>
@@ -21,7 +20,7 @@ const VaultsInfoHeader = ({item}) => {
         <div className={classes.coinName}>{item.vaultName}</div>
         <Link href='#' className={classes.coinLink}>
             <div className={classes.coinLinkValue}>{item.symbol}</div>
-            <img src={menuArrow} alt="" />
+
         </Link>
       </div>
 

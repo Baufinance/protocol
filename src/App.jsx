@@ -324,7 +324,7 @@ function App() {
             <Routes>
               <Route exec path="/" element={<MainPage />} />{" "}
               <Route exec path="/vaults" element={<Vaults />} />{" "}
-              <Route exec path={"/vaultsinfo"} element={<VaultsInfo />} />{" "}
+              <Route exec path={"/vaultsinfo/:address"} element={<VaultsInfo />} />{" "}
               <Route exec path="/roadmap" element={<Roadmap />} />{" "}
               <Route path="/error-page" element={<ErrorPage />} />{" "}
             </Routes>{" "}

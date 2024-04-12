@@ -6,19 +6,18 @@ import { motion } from "framer-motion";
 import { StatesContext } from "../../App";
 import NoActiveMsg from "../../components/noactive-msg";
 import ActiveMsg from "../../components/active-msg";
-import {useLocation} from 'react-router-dom';
+import {useParams} from 'react-router-dom';
 import useVault from "../../hooks/useVault";
 import {Helmet} from "react-helmet";
 
 const VaultsInfo = () => {
   const states = React.useContext(StatesContext);
 
-  const location = useLocation()
+  const {address} = useParams()
 
-  let item = JSON.parse(location.state)
+  let {vault} = useVault(address)
 
-  let {vault} = useVault(item['vaultAddress'])
-
+  console.log(vault)
   React.useEffect(() => {
     const vaultsinfoId = document.getElementById("vaultsinfo");
     if (vaultsinfoId)
@@ -32,7 +31,7 @@ const VaultsInfo = () => {
   return (
     <>
         <Helmet>
-        <title> {item['vaultName']} | BAU</title>
+        <title> {vault.length > 0 ? vault[0]['vaultName'] : ''} | BAU</title>
     </Helmet>
     <motion.div
       className={classes.VaultsInfo}
@@ -41,7 +40,7 @@ const VaultsInfo = () => {
       onClick={() => states.handlerCloseOutsideDepositInfo()}
       id="vaultsinfo"
     >
-      <VaultsInfoHeader  item={vault.length > 0 ? vault[0] : item}/>
+      <VaultsInfoHeader  item={vault.length > 0 ? vault[0] : []}/>
       {states.isDepositActiveteMSG && <NoActiveMsg />}
       {states.isDepositActiveteSuccessMSG && <ActiveMsg />}
 
