@@ -41,10 +41,7 @@ const VaultsInfo = () => {
       id="vaultsinfo"
     >
       <VaultsInfoHeader  item={vault.length > 0 ? vault[0] : []}/>
-      {states.isDepositActiveteMSG && <NoActiveMsg />}
-      {states.isDepositActiveteSuccessMSG && <ActiveMsg />}
-
-      <VaultsInfoPlace />
+      <VaultsInfoPlace item={vault.length > 0 ? vault[0] : []}/>
     </motion.div>
     </>
   );

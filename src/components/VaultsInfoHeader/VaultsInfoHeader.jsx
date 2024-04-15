@@ -24,11 +24,14 @@ const VaultsInfoHeader = ({item}) => {
         </Link>
       </div>
 
+
       <div className={classes.vaultDescr}>
+          {item.vaultIsExist &&
           <div className={classes.vaultTVL}>
             <div className={classes.vaultTVLTitle}>Total Deposited</div>
             <div className={classes.vaultTValue}>{item.vaultIsExist ? item.vaultByDeposited.props.children: '0'}</div>
           </div>
+          }
           {item.vaultIsExist &&
           <div className={classes.vaultHarvest}>
             <div className={classes.vaultHarvestTitle}>Last harvest:</div>
