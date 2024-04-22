@@ -20,6 +20,17 @@ contract VelodromeBuilderMock {
   event NewPool(address pool);
   event PoolCreated(address indexed token0, address indexed token1, bool indexed stable, address pool, uint256);
 
+  event GaugeCreated(
+    address indexed poolFactory,
+    address indexed votingRewardsFactory,
+    address indexed gaugeFactory,
+    address pool,
+    address bribeVotingReward,
+    address feeVotingReward,
+    address gauge,
+    address creator
+    );
+
   function build(address _token0, address _token1, bool _stable) external {
     address pool = address(new VelodromePoolMock(_stable, _token0, _token1));
     emit NewPool(pool);
@@ -27,9 +38,12 @@ contract VelodromeBuilderMock {
     emit PoolCreated(_token0, _token1, _stable, pool, 100);
 
     address gauge = address(new VelodromeGaugeMock(address(velo), pool));
+
     velo.mint(1_000_000 ether, gauge);
 
     emit NewGauge(gauge);
+
+    emit GaugeCreated(address(this), address(this), address(this),pool, address(this), address(this), gauge, address(this));
 
     router.addPool(_token0, _token1, pool, _stable);
 

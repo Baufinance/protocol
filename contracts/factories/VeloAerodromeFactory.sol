@@ -34,27 +34,27 @@ contract VeloAerodromeFactory is Initializable, IFactoryAdapter {
 
     IRegistry public registry;
 
-    address owner;
+    address public owner;
 
     address pendingOwner;
 
-    address keeper;
+    address public keeper;
 
-    address governance;
+    address public governance;
 
-    address guardian;
+    address public guardian;
 
-    address treasury;
+    address public treasury;
 
-    address management;
+    address public management;
 
-    address velo;
+    address public velo;
 
-    uint256 depositFee;
+    uint256 public depositFee;
 
-    uint256 zapFee;
+    uint256 public zapFee;
 
-    uint256 depositLimit;
+    uint256 public depositLimit;
 
     IVelodromeRouter public router;
 

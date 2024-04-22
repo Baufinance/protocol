@@ -5,7 +5,8 @@ def main():
     acct = accounts.load("bau")
     print("account", acct)
 
-    velo = "0xf09A8aFB1a4e38dfA96b06d5E9492D3373ECf38b"
-    router = "0x0dF66c0252ceF9c28dB2Aac56c9fabfEBe6994CF"
+    router = VelodromeRouterMock.deploy({"from":acct}, publish_source=True)
+
+    velo = Token2.deploy("Velo", "Velo", 18, {"from":acct}, publish_source=True)
 
     VelodromeBuilderMock.deploy(router, velo, {"from":acct}, publish_source=True)
